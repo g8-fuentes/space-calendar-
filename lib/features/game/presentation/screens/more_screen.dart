@@ -293,14 +293,32 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
       ),
       const SizedBox(height: 14),
       PixelPanel(
-        child: Row(children: [
-          Expanded(child: Text('SOM', style: PixelText.display(10))),
-          Switch(
+        child: Column(children: [
+          _SwitchRow(
+            title: 'EFEITOS SONOROS',
             value: s.sound,
-            activeThumbColor: Kanagawa.carpYellow,
             onChanged: (v) {
               ctrl.apply((g) => g.sound = v);
               if (v) Sfx.click.play();
+            },
+          ),
+          _SwitchRow(
+            title: 'MÚSICA 8-BIT',
+            subtitle: 'Toca enquanto o app está aberto.',
+            value: s.music,
+            onChanged: (v) {
+              Sfx.click.play();
+              ctrl.apply((g) => g.music = v);
+            },
+          ),
+          _SwitchRow(
+            title: 'NOTIFICAÇÕES',
+            subtitle: 'Avisa no celular quando cada missão começa.',
+            value: s.alerts,
+            onChanged: (v) {
+              Sfx.click.play();
+              ctrl.apply((g) => g.alerts = v);
+              if (v) ref.read(missionAlertsProvider).requestPermission();
             },
           ),
         ]),
@@ -392,4 +410,26 @@ class _GooglePanel extends ConsumerWidget {
       ]),
     );
   }
+}
+
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({required this.title, required this.value, required this.onChanged, this.subtitle});
+  final String title;
+  final String? subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(children: [
+          Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text(title, style: PixelText.display(9)),
+              if (subtitle != null) Text(subtitle!, style: PixelText.body(13, color: Kanagawa.springViolet1)),
+            ]),
+          ),
+          Switch(value: value, activeThumbColor: Kanagawa.carpYellow, onChanged: onChanged),
+        ]),
+      );
 }

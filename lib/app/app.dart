@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/sound/music.dart';
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
 import '../features/game/presentation/controllers/import_flow.dart';
@@ -13,8 +14,30 @@ import '../features/game/presentation/screens/week_screen.dart';
 import '../features/game/presentation/widgets/ui.dart';
 import 'theme/kanagawa.dart';
 
-class RotinaQuestApp extends StatelessWidget {
+class RotinaQuestApp extends StatefulWidget {
   const RotinaQuestApp({super.key});
+
+  @override
+  State<RotinaQuestApp> createState() => _RotinaQuestAppState();
+}
+
+class _RotinaQuestAppState extends State<RotinaQuestApp> {
+  // A música só toca com o app na tela.
+  late final _lifecycle = AppLifecycleListener(
+    onStateChange: (s) => MusicBox.instance.setForeground(s == AppLifecycleState.resumed),
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycle;
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +78,7 @@ class _GameShellState extends ConsumerState<GameShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final s = ref.read(gameControllerProvider);
+      if (s.alerts) ref.read(missionAlertsProvider).requestPermission();
       final now = ref.read(gameControllerProvider.notifier).now.millisecondsSinceEpoch;
       if (s.calendarUrl != null && (s.lastSync == null || now - s.lastSync! > 15 * 60 * 1000)) {
         syncGoogleCalendar(null, ref, quiet: true);

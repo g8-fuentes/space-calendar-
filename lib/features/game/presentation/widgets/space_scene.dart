@@ -138,8 +138,11 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
     final s = ref.watch(gameControllerProvider);
     final stats = ref.watch(statsProvider);
     final auraColor = Color(s.suitMode > 0 ? suitModes[s.suitMode].color : stats.rank.color);
+    final now = ref.watch(nowProvider).valueOrNull ?? ref.read(clockProvider).now();
+    final hour = now.hour + now.minute / 60;
     return Semantics(
-      label: 'Astronauta em ${stats.destination.name}, diante de ${stats.enemy.name}',
+      label: 'Astronauta em ${stats.destination.name}, diante de ${stats.enemy.name}, '
+          '${skyAt(hour).day > .5 ? 'com o sol no céu' : 'sob a lua e as estrelas'}',
       child: RepaintBoundary(
         child: AspectRatio(
           aspectRatio: 200 / 128,
@@ -161,6 +164,7 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
               here: stats.destination,
               next: stats.nextDestination,
               enemy: stats.enemy,
+              hour: hour,
             ),
           ),
         ),
@@ -187,9 +191,11 @@ class _ScenePainter extends CustomPainter {
     required this.here,
     required this.next,
     required this.enemy,
+    required this.hour,
   });
 
   final int tick, jump, shake, level, mode, rank, mk;
+  final double hour;
   final List<List<double>> stars;
   final List<_Particle> aura, magic, bursts;
   final Color auraColor;
@@ -205,20 +211,7 @@ class _ScenePainter extends CustomPainter {
     canvas.scale(size.width / 200, size.height / 128);
     canvas.clipRect(const Rect.fromLTWH(0, 0, 200, 128));
     final p = Paint();
-    p.color = Kanagawa.sumiInk0;
-    canvas.drawRect(const Rect.fromLTWH(0, 0, 200, 128), p);
-    const nebula = [Kanagawa.oniViolet, Kanagawa.crystalBlue, Kanagawa.sakuraPink];
-    for (var i = 0; i < 6; i++) {
-      p.color = nebula[i % 3].withAlpha(20);
-      canvas.drawCircle(Offset(((i * 61) % 200).toDouble(), ((i * 37) % 70).toDouble()), 18.0 + (i % 3) * 8, p);
-    }
-    for (var i = 0; i < stars.length; i++) {
-      if (((tick >> 3) + i) % 23 == 0) continue;
-      final s = stars[i];
-      final x = (s[0] - tick * .02 * s[3]) % 200;
-      p.color = i % 5 == 0 ? Kanagawa.carpYellow : Kanagawa.fujiWhite;
-      canvas.drawRect(Rect.fromLTWH(x.floorToDouble(), s[1], s[2], s[2]), p);
-    }
+    _sky(canvas, p);
     paintBody(canvas, next, const Offset(182, 16), 7, tick);
     paintBody(canvas, here, const Offset(100, 214), 112, tick);
     _ship(canvas, p);
@@ -325,6 +318,111 @@ class _ScenePainter extends CustomPainter {
       }
     }
     canvas.restore();
+  }
+
+  /// Céu conforme a hora do celular: de dia o sol cruza a cena e as
+  /// estrelas quase somem; à noite a lua aparece e as estrelas brilham.
+  void _sky(Canvas canvas, Paint p) {
+    final sky = skyAt(hour);
+    const full = Rect.fromLTWH(0, 0, 200, 128);
+    p.color = Kanagawa.sumiInk0;
+    canvas.drawRect(full, p);
+    if (sky.day > 0) {
+      canvas.drawRect(
+          full,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Kanagawa.waveBlue1.withAlpha((sky.day * 255).round()),
+                Kanagawa.waveBlue2.withAlpha((sky.day * 255).round()),
+              ],
+            ).createShader(full));
+    }
+    if (sky.dusk > 0) {
+      canvas.drawRect(
+          full,
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Kanagawa.oniViolet.withAlpha(0),
+                Kanagawa.sakuraPink.withAlpha((sky.dusk * 70).round()),
+                Kanagawa.surimiOrange.withAlpha((sky.dusk * 120).round()),
+              ],
+            ).createShader(full));
+    }
+    const nebula = [Kanagawa.oniViolet, Kanagawa.crystalBlue, Kanagawa.sakuraPink];
+    for (var i = 0; i < 6; i++) {
+      p.color = nebula[i % 3].withAlpha((20 + 14 * sky.night).round());
+      canvas.drawCircle(Offset(((i * 61) % 200).toDouble(), ((i * 37) % 70).toDouble()), 18.0 + (i % 3) * 8, p);
+    }
+    for (var i = 0; i < stars.length; i++) {
+      if (((tick >> 3) + i) % 23 == 0) continue;
+      // De dia só um terço das estrelas aparece, bem fraco.
+      if (sky.day > .5 && i % 3 != 0) continue;
+      final s = stars[i];
+      final x = ((s[0] - tick * .02 * s[3]) % 200).floorToDouble();
+      final twinkle = .75 + .25 * math.sin(tick * .09 + i * 1.7);
+      final alpha = (255 * (.3 + .7 * sky.night) * (sky.night > .5 ? twinkle : 1)).round().clamp(0, 255);
+      final c = i % 5 == 0 ? Kanagawa.carpYellow : Kanagawa.fujiWhite;
+      p.color = c.withAlpha(alpha);
+      final size = s[2] + (sky.night > .5 && i % 4 == 0 ? 1 : 0);
+      canvas.drawRect(Rect.fromLTWH(x, s[1], size, size), p);
+      if (sky.night > .5 && i % 9 == 0) {
+        // brilho em cruz nas estrelas grandes
+        p.color = c.withAlpha((alpha * .6).round());
+        canvas.drawRect(Rect.fromLTWH(x - 2, s[1] + size / 2 - .5, size + 4, 1), p);
+        canvas.drawRect(Rect.fromLTWH(x + size / 2 - .5, s[1] - 2, 1, size + 4), p);
+      }
+    }
+    final sun = sky.sun, moon = sky.moon;
+    if (sun != null) _sun(canvas, p, sun);
+    if (moon != null) _moon(canvas, p, moon);
+  }
+
+  void _sun(Canvas canvas, Paint p, Offset c) {
+    p.color = Kanagawa.carpYellow.withAlpha(28);
+    canvas.drawCircle(c, 20, p);
+    p.color = Kanagawa.carpYellow.withAlpha(50);
+    canvas.drawCircle(c, 13, p);
+    for (var i = 0; i < 8; i++) {
+      final a = i * math.pi / 4 + tick * .01;
+      final len = i.isEven ? 4.0 : 3.0;
+      final r0 = 10.0 + ((tick >> 3) + i) % 2;
+      p.color = Kanagawa.surimiOrange;
+      for (var k = 0.0; k < len; k++) {
+        canvas.drawRect(
+            Rect.fromLTWH((c.dx + math.cos(a) * (r0 + k)).roundToDouble(), (c.dy + math.sin(a) * (r0 + k)).roundToDouble(), 1, 1), p);
+      }
+    }
+    p.color = Kanagawa.surimiOrange;
+    canvas.drawCircle(c, 8, p);
+    p.color = Kanagawa.carpYellow;
+    canvas.drawCircle(c, 7, p);
+    p.color = const Color(0xFFFFF1C4);
+    canvas.drawRect(Rect.fromLTWH(c.dx - 4, c.dy - 4, 3, 2), p);
+  }
+
+  void _moon(Canvas canvas, Paint p, Offset c) {
+    p.color = Kanagawa.fujiWhite.withAlpha(22);
+    canvas.drawCircle(c, 15, p);
+    p.color = Kanagawa.fujiWhite.withAlpha(40);
+    canvas.drawCircle(c, 10, p);
+    // crescente: o disco menos um disco deslocado
+    final lit = Path.combine(
+      PathOperation.difference,
+      Path()..addOval(Rect.fromCircle(center: c, radius: 7)),
+      Path()..addOval(Rect.fromCircle(center: c.translate(4, -2), radius: 6)),
+    );
+    p.color = Kanagawa.fujiWhite;
+    canvas.drawPath(lit, p);
+    p.color = Kanagawa.fujiGray.withAlpha(150);
+    for (final (dx, dy, w) in const [(-5.0, 0.0, 2.0), (-3.0, 3.0, 2.0), (-1.0, 5.0, 1.0)]) {
+      canvas.drawRect(Rect.fromLTWH(c.dx + dx, c.dy + dy, w, w), p);
+    }
   }
 
   void _ship(Canvas canvas, Paint p) {
@@ -439,4 +537,34 @@ class _IntroPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _IntroPainter old) => old.tick != tick;
+}
+
+/// Luz do céu numa hora do dia (0 a 24).
+class Sky {
+  const Sky(this.day, this.dusk, this.sun, this.moon);
+
+  /// 1 = dia claro, 0 = noite.
+  final double day;
+
+  /// Força do pôr/nascer do sol.
+  final double dusk;
+  final Offset? sun;
+  final Offset? moon;
+
+  double get night => 1 - day;
+}
+
+Sky skyAt(double h) {
+  double ramp(double x, double a, double b) => ((x - a) / (b - a)).clamp(0.0, 1.0);
+  final day = h < 12 ? ramp(h, 5, 7) : 1 - ramp(h, 17, 19);
+  final dusk = math.max(0.0, 1 - math.min((h - 6).abs(), (h - 18).abs()) / 1.5);
+  Offset arc(double t) => Offset(40 + t * 130, 40 - math.sin(math.pi * t) * 20);
+  final sunT = (h - 6) / 12;
+  final moonT = ((h - 18 + 24) % 24) / 12;
+  return Sky(
+    day,
+    dusk,
+    sunT >= -.04 && sunT <= 1.04 ? arc(sunT) : null,
+    moonT >= -.04 && moonT <= 1.04 && day < 1 ? arc(moonT) : null,
+  );
 }

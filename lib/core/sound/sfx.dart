@@ -59,6 +59,14 @@ class SoundBoard {
         final p = AudioPlayer();
         await p.setPlayerMode(PlayerMode.lowLatency);
         await p.setReleaseMode(ReleaseMode.stop);
+        // Sem pedir foco de áudio: senão cada efeito pausaria a música.
+        await p.setAudioContext(AudioContext(
+          android: const AudioContextAndroid(
+            audioFocus: AndroidAudioFocus.none,
+            usageType: AndroidUsageType.game,
+            contentType: AndroidContentType.sonification,
+          ),
+        ));
         _players.add(p);
       }
       _ready = true;
@@ -104,6 +112,12 @@ Uint8List synthesize(List<Note> notes, Wave wave, {int rate = 22050}) {
     }
     t += d * .9;
   }
+  return wavFromSamples(samples, rate);
+}
+
+/// Empacota amostras (-1 a 1) num WAV mono de 16 bits.
+Uint8List wavFromSamples(Float64List samples, int rate) {
+  final n = samples.length;
   final bytes = ByteData(44 + n * 2);
   void str(int o, String s) {
     for (var i = 0; i < s.length; i++) {

@@ -10,6 +10,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Exigido pelas notificações agendadas (flutter_local_notifications).
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -29,11 +31,23 @@ android {
         versionName = flutter.versionName
     }
 
+    // Chave fixa (no repositório) para que cada APK novo instale por cima
+    // do anterior, mantendo o progresso. Serve para instalar fora da loja.
+    signingConfigs {
+        create("rotina") {
+            storeFile = file("rotina-quest.jks")
+            storePassword = "rotinaquest"
+            keyAlias = "rotina"
+            keyPassword = "rotinaquest"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("rotina")
+        }
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("rotina")
             // Sem R8: os plugins usam reflexão/JNI e o encolhimento quebrava o app.
             isMinifyEnabled = false
             isShrinkResources = false
@@ -49,4 +63,8 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }

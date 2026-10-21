@@ -49,6 +49,22 @@ class Hud extends ConsumerWidget {
             const SizedBox(height: 6),
             Semantics(
               button: true,
+              toggled: s.music,
+              child: InkWell(
+                onTap: () {
+                  Sfx.click.play();
+                  ref.read(gameControllerProvider.notifier).apply((g) => g.music = !g.music);
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                  color: Kanagawa.sumiInk5,
+                  child: Text('MÚSICA: ${s.music ? 'ON' : 'OFF'}', style: PixelText.display(7)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Semantics(
+              button: true,
               toggled: s.sound,
               child: InkWell(
                 onTap: () {

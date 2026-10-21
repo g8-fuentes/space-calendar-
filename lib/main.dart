@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
 import 'app/startup_error.dart';
+import 'core/notifications/mission_alerts.dart';
+import 'core/sound/music.dart';
 import 'core/sound/sfx.dart';
 import 'core/time/clock.dart';
 import 'core/time/week_utils.dart';
@@ -28,6 +30,9 @@ Future<void> main() async {
     unawaited(SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
 
     unawaited(SoundBoard.instance.init());
+    unawaited(MusicBox.instance.init());
+    final alerts = LocalMissionAlerts();
+    unawaited(alerts.init());
 
     const clock = SystemClock();
     final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));
@@ -46,6 +51,7 @@ Future<void> main() async {
           clockProvider.overrideWithValue(clock),
           gameRepositoryProvider.overrideWithValue(repository),
           initialGameStateProvider.overrideWithValue(initial),
+          missionAlertsProvider.overrideWithValue(alerts),
         ],
         child: const RotinaQuestApp(),
       ),

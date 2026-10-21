@@ -239,6 +239,8 @@ class GameState {
     this.sound = true,
     this.calendarUrl,
     this.lastSync,
+    this.music = true,
+    this.alerts = true,
   })  : missions = missions ?? [],
         courses = courses ?? [],
         weeks = weeks ?? {},
@@ -277,6 +279,12 @@ class GameState {
 
   /// Última sincronização (ms desde epoch).
   int? lastSync;
+
+  /// Música de fundo ligada.
+  bool music;
+
+  /// Notificação no celular quando uma missão começa.
+  bool alerts;
 
   static List<Reward> _defaultRewards() => const [
         Reward(id: 'r1', name: 'Noite de filme sem culpa', price: 100),
@@ -326,6 +334,8 @@ class GameState {
         'start': startDate,
         'gcal': calendarUrl,
         'gsync': lastSync,
+        'music': music,
+        'alerts': alerts,
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
@@ -362,6 +372,8 @@ class GameState {
       sound: j['sound'] as bool? ?? true,
       calendarUrl: j['gcal'] as String?,
       lastSync: (j['gsync'] as num?)?.toInt(),
+      music: j['music'] as bool? ?? true,
+      alerts: j['alerts'] as bool? ?? true,
     );
   }
 

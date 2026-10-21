@@ -53,7 +53,8 @@ void main() {
       expect(tester.takeException(), isNull, reason: tab);
     }
 
-    await tester.ensureVisible(find.text('CONECTAR GOOGLE AGENDA'));
+    await Scrollable.ensureVisible(tester.element(find.text('CONECTAR GOOGLE AGENDA')), alignment: .5);
+    await tester.pump(const Duration(milliseconds: 100));
     await tester.tap(find.text('CONECTAR GOOGLE AGENDA'));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text('Endereço secreto iCal'), findsOneWidget);
