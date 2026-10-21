@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../features/game/domain/entities/quest.dart';
 
@@ -40,19 +39,17 @@ abstract final class Kanagawa {
 }
 
 /// Tipografia pixel: Press Start 2P para títulos, DotGothic16 para texto.
-/// As fontes são baixadas na primeira abertura e ficam em cache. Sem
-/// internet, o app usa a fonte monoespaçada do sistema.
+/// As duas fontes vão dentro do APK (assets/fonts), então o app abre
+/// igual com ou sem internet.
 abstract final class PixelText {
-  /// Desligado nos testes, que não têm acesso à rede.
-  static bool useGoogleFonts = true;
+  static const displayFamily = 'PressStart2P';
+  static const bodyFamily = 'DotGothic16';
 
-  static TextStyle display(double size, {Color color = Kanagawa.fujiWhite}) => useGoogleFonts
-      ? GoogleFonts.pressStart2p(fontSize: size, color: color, height: 1.5)
-      : TextStyle(fontFamily: 'monospace', fontSize: size, color: color, height: 1.5);
+  static TextStyle display(double size, {Color color = Kanagawa.fujiWhite}) =>
+      TextStyle(fontFamily: displayFamily, fontSize: size, color: color, height: 1.5);
 
-  static TextStyle body(double size, {Color color = Kanagawa.fujiWhite}) => useGoogleFonts
-      ? GoogleFonts.dotGothic16(fontSize: size, color: color, height: 1.3)
-      : TextStyle(fontFamily: 'monospace', fontSize: size, color: color, height: 1.3);
+  static TextStyle body(double size, {Color color = Kanagawa.fujiWhite}) =>
+      TextStyle(fontFamily: bodyFamily, fontSize: size, color: color, height: 1.3);
 }
 
 ThemeData buildKanagawaTheme() {
@@ -71,7 +68,8 @@ ThemeData buildKanagawaTheme() {
     ),
   );
   return base.copyWith(
-    textTheme: (PixelText.useGoogleFonts ? GoogleFonts.dotGothic16TextTheme(base.textTheme) : base.textTheme).apply(
+    textTheme: base.textTheme.apply(
+      fontFamily: PixelText.bodyFamily,
       bodyColor: Kanagawa.fujiWhite,
       displayColor: Kanagawa.fujiWhite,
     ),

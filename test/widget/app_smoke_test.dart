@@ -2,7 +2,6 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rotina_quest/app/app.dart';
-import 'package:rotina_quest/app/theme/kanagawa.dart';
 import 'package:rotina_quest/core/time/clock.dart';
 import 'package:rotina_quest/core/time/week_utils.dart';
 import 'package:rotina_quest/features/game/domain/entities/game_state.dart';
@@ -20,8 +19,6 @@ class _MemoryRepository implements GameRepository {
 }
 
 void main() {
-  setUpAll(() => PixelText.useGoogleFonts = false);
-
   testWidgets('abre o app e marca uma missão', (tester) async {
     final now = DateTime(2026, 10, 21, 9);
     final repo = _MemoryRepository();

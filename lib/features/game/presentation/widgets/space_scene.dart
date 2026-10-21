@@ -35,6 +35,7 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
   final _bursts = <_Particle>[];
   late final List<(double, double, double, int)> _stars;
   int _tick = 0;
+  int _lastFrame = -1;
   int _jump = 0;
   bool _reduceMotion = false;
 
@@ -44,9 +45,19 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
     _stars = List.generate(70, (i) {
       return (((i * 53 + 7) % 200).toDouble(), ((i * 29 + i * i) % 128).toDouble(), i % 9 == 0 ? 2.0 : 1.0, i % 3 + 1);
     });
-    _ticker = createTicker((_) {
+    // A cena é pixel art de baixa resolução: 30 quadros por segundo
+    // bastam e poupam bateria e CPU em celulares mais simples.
+    _ticker = createTicker((elapsed) {
       if (!mounted) return;
-      setState(_step);
+      final frame = elapsed.inMilliseconds ~/ 33;
+      if (frame == _lastFrame) return;
+      final steps = (frame - _lastFrame).clamp(1, 3);
+      _lastFrame = frame;
+      setState(() {
+        for (var i = 0; i < steps; i++) {
+          _step();
+        }
+      });
     })
       ..start();
   }
@@ -56,7 +67,10 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
     super.didChangeDependencies();
     _reduceMotion = MediaQuery.of(context).disableAnimations;
     if (_reduceMotion && _ticker.isActive) _ticker.stop();
-    if (!_reduceMotion && !_ticker.isActive) _ticker.start();
+    if (!_reduceMotion && !_ticker.isActive) {
+      _lastFrame = -1;
+      _ticker.start();
+    }
   }
 
   @override
@@ -88,8 +102,8 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
     }
     _aura.removeWhere((p) => p.life <= 0);
     if (mode >= 3 && _tick % 3 == 0) {
-      _bursts.add(_Particle(100 + (_rand.nextDouble() - .5) * 40, 30 + _rand.nextDouble() * 50, 0, -.3, 30, 1,
-          Kanagawa.carpYellow));
+      _bursts.add(_Particle(
+          100 + (_rand.nextDouble() - .5) * 40, 30 + _rand.nextDouble() * 50, 0, -.3, 30, 1, Kanagawa.carpYellow));
     }
     for (final p in _bursts) {
       p
@@ -122,23 +136,25 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
 
     return Semantics(
       label: 'Guilherme Fuentes, astronauta mirim, em ${stats.destination.name}',
-      child: AspectRatio(
-        aspectRatio: 200 / 128,
-        child: CustomPaint(
-          painter: _ScenePainter(
-            tick: _tick,
-            jump: _jump,
-            stars: _stars,
-            aura: _aura,
-            bursts: _bursts,
-            auraColor: auraColor,
-            level: stats.lv,
-            mode: state.suitMode,
-            rank: stats.rankIndex,
-            mk: stats.suitMk,
-            equipped: state.equipped,
-            here: stats.destination,
-            next: stats.nextDestination,
+      child: RepaintBoundary(
+        child: AspectRatio(
+          aspectRatio: 200 / 128,
+          child: CustomPaint(
+            painter: _ScenePainter(
+              tick: _tick,
+              jump: _jump,
+              stars: _stars,
+              aura: _aura,
+              bursts: _bursts,
+              auraColor: auraColor,
+              level: stats.lv,
+              mode: state.suitMode,
+              rank: stats.rankIndex,
+              mk: stats.suitMk,
+              equipped: state.equipped,
+              here: stats.destination,
+              next: stats.nextDestination,
+            ),
           ),
         ),
       ),
@@ -220,18 +236,22 @@ class _ScenePainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(a.x.roundToDouble(), a.y.roundToDouble(), a.size, a.size), p);
     }
 
-    final bob = jump > 0 ? -(math.sin(jump / 26 * math.pi) * 10).roundToDouble() : (math.sin(tick * .04) * 3).roundToDouble();
+    final bob =
+        jump > 0 ? -(math.sin(jump / 26 * math.pi) * 10).roundToDouble() : (math.sin(tick * .04) * 3).roundToDouble();
     const scale = 2.1;
     final origin = Offset(100 - 13 * scale, 24 + bob);
     final flame = (mode >= 1 ? 7 : 4) + (tick >> 2) % 3;
     for (final fx in [6.0, 18.0]) {
       p.color = Kanagawa.surimiOrange;
-      canvas.drawRect(Rect.fromLTWH(origin.dx + (fx + .5) * scale, origin.dy + 20 * scale, 2 * scale, flame.toDouble()), p);
+      canvas.drawRect(
+          Rect.fromLTWH(origin.dx + (fx + .5) * scale, origin.dy + 20 * scale, 2 * scale, flame.toDouble()), p);
       p.color = Kanagawa.carpYellow;
-      canvas.drawRect(Rect.fromLTWH(origin.dx + (fx + 1) * scale, origin.dy + 20 * scale, scale, math.max(2, flame - 3).toDouble()), p);
+      canvas.drawRect(
+          Rect.fromLTWH(origin.dx + (fx + 1) * scale, origin.dy + 20 * scale, scale, math.max(2, flame - 3).toDouble()),
+          p);
     }
     final blink = tick % 200 < 6;
-    paintGrid(canvas, astronautGrid(rank: rank, mk: mk, equipped: equipped, blink: blink), origin, scale);
+    paintGrid(canvas, _astronaut(rank, mk, equipped, blink), origin, scale);
 
     final pet = equipped['pet'];
     if (pet != null) paintPet(canvas, pet, Offset(134, 48 + (math.sin(tick * .05) * 3).roundToDouble()));
@@ -278,11 +298,22 @@ class _ScenePainter extends CustomPainter {
   void _label(Canvas canvas, String text, Offset at, double size, Color color,
       {bool center = false, int maxChars = 16}) {
     final t = text.length > maxChars ? text.substring(0, maxChars) : text;
-    final tp = TextPainter(
+    final key = '$t|$size|${color.toARGB32()}';
+    final tp = _labels[key] ??= (TextPainter(
       text: TextSpan(text: t, style: PixelText.display(size, color: color).copyWith(height: 1)),
       textDirection: TextDirection.ltr,
-    )..layout();
+    )..layout());
+    if (_labels.length > 64) _labels.remove(_labels.keys.first);
     tp.paint(canvas, center ? at - Offset(tp.width / 2, 0) : at);
+  }
+
+  static final _labels = <String, TextPainter>{};
+  static final _grids = <String, PixelGrid>{};
+
+  static PixelGrid _astronaut(int rank, int mk, Map<String, String> equipped, bool blink) {
+    final key = '$rank|$mk|$blink|${equipped.entries.map((e) => '${e.key}=${e.value}').join(',')}';
+    if (_grids.length > 16) _grids.clear();
+    return _grids[key] ??= astronautGrid(rank: rank, mk: mk, equipped: equipped, blink: blink);
   }
 
   @override
