@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/app.dart';
 import 'app/startup_error.dart';
+import 'core/sound/sfx.dart';
 import 'core/time/clock.dart';
 import 'core/time/week_utils.dart';
 import 'features/game/data/datasources/game_local_datasource.dart';
@@ -25,6 +26,8 @@ Future<void> main() async {
 
   try {
     unawaited(SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]));
+
+    unawaited(SoundBoard.instance.init());
 
     const clock = SystemClock();
     final prefs = await SharedPreferences.getInstance().timeout(const Duration(seconds: 5));

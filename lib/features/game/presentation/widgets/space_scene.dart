@@ -10,8 +10,16 @@ import '../../domain/catalog/destinations.dart';
 import '../art/pixel_art.dart';
 import '../controllers/game_providers.dart';
 
-/// Cena animada: o astronauta flutua sobre o destino atual, com a nave
-/// pousada, o próximo destino ao longe e a energia que cresce com o nível.
+class _Particle {
+  _Particle(this.x, this.y, this.vx, this.vy, this.life, this.size, this.color, [this.text]);
+  double x, y, vx, vy, life;
+  final double size;
+  final Color color;
+  final String? text;
+}
+
+/// Cena animada: o astronauta flutua sobre o destino atual, encarando o
+/// inimigo do nível, com a nave pousada e o próximo destino ao longe.
 class SpaceScene extends ConsumerStatefulWidget {
   const SpaceScene({super.key});
 
@@ -19,55 +27,40 @@ class SpaceScene extends ConsumerStatefulWidget {
   ConsumerState<SpaceScene> createState() => _SpaceSceneState();
 }
 
-class _Particle {
-  _Particle(this.x, this.y, this.vx, this.vy, this.life, this.size, this.color, [this.text]);
-  double x, y, vx, vy;
-  double life;
-  final double size;
-  final Color color;
-  final String? text;
-}
-
 class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProviderStateMixin {
   late final Ticker _ticker;
   final _rand = math.Random();
   final _aura = <_Particle>[];
   final _bursts = <_Particle>[];
-  late final List<(double, double, double, int)> _stars;
-  int _tick = 0;
-  int _lastFrame = -1;
-  int _jump = 0;
-  bool _reduceMotion = false;
+  final _magic = <_Particle>[];
+  final _stars = List.generate(
+      70, (i) => [((i * 53 + 7) % 200).toDouble(), ((i * 29 + i * i) % 128).toDouble(), i % 9 == 0 ? 2.0 : 1.0, (i % 3 + 1).toDouble()]);
+  int _tick = 0, _jump = 0, _shake = 0, _lastFrame = -1;
 
   @override
   void initState() {
     super.initState();
-    _stars = List.generate(70, (i) {
-      return (((i * 53 + 7) % 200).toDouble(), ((i * 29 + i * i) % 128).toDouble(), i % 9 == 0 ? 2.0 : 1.0, i % 3 + 1);
-    });
-    // A cena é pixel art de baixa resolução: 30 quadros por segundo
-    // bastam e poupam bateria e CPU em celulares mais simples.
+    // Pixel art de baixa resolução: 30 quadros por segundo bastam.
     _ticker = createTicker((elapsed) {
       if (!mounted) return;
       final frame = elapsed.inMilliseconds ~/ 33;
       if (frame == _lastFrame) return;
-      final steps = (frame - _lastFrame).clamp(1, 3);
+      final steps = _lastFrame < 0 ? 1 : (frame - _lastFrame).clamp(1, 3);
       _lastFrame = frame;
       setState(() {
         for (var i = 0; i < steps; i++) {
           _step();
         }
       });
-    })
-      ..start();
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _reduceMotion = MediaQuery.of(context).disableAnimations;
-    if (_reduceMotion && _ticker.isActive) _ticker.stop();
-    if (!_reduceMotion && !_ticker.isActive) {
+    final reduce = MediaQuery.of(context).disableAnimations;
+    if (reduce && _ticker.isActive) _ticker.stop();
+    if (!reduce && !_ticker.isActive) {
       _lastFrame = -1;
       _ticker.start();
     }
@@ -79,49 +72,62 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
     super.dispose();
   }
 
+  static const ax = 70.0, ay = 58.0;
+
   void _step() {
     _tick++;
     if (_jump > 0) _jump--;
+    if (_shake > 0) _shake--;
     final stats = ref.read(statsProvider);
-    final mode = ref.read(gameControllerProvider).suitMode;
-    final lv = stats.lv;
+    final s = ref.read(gameControllerProvider);
+    final lv = stats.lv, mode = s.suitMode;
     final rate = 1 + math.min(12, lv ~/ 4) + mode * 2;
     for (var i = 0; i < rate; i++) {
-      if (_rand.nextDouble() > 0.6) continue;
+      if (_rand.nextDouble() > .6) continue;
       final a = _rand.nextDouble() * math.pi * 2;
-      final rr = 16 + math.min(30, lv * 0.6) + mode * 6;
-      _aura.add(_Particle(100 + math.cos(a) * rr * 0.7, 58 + math.sin(a) * rr, -math.cos(a) * 0.2,
-          -math.sin(a) * 0.2 - 0.15, 25 + _rand.nextDouble() * 25, _rand.nextDouble() < 0.3 ? 2 : 1, Colors.white));
+      final rr = 16 + math.min(30, lv * .6) + mode * 6;
+      _aura.add(_Particle(ax + math.cos(a) * rr * .7, ay + math.sin(a) * rr, -math.cos(a) * .2,
+          -math.sin(a) * .2 - .15, 25 + _rand.nextDouble() * 25, _rand.nextDouble() < .3 ? 2 : 1, Colors.white));
     }
     if (_aura.length > 300) _aura.removeRange(0, _aura.length - 300);
-    for (final p in _aura) {
-      p
-        ..life -= 1
-        ..x += p.vx
-        ..y += p.vy;
+    final magic = s.equipped['magic'];
+    final mc = magic == null ? null : shopItem(magic);
+    if (mc != null) {
+      final c = Color(mc.color!);
+      if (magic == 'mg_star' && _tick % 5 == 0) {
+        _magic.add(_Particle(_rand.nextDouble() * 200, -2, -.3, .8, 160, _rand.nextDouble() < .3 ? 2 : 1, c));
+      } else if (magic == 'mg_fire' && _tick.isEven) {
+        _magic.add(_Particle(ax + (_rand.nextDouble() - .5) * 34, ay + 26, 0, -.5 - _rand.nextDouble() * .4, 40, 2,
+            _rand.nextBool() ? c : Kanagawa.lightBlue));
+      } else if (magic == 'mg_comet' && _tick.isEven) {
+        _magic.add(_Particle(ax - 8 + (_rand.nextDouble() - .5) * 6, ay + (_rand.nextDouble() - .5) * 14,
+            -1.1 - _rand.nextDouble(), 0, 35, 2, _rand.nextBool() ? c : Kanagawa.carpYellow));
+      }
     }
-    _aura.removeWhere((p) => p.life <= 0);
+    if (_magic.length > 200) _magic.removeRange(0, _magic.length - 200);
     if (mode >= 3 && _tick % 3 == 0) {
-      _bursts.add(_Particle(
-          100 + (_rand.nextDouble() - .5) * 40, 30 + _rand.nextDouble() * 50, 0, -.3, 30, 1, Kanagawa.carpYellow));
+      _bursts.add(_Particle(ax + (_rand.nextDouble() - .5) * 40, 30 + _rand.nextDouble() * 50, 0, -.3, 30, 1, Kanagawa.carpYellow));
     }
-    for (final p in _bursts) {
-      p
-        ..life -= 1
-        ..x += p.vx
-        ..y += p.vy
-        ..vy += p.text == null ? 0.04 : 0;
+    for (final list in [_aura, _magic, _bursts]) {
+      for (final p in list) {
+        p
+          ..life -= 1
+          ..x += p.vx
+          ..y += p.vy;
+        if (identical(list, _bursts) && p.text == null) p.vy += .04;
+      }
+      list.removeWhere((p) => p.life <= 0 || p.y > 132);
     }
-    _bursts.removeWhere((p) => p.life <= 0);
   }
 
   void _celebrate(int xp) {
     _jump = 26;
+    _shake = 14;
     for (var i = 0; i < 16; i++) {
-      _bursts.add(_Particle(100, 50, (_rand.nextDouble() - .5) * 3, -_rand.nextDouble() * 2 - 1, 40, 2,
+      _bursts.add(_Particle(ax, 50, (_rand.nextDouble() - .5) * 3, -_rand.nextDouble() * 2 - 1, 40, 2,
           i.isEven ? Kanagawa.fujiWhite : Kanagawa.carpYellow));
     }
-    if (xp > 0) _bursts.add(_Particle(74, 28, 0, -.5, 50, 0, Kanagawa.springBlue, '+$xp XP'));
+    if (xp > 0) _bursts.add(_Particle(46, 26, 0, -.5, 50, 0, Kanagawa.springBlue, '+$xp XP'));
   }
 
   @override
@@ -129,13 +135,11 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
     ref.listen(burstProvider, (_, next) {
       if (next != null) _celebrate(next.xp);
     });
-    final state = ref.watch(gameControllerProvider);
+    final s = ref.watch(gameControllerProvider);
     final stats = ref.watch(statsProvider);
-    final mode = suitModes[state.suitMode];
-    final auraColor = state.suitMode > 0 ? Color(mode.color) : Color(stats.rank.color);
-
+    final auraColor = Color(s.suitMode > 0 ? suitModes[s.suitMode].color : stats.rank.color);
     return Semantics(
-      label: 'Guilherme Fuentes, astronauta mirim, em ${stats.destination.name}',
+      label: 'Astronauta em ${stats.destination.name}, diante de ${stats.enemy.name}',
       child: RepaintBoundary(
         child: AspectRatio(
           aspectRatio: 200 / 128,
@@ -143,17 +147,20 @@ class _SpaceSceneState extends ConsumerState<SpaceScene> with SingleTickerProvid
             painter: _ScenePainter(
               tick: _tick,
               jump: _jump,
+              shake: _shake,
               stars: _stars,
               aura: _aura,
+              magic: _magic,
               bursts: _bursts,
               auraColor: auraColor,
               level: stats.lv,
-              mode: state.suitMode,
+              mode: s.suitMode,
               rank: stats.rankIndex,
               mk: stats.suitMk,
-              equipped: state.equipped,
+              equipped: s.equipped,
               here: stats.destination,
               next: stats.nextDestination,
+              enemy: stats.enemy,
             ),
           ),
         ),
@@ -166,8 +173,10 @@ class _ScenePainter extends CustomPainter {
   _ScenePainter({
     required this.tick,
     required this.jump,
+    required this.shake,
     required this.stars,
     required this.aura,
+    required this.magic,
     required this.bursts,
     required this.auraColor,
     required this.level,
@@ -177,21 +186,18 @@ class _ScenePainter extends CustomPainter {
     required this.equipped,
     required this.here,
     required this.next,
+    required this.enemy,
   });
 
-  final int tick;
-  final int jump;
-  final List<(double, double, double, int)> stars;
-  final List<_Particle> aura;
-  final List<_Particle> bursts;
+  final int tick, jump, shake, level, mode, rank, mk;
+  final List<List<double>> stars;
+  final List<_Particle> aura, magic, bursts;
   final Color auraColor;
-  final int level;
-  final int mode;
-  final int rank;
-  final int mk;
   final Map<String, String> equipped;
-  final Destination here;
-  final Destination next;
+  final Destination here, next;
+  final Enemy enemy;
+
+  static const ax = _SpaceSceneState.ax, ay = _SpaceSceneState.ay;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -199,7 +205,6 @@ class _ScenePainter extends CustomPainter {
     canvas.scale(size.width / 200, size.height / 128);
     canvas.clipRect(const Rect.fromLTWH(0, 0, 200, 128));
     final p = Paint();
-
     p.color = Kanagawa.sumiInk0;
     canvas.drawRect(const Rect.fromLTWH(0, 0, 200, 128), p);
     const nebula = [Kanagawa.oniViolet, Kanagawa.crystalBlue, Kanagawa.sakuraPink];
@@ -208,27 +213,52 @@ class _ScenePainter extends CustomPainter {
       canvas.drawCircle(Offset(((i * 61) % 200).toDouble(), ((i * 37) % 70).toDouble()), 18.0 + (i % 3) * 8, p);
     }
     for (var i = 0; i < stars.length; i++) {
-      final s = stars[i];
       if (((tick >> 3) + i) % 23 == 0) continue;
-      final x = (s.$1 - tick * 0.02 * s.$4) % 200;
+      final s = stars[i];
+      final x = (s[0] - tick * .02 * s[3]) % 200;
       p.color = i % 5 == 0 ? Kanagawa.carpYellow : Kanagawa.fujiWhite;
-      canvas.drawRect(Rect.fromLTWH(x.floorToDouble(), s.$2, s.$3, s.$3), p);
+      canvas.drawRect(Rect.fromLTWH(x.floorToDouble(), s[1], s[2], s[2]), p);
     }
-
-    paintBody(canvas, next, const Offset(170, 24), 9, tick);
-    _label(canvas, next.name, const Offset(170, 36), 5, Kanagawa.fujiWhite, center: true);
+    paintBody(canvas, next, const Offset(182, 16), 7, tick);
     paintBody(canvas, here, const Offset(100, 214), 112, tick);
     _ship(canvas, p);
 
+    // inimigo do nível
+    final fs = enemy.boss ? 2.4 : 2.5, fN = enemy.size * fs;
+    final fx = 148 - fN / 2 + (shake > 0 ? ((tick % 4) < 2 ? -2 : 2) : 0);
+    final fy = 46 - fN / 2 + (math.sin(tick * .05 + 1) * 3).roundToDouble();
+    p.color = Color(enemy.color).withAlpha(38);
+    canvas.drawCircle(Offset(148, 46 + fN / 2 + 8), fN * .45, p);
+    paintGrid(canvas, enemyGrid(enemy), Offset(fx, fy), fs);
+    _label(canvas, 'NV $level', Offset(148, fy + fN + 4), 5, Kanagawa.waveRed, center: true);
+
+    // magia (portal atrás)
+    final magicId = equipped['magic'];
+    final magicItem = magicId == null ? null : shopItem(magicId);
+    if (magicId == 'mg_portal' && magicItem != null) {
+      final stroke = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2
+        ..color = Color(magicItem.color!).withAlpha(((.55 + .25 * math.sin(tick * .06)) * 255).round());
+      canvas.drawOval(Rect.fromCenter(center: const Offset(ax, ay), width: (22 + math.sin(tick * .05) * 2) * 2, height: 64), stroke);
+      stroke
+        ..strokeWidth = 1
+        ..color = Kanagawa.lightBlue.withAlpha(140);
+      canvas.drawOval(Rect.fromCenter(center: const Offset(ax, ay), width: 34, height: 52), stroke);
+    }
+
+    // aura
     final intensity = math.min(1.0, .15 + level / 30 + mode * .15);
     p.color = auraColor.withAlpha(((.10 + .12 * intensity) * 255).round());
-    canvas.drawCircle(const Offset(100, 58), 18.0 + math.min(26, level * .5) + mode * 5, p);
+    canvas.drawCircle(const Offset(ax, ay), 18.0 + math.min(26, level * .5) + mode * 5, p);
     if (mode >= 2) {
-      final shield = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1
-        ..color = Kanagawa.springBlue.withAlpha(((.5 + .2 * math.sin(tick * .08)) * 255).round());
-      canvas.drawCircle(const Offset(100, 58), 30, shield);
+      canvas.drawCircle(
+          const Offset(ax, ay),
+          30,
+          Paint()
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1
+            ..color = Kanagawa.springBlue.withAlpha(((.5 + .2 * math.sin(tick * .08)) * 255).round()));
     }
     for (final a in aura) {
       final alpha = (math.min(1.0, a.life / 30) * (.4 + intensity * .6)).clamp(0.0, 1.0);
@@ -236,30 +266,50 @@ class _ScenePainter extends CustomPainter {
       canvas.drawRect(Rect.fromLTWH(a.x.roundToDouble(), a.y.roundToDouble(), a.size, a.size), p);
     }
 
-    final bob =
-        jump > 0 ? -(math.sin(jump / 26 * math.pi) * 10).roundToDouble() : (math.sin(tick * .04) * 3).roundToDouble();
-    const scale = 2.1;
-    final origin = Offset(100 - 13 * scale, 24 + bob);
+    // astronauta
+    final bob = jump > 0 ? -(math.sin(jump / 26 * math.pi) * 10).roundToDouble() : (math.sin(tick * .04) * 3).roundToDouble();
+    const sc = 2.1;
+    final origin = Offset(ax - 13 * sc, 24 + bob);
     final flame = (mode >= 1 ? 7 : 4) + (tick >> 2) % 3;
-    for (final fx in [6.0, 18.0]) {
+    for (final fx2 in [6.0, 18.0]) {
       p.color = Kanagawa.surimiOrange;
-      canvas.drawRect(
-          Rect.fromLTWH(origin.dx + (fx + .5) * scale, origin.dy + 20 * scale, 2 * scale, flame.toDouble()), p);
+      canvas.drawRect(Rect.fromLTWH(origin.dx + (fx2 + .5) * sc, origin.dy + 20 * sc, 2 * sc, flame.toDouble()), p);
       p.color = Kanagawa.carpYellow;
-      canvas.drawRect(
-          Rect.fromLTWH(origin.dx + (fx + 1) * scale, origin.dy + 20 * scale, scale, math.max(2, flame - 3).toDouble()),
-          p);
+      canvas.drawRect(Rect.fromLTWH(origin.dx + (fx2 + 1) * sc, origin.dy + 20 * sc, sc, math.max(2, flame - 3).toDouble()), p);
     }
-    final blink = tick % 200 < 6;
-    paintGrid(canvas, _astronaut(rank, mk, equipped, blink), origin, scale);
+    paintGrid(canvas, _astronaut(rank, mk, equipped, tick % 200 < 6, tick), origin, sc);
 
+    if (magicItem != null) {
+      final c = Color(magicItem.color!);
+      if (magicId == 'mg_arc') {
+        for (var i = 0; i < 5; i++) {
+          final a = tick * .03 + i * 1.2566;
+          final x = (ax + math.cos(a) * 30).roundToDouble(), y = (ay + math.sin(a) * 14).roundToDouble();
+          p.color = i.isOdd ? c : Kanagawa.sakuraPink;
+          canvas.drawRect(Rect.fromLTWH(x - 1, y, 3, 1), p);
+          canvas.drawRect(Rect.fromLTWH(x, y - 1, 1, 3), p);
+        }
+      } else if (magicId == 'mg_halo') {
+        canvas.drawOval(
+            Rect.fromCenter(center: Offset(ax, origin.dy - 4), width: 22, height: 6),
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1
+              ..color = c.withAlpha(((.7 + .3 * math.sin(tick * .1)).clamp(0.0, 1.0) * 255).round()));
+      }
+    }
+    for (final m in magic) {
+      p.color = m.color.withAlpha((math.min(1.0, m.life / 20) * 255).round());
+      canvas.drawRect(Rect.fromLTWH(m.x.roundToDouble(), m.y.roundToDouble(), m.size, m.size), p);
+    }
     final pet = equipped['pet'];
-    if (pet != null) paintPet(canvas, pet, Offset(134, 48 + (math.sin(tick * .05) * 3).roundToDouble()));
-    if (equipped['satellite'] != null) {
+    if (pet != null) paintPet(canvas, pet, Offset(ax - 46, 52 + (math.sin(tick * .05) * 3).roundToDouble()), tick);
+    if (equipped['orbit'] != null) {
       final a = tick * .03;
-      paintPet(canvas, 'sat', Offset((96 + math.cos(a) * 42).roundToDouble(), (56 + math.sin(a) * 18).roundToDouble()));
+      paintPet(canvas, 'sat', Offset((ax - 6 + math.cos(a) * 36).roundToDouble(), (ay - 4 + math.sin(a) * 16).roundToDouble()), tick);
     }
 
+    // placa do destino
     p.color = Kanagawa.sumiInk0;
     canvas.drawRect(const Rect.fromLTWH(4, 4, 92, 13), p);
     p.color = Kanagawa.sumiInk4;
@@ -278,7 +328,7 @@ class _ScenePainter extends CustomPainter {
   }
 
   void _ship(Canvas canvas, Paint p) {
-    const sx = 30.0, sy = 82.0;
+    const sx = 4.0, sy = 86.0;
     void r(double a, double b, double w, double h, Color c) {
       p.color = c;
       canvas.drawRect(Rect.fromLTWH(sx + a, sy + b, w, h), p);
@@ -295,8 +345,18 @@ class _ScenePainter extends CustomPainter {
     r(5, 11, 6, 2, Kanagawa.fujiGray);
   }
 
-  void _label(Canvas canvas, String text, Offset at, double size, Color color,
-      {bool center = false, int maxChars = 16}) {
+  static final _labels = <String, TextPainter>{};
+  static final _grids = <String, PixelGrid>{};
+
+  static PixelGrid _astronaut(int rank, int mk, Map<String, String> eq, bool blink, int tick) {
+    // Só a skin Aurora e o sabre mudam com o tempo.
+    final animated = eq['skin'] == 'sk_aur' || eq['hand'] == 'saber';
+    final key = '$rank|$mk|$blink|${animated ? tick : 0}|${eq.entries.map((e) => '${e.key}=${e.value}').join(',')}';
+    if (_grids.length > 24) _grids.clear();
+    return _grids[key] ??= astronautGrid(rank: rank, mk: mk, equipped: eq, blink: blink, tick: tick);
+  }
+
+  void _label(Canvas canvas, String text, Offset at, double size, Color color, {bool center = false, int maxChars = 16}) {
     final t = text.length > maxChars ? text.substring(0, maxChars) : text;
     final key = '$t|$size|${color.toARGB32()}';
     final tp = _labels[key] ??= (TextPainter(
@@ -307,15 +367,76 @@ class _ScenePainter extends CustomPainter {
     tp.paint(canvas, center ? at - Offset(tp.width / 2, 0) : at);
   }
 
-  static final _labels = <String, TextPainter>{};
-  static final _grids = <String, PixelGrid>{};
+  @override
+  bool shouldRepaint(covariant _ScenePainter old) => true;
+}
 
-  static PixelGrid _astronaut(int rank, int mk, Map<String, String> equipped, bool blink) {
-    final key = '$rank|$mk|$blink|${equipped.entries.map((e) => '${e.key}=${e.value}').join(',')}';
-    if (_grids.length > 16) _grids.clear();
-    return _grids[key] ??= astronautGrid(rank: rank, mk: mk, equipped: equipped, blink: blink);
+/// Cena da tela inicial: astronauta perto da Terra e o primeiro inimigo.
+class IntroScene extends StatefulWidget {
+  const IntroScene({super.key});
+
+  @override
+  State<IntroScene> createState() => _IntroSceneState();
+}
+
+class _IntroSceneState extends State<IntroScene> with SingleTickerProviderStateMixin {
+  late final Ticker _ticker;
+  int _tick = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    var last = -1;
+    _ticker = createTicker((e) {
+      final f = e.inMilliseconds ~/ 33;
+      if (f != last && mounted) {
+        last = f;
+        setState(() => _tick++);
+      }
+    })
+      ..start();
   }
 
   @override
-  bool shouldRepaint(covariant _ScenePainter old) => true;
+  void dispose() {
+    _ticker.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => RepaintBoundary(
+        child: AspectRatio(aspectRatio: 200 / 96, child: CustomPaint(painter: _IntroPainter(_tick))),
+      );
+}
+
+class _IntroPainter extends CustomPainter {
+  _IntroPainter(this.tick);
+  final int tick;
+  static final _astro = astronautGrid(rank: 0, mk: 1, equipped: const {});
+  static final _blink = astronautGrid(rank: 0, mk: 1, equipped: const {}, blink: true);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.scale(size.width / 200, size.height / 96);
+    canvas.clipRect(const Rect.fromLTWH(0, 0, 200, 96));
+    final p = Paint()..color = Kanagawa.sumiInk0;
+    canvas.drawRect(const Rect.fromLTWH(0, 0, 200, 96), p);
+    for (var i = 0; i < 70; i++) {
+      if (((tick >> 3) + i) % 19 == 0) continue;
+      final l = i % 3 + 1, s = i % 9 == 0 ? 2.0 : 1.0;
+      final x = ((((i * 53 + 7) % 200) + 200 - (tick * .05 * l) % 200) % 200).floorToDouble();
+      p.color = i % 5 == 0 ? Kanagawa.carpYellow : Kanagawa.fujiWhite;
+      canvas.drawRect(Rect.fromLTWH(x, (((i * 29 + i * i) % 128) % 96).toDouble(), s, s), p);
+    }
+    paintBody(canvas, destinationAt(0), const Offset(40, 120), 48, tick);
+    paintBody(canvas, destinationAt(1), const Offset(170, 20), 8, tick);
+    final bob = (math.sin(tick * .05) * 3).roundToDouble();
+    paintGrid(canvas, tick % 180 < 6 ? _blink : _astro, Offset(100 - 13 * 1.8, 14 + bob), 1.8);
+    paintGrid(canvas, enemyGrid(enemyFor(1)), Offset(158, 52 + (math.sin(tick * .05 + 2) * 2).roundToDouble()), 2);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant _IntroPainter old) => old.tick != tick;
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../features/game/domain/entities/quest.dart';
-
 /// Paleta Kanagawa (variante wave) do Neovim.
 abstract final class Kanagawa {
   static const sumiInk0 = Color(0xFF16161D);
@@ -27,15 +25,6 @@ abstract final class Kanagawa {
   static const autumnRed = Color(0xFFC34043);
   static const waveRed = Color(0xFFE46876);
   static const sakuraPink = Color(0xFFD27E99);
-
-  static Color category(QuestCategory c) => switch (c) {
-        QuestCategory.cuidado => sakuraPink,
-        QuestCategory.estudo => springBlue,
-        QuestCategory.trabalho => crystalBlue,
-        QuestCategory.treino => waveRed,
-        QuestCategory.arte => oniViolet,
-        QuestCategory.fe => carpYellow,
-      };
 }
 
 /// Tipografia pixel: Press Start 2P para títulos, DotGothic16 para texto.

@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'catalog.dart';
+import 'catalog.dart' show hslToArgb;
 
 enum BodyKind { earth, moon, rocky, belt, gas, ring, star }
 
@@ -98,7 +98,7 @@ Destination destinationAt(int index) {
       hslToArgb(h2, 0.40, 0.50),
       hslToArgb((h1 + 180) % 360, 0.45, 0.60),
     ],
-    fact: 'Mundo descoberto pela sua tripulação no setor ${j ~/ 10 + 1}. '
+    fact: 'Mundo descoberto no setor ${j ~/ 10 + 1}. '
         'Destino número ${index + 1} da jornada.',
   );
 }

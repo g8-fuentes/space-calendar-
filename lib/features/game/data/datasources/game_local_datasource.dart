@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class GameLocalDataSource {
   GameLocalDataSource(this._prefs);
 
-  static const _key = 'rotina_quest.state.v1';
+  static const _key = 'rotina_quest.state.v2';
   final SharedPreferences _prefs;
 
   String? read() => _prefs.getString(_key);

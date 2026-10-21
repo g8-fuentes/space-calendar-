@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../app/theme/kanagawa.dart';
+import '../../../../core/sound/sfx.dart';
 
 /// Painel com borda grossa e sombra dura, no estilo dos jogos 8-bit.
 class PixelPanel extends StatelessWidget {
@@ -31,7 +32,7 @@ class PixelPanel extends StatelessWidget {
           bottom: BorderSide(color: borderColor, width: 3),
           left: BorderSide(color: accent ?? borderColor, width: accent == null ? 3 : 5),
         ),
-        boxShadow: const [BoxShadow(color: Color(0x66000000), offset: Offset(4, 4))],
+        boxShadow: const [BoxShadow(color: Color(0x66000000), offset: Offset(3, 3))],
       ),
       child: child,
     );
@@ -77,6 +78,7 @@ class PixelButton extends StatelessWidget {
     this.color = Kanagawa.carpYellow,
     this.textColor = Kanagawa.sumiInk0,
     this.dense = false,
+    this.sound = true,
   });
 
   final String label;
@@ -84,6 +86,9 @@ class PixelButton extends StatelessWidget {
   final Color color;
   final Color textColor;
   final bool dense;
+
+  /// Toca o clique. Desligue quando a própria ação já tem som.
+  final bool sound;
 
   @override
   Widget build(BuildContext context) {
@@ -97,7 +102,12 @@ class PixelButton extends StatelessWidget {
           side: BorderSide(color: Kanagawa.sumiInk0, width: 3),
         ),
         child: InkWell(
-          onTap: onPressed,
+          onTap: onPressed == null
+              ? null
+              : () {
+                  if (sound) Sfx.click.play();
+                  onPressed!();
+                },
           child: Padding(
             padding: EdgeInsets.symmetric(horizontal: dense ? 8 : 12, vertical: dense ? 7 : 11),
             child: Text(

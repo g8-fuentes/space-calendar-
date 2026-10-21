@@ -34,7 +34,9 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Sem R8: os plugins usam reflexão/JNI e o encolhimento quebrava o app.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
