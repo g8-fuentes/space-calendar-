@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
+import '../features/game/presentation/controllers/import_flow.dart';
 import '../features/game/presentation/screens/courses_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
 import '../features/game/presentation/screens/missions_screen.dart';
@@ -39,8 +40,27 @@ class _Root extends ConsumerWidget {
 
 final shellTabProvider = StateProvider<int>((ref) => 0);
 
-class GameShell extends ConsumerWidget {
+class GameShell extends ConsumerStatefulWidget {
   const GameShell({super.key});
+
+  @override
+  ConsumerState<GameShell> createState() => _GameShellState();
+}
+
+class _GameShellState extends ConsumerState<GameShell> {
+  @override
+  void initState() {
+    super.initState();
+    // Sincroniza o Google Agenda em silêncio ao abrir (no máximo a cada 15 min).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final s = ref.read(gameControllerProvider);
+      final now = ref.read(gameControllerProvider.notifier).now.millisecondsSinceEpoch;
+      if (s.calendarUrl != null && (s.lastSync == null || now - s.lastSync! > 15 * 60 * 1000)) {
+        syncGoogleCalendar(null, ref, quiet: true);
+      }
+    });
+  }
 
   static const _tabs = [
     (Icons.rocket_launch_outlined, 'MISSÕES'),
@@ -51,7 +71,7 @@ class GameShell extends ConsumerWidget {
   ];
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final i = ref.watch(shellTabProvider);
     return Scaffold(
       body: SafeArea(

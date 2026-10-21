@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -95,4 +96,81 @@ Future<void> startDemo(BuildContext context, WidgetRef ref, String name) async {
         '${missions.length} missões viraram $slots tarefas por semana. Você pode editar, excluir ou criar missões a qualquer momento.',
         sound: 'none'),
   ]);
+}
+
+// ---------- Google Agenda (endereço secreto iCal) ----------
+
+Future<String> _download(String url) async {
+  final client = HttpClient()..connectionTimeout = const Duration(seconds: 15);
+  try {
+    final req = await client.getUrl(Uri.parse(url));
+    final res = await req.close().timeout(const Duration(seconds: 25));
+    final body = await res.transform(const Utf8Decoder(allowMalformed: true)).join().timeout(const Duration(seconds: 25));
+    if (res.statusCode != 200) throw HttpException('HTTP ${res.statusCode}');
+    return body;
+  } finally {
+    client.close(force: true);
+  }
+}
+
+/// Baixa a agenda do Google e troca as missões sincronizadas pelas da
+/// semana atual. [quiet] roda sem tela de carregamento nem avisos (ao abrir
+/// o app). Devolve o erro, se houver.
+Future<String?> syncGoogleCalendar(
+  BuildContext? context,
+  WidgetRef ref, {
+  String? url,
+  bool quiet = false,
+  String? astronautName,
+}) async {
+  final ctrl = ref.read(gameControllerProvider.notifier);
+  final address = url ?? ref.read(gameControllerProvider).calendarUrl;
+  if (address == null) return 'Conecte o Google Agenda primeiro.';
+  final download = _download(address).then<(String?, Object?)>((t) => (t, null), onError: (Object e) => (null, e));
+  if (!quiet && context != null && context.mounted) {
+    await runLoading(context, 'SINCRONIZANDO GOOGLE AGENDA', const Duration(milliseconds: 1800));
+  }
+  final (text, error) = await download;
+  String? fail;
+  if (error != null || text == null) {
+    fail = 'Não consegui baixar a agenda. Confira a internet e se o endereço secreto iCal está completo.';
+  } else if (!RegExp('BEGIN:VCALENDAR', caseSensitive: false).hasMatch(text)) {
+    fail = 'Esse endereço não é uma agenda iCal. Copie o "Endereço secreto no formato iCal", que termina em basic.ics.';
+  }
+  if (fail != null) {
+    if (!quiet) Sfx.error.play();
+    return fail;
+  }
+  final missions = toMissions(parseIcs(text!, ctrl.now, thisWeekOnly: true).events);
+  final (total, added, removed) = ctrl.apply((s) {
+    if (astronautName != null) _finishIntro(s, astronautName, ctrl.now);
+    s.calendarUrl = address;
+    s.lastSync = ctrl.now.millisecondsSinceEpoch;
+    return GameRules.syncCalendar(s, missions);
+  });
+  if (quiet) return null;
+  Sfx.save.play();
+  ctrl.notify([
+    Notice(
+      'AGENDA SINCRONIZADA!',
+      total == 0
+          ? 'Conectado, mas não achei eventos com horário nesta semana. Eles aparecem quando você sincronizar de novo.'
+          : '$total missões vêm do Google Agenda ($added novas, $removed removidas). '
+              'O app sincroniza ao abrir, e você pode tocar em Sincronizar agenda quando quiser.',
+      sound: 'none',
+    ),
+  ]);
+  return null;
+}
+
+/// Desconecta. As missões que vieram da agenda ficam, como missões normais.
+void disconnectGoogleCalendar(WidgetRef ref) {
+  ref.read(gameControllerProvider.notifier).apply((s) {
+    s.calendarUrl = null;
+    s.lastSync = null;
+    for (final m in s.missions) {
+      m.synced = false;
+    }
+  });
+  Sfx.delete.play();
 }

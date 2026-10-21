@@ -5,6 +5,7 @@ import '../../../../app/theme/kanagawa.dart';
 import '../../../../core/sound/sfx.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
+import '../widgets/google_connect.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/space_scene.dart';
 import '../widgets/ui.dart';
@@ -81,6 +82,15 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                   ),
                   const SizedBox(height: 8),
                   PixelButton(label: 'Importar calendário', onPressed: _import),
+                  const SizedBox(height: 10),
+                  PixelButton(
+                    label: 'Conectar Google Agenda',
+                    color: Kanagawa.springBlue,
+                    onPressed: () {
+                      final n = _validName();
+                      if (n != null) openGoogleConnect(context, astronautName: n);
+                    },
+                  ),
                   const SizedBox(height: 10),
                   PixelButton(
                     label: 'Usar agenda de exemplo',

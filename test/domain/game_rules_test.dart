@@ -42,6 +42,41 @@ void main() {
     });
   });
 
+  group('Google Agenda', () {
+    const ics = 'BEGIN:VCALENDAR\n'
+        'BEGIN:VEVENT\nSUMMARY:Academia\nDTSTART:20261019T070000\nDTEND:20261019T080000\nRRULE:FREQ=WEEKLY;BYDAY=MO,WE\nEND:VEVENT\n'
+        'BEGIN:VEVENT\nSUMMARY:Dentista\nDTSTART:20261023T150000\nDTEND:20261023T160000\nEND:VEVENT\n'
+        'BEGIN:VEVENT\nSUMMARY:Viagem\nDTSTART:20261110T090000\nDTEND:20261110T100000\nEND:VEVENT\n'
+        'END:VCALENDAR\n';
+
+    test('sincronização só traz eventos avulsos desta semana', () {
+      final titles = toMissions(parseIcs(ics, now, thisWeekOnly: true).events).map((m) => m.title).toSet();
+      expect(titles, {'Academia', 'Dentista'});
+    });
+
+    test('ressincronizar mantém o que foi marcado e não mexe em missões manuais', () {
+      final s = GameState.initial(ymd(now));
+      s.missions.add(Mission(id: 'eu', title: 'Ler', days: [2], start: '21:00', end: '22:00'));
+      GameRules.syncCalendar(s, toMissions(parseIcs(ics, now, thisWeekOnly: true).events));
+      final academia = s.missions.firstWhere((m) => m.title == 'Academia');
+      GameRules.toggle(s, academia, 2, now);
+
+      final later = DateTime(2026, 11, 10, 8);
+      final (total, added, removed) = GameRules.syncCalendar(s, toMissions(parseIcs(ics, later, thisWeekOnly: true).events));
+      expect((total, added, removed), (2, 1, 1));
+      expect(s.missions.firstWhere((m) => m.title == 'Academia').id, academia.id);
+      expect(s.missions.any((m) => m.title == 'Dentista'), isFalse);
+      expect(s.missions.firstWhere((m) => m.title == 'Viagem').synced, isTrue);
+      expect(s.missions.firstWhere((m) => m.id == 'eu').synced, isFalse);
+      expect(s.copy().missions.where((m) => m.synced), hasLength(2));
+    });
+
+    test('aceita webcal:// e recusa texto qualquer', () {
+      expect(normalizeCalendarUrl(' webcal://calendar.google.com/x/basic.ics '), 'https://calendar.google.com/x/basic.ics');
+      expect(normalizeCalendarUrl('minha agenda'), isNull);
+    });
+  });
+
   group('regras', () {
     test('XP da missão depende da categoria e da duração', () {
       final m = Mission(id: 'a', title: 'Treino', days: [0], start: '07:00', end: '08:00', category: 'treino');

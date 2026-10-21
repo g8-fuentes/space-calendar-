@@ -79,6 +79,31 @@ abstract final class GameRules {
     if (i >= 0) s.missions[i] = data;
   }
 
+  /// Troca as missões que vieram do Google Agenda pelas de [list].
+  /// Missões que continuam na agenda mantêm o id (e o que já foi marcado),
+  /// a categoria e o curso ligado. Missões criadas à mão não mudam.
+  /// Devolve (total da agenda, novas, removidas).
+  static (int, int, int) syncCalendar(GameState s, List<Mission> list) {
+    final old = {for (final m in s.missions.where((m) => m.synced)) m.key: m};
+    final manual = {for (final m in s.missions.where((m) => !m.synced)) m.key};
+    final next = <Mission>[];
+    var added = 0;
+    for (final m in list) {
+      if (manual.contains(m.key)) continue;
+      final prev = old.remove(m.key);
+      if (prev != null) {
+        prev.days = m.days;
+        next.add(prev);
+      } else {
+        m.synced = true;
+        next.add(m);
+        added++;
+      }
+    }
+    s.missions = [...s.missions.where((m) => !m.synced), ...next];
+    return (next.length, added, old.length);
+  }
+
   static void deleteMission(GameState s, String id) => s.missions.removeWhere((m) => m.id == id);
 
   /// Soma ([replace] = false) ou troca as missões importadas. Missões com

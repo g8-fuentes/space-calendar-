@@ -53,6 +53,14 @@ void main() {
       expect(tester.takeException(), isNull, reason: tab);
     }
 
+    await tester.ensureVisible(find.text('CONECTAR GOOGLE AGENDA'));
+    await tester.tap(find.text('CONECTAR GOOGLE AGENDA'));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.text('Endereço secreto iCal'), findsOneWidget);
+    await tester.tap(find.text('CONECTAR'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.textContaining('https://'), findsWidgets);
+
     await tester.pumpWidget(const SizedBox());
     await tester.pump(const Duration(seconds: 1));
   });

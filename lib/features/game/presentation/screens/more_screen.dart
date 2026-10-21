@@ -5,12 +5,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/kanagawa.dart';
 import '../../../../core/sound/sfx.dart';
+import '../../../../core/text/text_utils.dart';
 import '../../domain/catalog/catalog.dart';
 import '../../domain/catalog/destinations.dart';
 import '../../domain/services/game_stats.dart';
 import '../art/pixel_art.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
+import '../widgets/google_connect.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
 
@@ -273,6 +275,8 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
         ]),
       ),
       const SizedBox(height: 14),
+      const _GooglePanel(),
+      const SizedBox(height: 14),
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('CALENDÁRIO', style: PixelText.display(10)),
@@ -343,5 +347,49 @@ class _SettingsTabState extends ConsumerState<_SettingsTab> {
         ]),
       ),
     ]);
+  }
+}
+
+class _GooglePanel extends ConsumerWidget {
+  const _GooglePanel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(gameControllerProvider);
+    final connected = s.calendarUrl != null;
+    final synced = s.missions.where((m) => m.synced).length;
+    final last = s.lastSync == null ? null : DateTime.fromMillisecondsSinceEpoch(s.lastSync!);
+    return PixelPanel(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text('GOOGLE AGENDA', style: PixelText.display(10)),
+        const SizedBox(height: 6),
+        Text(
+          connected
+              ? 'Conectado. $synced missões vêm da agenda.'
+                  '${last != null ? ' Última sincronização: ${two(last.day)}/${two(last.month)} às ${two(last.hour)}:${two(last.minute)}.' : ''}'
+                  ' Para mudar uma missão da agenda, mude no Google Agenda e sincronize.'
+              : 'Conecte sua agenda do Google para que os eventos virem missões. O app sincroniza toda vez que abre.',
+          style: PixelText.body(14, color: Kanagawa.springViolet1),
+        ),
+        const SizedBox(height: 10),
+        Wrap(spacing: 8, runSpacing: 8, children: [
+          if (connected) ...[
+            PixelButton(label: 'Sincronizar agenda', color: Kanagawa.springBlue, onPressed: () => syncOrConnect(context, ref)),
+            PixelButton(label: 'Trocar endereço', color: Kanagawa.sumiInk5, textColor: Kanagawa.fujiWhite, onPressed: () => openGoogleConnect(context)),
+            PixelButton(
+              label: 'Desconectar',
+              color: Kanagawa.sumiInk5,
+              textColor: Kanagawa.fujiWhite,
+              sound: false,
+              onPressed: () {
+                disconnectGoogleCalendar(ref);
+                showToast(context, 'Google Agenda desconectado. As missões continuam.');
+              },
+            ),
+          ] else
+            PixelButton(label: 'Conectar Google Agenda', color: Kanagawa.springBlue, onPressed: () => openGoogleConnect(context)),
+        ]),
+      ]),
+    );
   }
 }

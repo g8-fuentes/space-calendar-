@@ -10,6 +10,7 @@ import '../../domain/entities/game_state.dart';
 import '../../domain/services/game_rules.dart';
 import '../../domain/services/game_stats.dart';
 import '../controllers/game_providers.dart';
+import '../widgets/google_connect.dart';
 import '../widgets/hud.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/space_scene.dart';
@@ -150,6 +151,11 @@ class _QuestBoard extends ConsumerWidget {
         const SizedBox(height: 8),
         Wrap(spacing: 10, runSpacing: 10, children: [
           PixelButton(label: '+ Nova missão', onPressed: () => openMissionForm(context, presetDay: sel)),
+          PixelButton(
+            label: s.calendarUrl == null ? 'Conectar Google Agenda' : 'Sincronizar agenda',
+            color: Kanagawa.springBlue,
+            onPressed: () => syncOrConnect(context, ref),
+          ),
           if (sel == today && qs.isNotEmpty)
             PixelButton(
               label: 'Marcar tudo até agora',
@@ -274,6 +280,7 @@ class _QuestTile extends ConsumerWidget {
                     Text.rich(TextSpan(style: PixelText.body(12, color: color), children: [
                       TextSpan(text: cat.name),
                       if (link != null) TextSpan(text: ' · ${link.name}', style: PixelText.body(12, color: Kanagawa.carpYellow)),
+                      if (mission.synced) TextSpan(text: ' · Google', style: PixelText.body(12, color: Kanagawa.springViolet1)),
                       if (live) TextSpan(text: ' · AGORA', style: PixelText.display(6, color: Kanagawa.carpYellow)),
                     ])),
                   ]),

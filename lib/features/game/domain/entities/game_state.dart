@@ -10,6 +10,7 @@ class Mission {
     this.end = '',
     this.category = 'cuidado',
     this.link,
+    this.synced = false,
   });
 
   final String id;
@@ -22,6 +23,9 @@ class Mission {
   /// Curso ou idioma que recebe o XP desta missão.
   String? link;
 
+  /// Veio da sincronização com o Google Agenda.
+  bool synced;
+
   String get key => '${title.toLowerCase().trim()}|$start|$end';
 
   Map<String, Object?> toJson() => {
@@ -32,6 +36,7 @@ class Mission {
         'e': end,
         'cat': category,
         'link': link,
+        if (synced) 'g': true,
       };
 
   factory Mission.fromJson(Map<String, Object?> j) => Mission(
@@ -42,6 +47,7 @@ class Mission {
         end: j['e'] as String? ?? '',
         category: j['cat'] as String? ?? 'cuidado',
         link: j['link'] as String?,
+        synced: j['g'] as bool? ?? false,
       );
 }
 
@@ -231,6 +237,8 @@ class GameState {
     this.lastModeSeen = 0,
     Map<String, int>? upgrades,
     this.sound = true,
+    this.calendarUrl,
+    this.lastSync,
   })  : missions = missions ?? [],
         courses = courses ?? [],
         weeks = weeks ?? {},
@@ -263,6 +271,12 @@ class GameState {
   final Map<String, int> upgrades;
   bool sound;
   String startDate;
+
+  /// Endereço secreto iCal do Google Agenda, quando conectado.
+  String? calendarUrl;
+
+  /// Última sincronização (ms desde epoch).
+  int? lastSync;
 
   static List<Reward> _defaultRewards() => const [
         Reward(id: 'r1', name: 'Noite de filme sem culpa', price: 100),
@@ -310,6 +324,8 @@ class GameState {
         'up': upgrades,
         'sound': sound,
         'start': startDate,
+        'gcal': calendarUrl,
+        'gsync': lastSync,
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
@@ -344,6 +360,8 @@ class GameState {
         ...(j['up'] as Map? ?? {}).map((k, v) => MapEntry(k as String, (v as num).toInt())),
       },
       sound: j['sound'] as bool? ?? true,
+      calendarUrl: j['gcal'] as String?,
+      lastSync: (j['gsync'] as num?)?.toInt(),
     );
   }
 

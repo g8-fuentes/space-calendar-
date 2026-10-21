@@ -59,7 +59,9 @@ ImportResult parseCalendar(String fileName, String text, DateTime now) {
 String _unescape(String s) =>
     s.replaceAll(RegExp(r'\\n', caseSensitive: false), ' ').replaceAllMapped(RegExp(r'\\([,;\\])'), (m) => m[1]!).trim();
 
-ImportResult parseIcs(String text, DateTime now) {
+/// [thisWeekOnly]: eventos avulsos só entram se caírem na semana de [now]
+/// (usado na sincronização, que roda toda semana).
+ImportResult parseIcs(String text, DateTime now, {bool thisWeekOnly = false}) {
   final lines = text.replaceAll(RegExp(r'\r\n?'), '\n').replaceAll(RegExp(r'\n[ \t]'), '').split('\n');
   final events = <Map<String, (String, String)>>[];
   Map<String, (String, String)>? cur;
@@ -84,7 +86,9 @@ ImportResult parseIcs(String text, DateTime now) {
   final info = ImportInfo()..total = events.length;
   final out = <ImportedEvent>[];
   final today = now;
-  final from = DateTime(now.year, now.month, now.day - 35), to = DateTime(now.year, now.month, now.day + 63);
+  final monday = DateTime(now.year, now.month, now.day - _weekday(now));
+  final from = thisWeekOnly ? monday : DateTime(now.year, now.month, now.day - 35);
+  final to = thisWeekOnly ? monday.add(const Duration(days: 7)) : DateTime(now.year, now.month, now.day + 63);
   final once = <(ImportedEvent, DateTime)>[];
 
   for (final e in events) {
@@ -165,8 +169,8 @@ ImportResult parseIcs(String text, DateTime now) {
       once.add((ImportedEvent(title, [wd], s, endStr), st.date));
     }
   }
-  var selected = once.where((o) => !o.$2.isBefore(from) && !o.$2.isAfter(to)).toList();
-  if (out.isEmpty && selected.isEmpty) selected = once;
+  var selected = once.where((o) => !o.$2.isBefore(from) && (thisWeekOnly ? o.$2.isBefore(to) : !o.$2.isAfter(to))).toList();
+  if (!thisWeekOnly && out.isEmpty && selected.isEmpty) selected = once;
   info.skippedOld += once.length - selected.length;
   out.addAll(selected.map((o) => o.$1));
   return ImportResult(out, info);
@@ -386,4 +390,14 @@ List<Mission> toMissions(List<ImportedEvent> list) {
     if (m.title == 'Violão') m.link = gui.id;
   }
   return (ms, [dev, gui, en]);
+}
+
+/// Aceita o endereço iCal colado (https:// ou webcal://). null = inválido.
+String? normalizeCalendarUrl(String raw) {
+  var u = raw.trim();
+  if (u.isEmpty) return null;
+  if (u.toLowerCase().startsWith('webcal://')) u = 'https://${u.substring(9)}';
+  final uri = Uri.tryParse(u);
+  if (uri == null || !(uri.scheme == 'https' || uri.scheme == 'http') || uri.host.isEmpty) return null;
+  return u;
 }
