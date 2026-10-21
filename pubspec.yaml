@@ -27,3 +27,8 @@ flutter:
     - family: DotGothic16
       fonts:
         - asset: assets/fonts/DotGothic16-Regular.ttf
+
+# A versão 2.5.x do plugin Android usa JNI e quebra no APK de release
+# (o R8 remove os métodos que ele chama). A 2.4.x usa canal de plataforma.
+dependency_overrides:
+  shared_preferences_android: 2.4.28
