@@ -3,14 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/kanagawa.dart';
 import '../../../../core/sound/sfx.dart';
+import '../../domain/catalog/places.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
-import '../widgets/google_connect.dart';
+import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
-import '../widgets/space_scene.dart';
 import '../widgets/ui.dart';
+import 'settings_screen.dart';
 
-/// Tela inicial: nome do astronauta e de onde vêm as missões.
+/// Primeira tela: nome do astronauta e a agenda (.ics ou .cal).
 class IntroScreen extends ConsumerStatefulWidget {
   const IntroScreen({super.key});
 
@@ -28,21 +29,15 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
     super.dispose();
   }
 
-  String? _validName() {
+  Future<void> _import() async {
     final n = _name.text.trim();
     if (n.isEmpty) {
       setState(() => _error = 'Escreva o nome do astronauta antes de continuar.');
       Sfx.error.play();
-      return null;
+      return;
     }
     setState(() => _error = null);
-    return n;
-  }
-
-  Future<void> _import() async {
-    final n = _validName();
-    if (n == null) return;
-    final err = await importCalendar(context, ref, ImportMode.intro, astronautName: n);
+    final err = await importCalendar(context, ref, astronautName: n);
     if (err != null && mounted) setState(() => _error = err);
   }
 
@@ -51,86 +46,43 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 760),
-              child: PixelPanel(
-                padding: const EdgeInsets.all(18),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  Text('ROTINA QUEST',
-                      textAlign: TextAlign.center,
-                      style: PixelText.display(22, color: Kanagawa.carpYellow).copyWith(
-                        shadows: const [Shadow(color: Kanagawa.sumiInk0, offset: Offset(3, 3))],
-                      )),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Sua agenda vira uma jornada pelo espaço. Cada compromisso da semana é uma missão que dá XP e moedas.',
-                    textAlign: TextAlign.center,
-                    style: PixelText.body(16, color: Kanagawa.springViolet1),
-                  ),
-                  const SizedBox(height: 16),
-                  const IntroScene(),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _name,
-                    maxLength: 32,
-                    textCapitalization: TextCapitalization.words,
-                    style: PixelText.body(17),
-                    decoration: pixelInput('Nome do astronauta', hint: 'Ex.: Ana Souza'),
-                    onSubmitted: (_) => _import(),
-                  ),
-                  const SizedBox(height: 8),
-                  PixelButton(label: 'Importar calendário', onPressed: _import),
-                  const SizedBox(height: 10),
-                  PixelButton(
-                    label: 'Conectar Google Agenda',
-                    color: Kanagawa.springBlue,
-                    onPressed: () {
-                      final n = _validName();
-                      if (n != null) openGoogleConnect(context, astronautName: n);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  PixelButton(
-                    label: 'Usar agenda de exemplo',
-                    color: Kanagawa.sumiInk5,
-                    textColor: Kanagawa.fujiWhite,
-                    onPressed: () {
-                      final n = _validName();
-                      if (n != null) startDemo(context, ref, n);
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  PixelButton(
-                    label: 'Começar sem calendário',
-                    color: Kanagawa.sumiInk5,
-                    textColor: Kanagawa.fujiWhite,
-                    onPressed: () {
-                      final n = _validName();
-                      if (n != null) startEmpty(ref, n);
-                    },
-                  ),
-                  ErrorText(_error),
-                  const SizedBox(height: 14),
-                  Container(
-                    color: Kanagawa.sumiInk0,
-                    padding: const EdgeInsets.all(12),
-                    child: Text.rich(
-                      TextSpan(style: PixelText.body(14, color: Kanagawa.springViolet1), children: [
-                        TextSpan(text: 'Formatos aceitos: ', style: PixelText.body(14)),
-                        const TextSpan(
-                            text: '.ics, .cal e .csv. Os eventos viram missões que se repetem toda semana, no mesmo dia e horário.\n\n'),
-                        TextSpan(text: 'Google Agenda: ', style: PixelText.body(14)),
-                        const TextSpan(
-                            text: 'no computador, Configurações › Importar e exportar › Exportar. Descompacte o .zip e envie o arquivo .ics para o celular.\n\n'),
-                        TextSpan(text: 'CSV: ', style: PixelText.body(14)),
-                        const TextSpan(text: 'colunas título, dia (seg, ter...) ou data, início e fim. Ex.: Academia;seg/qua;12:00;13:00'),
-                      ]),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text('ROTINA QUEST', textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
+                const SizedBox(height: 4),
+                Text('Sua agenda vira uma exploração espacial.',
+                    textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),
+                const SizedBox(height: 14),
+                PixelPanel(padding: EdgeInsets.zero, child: ExploreScene(placeOverride: placeAt(0))),
+                const SizedBox(height: 16),
+                PixelPanel(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                    TextField(
+                      controller: _name,
+                      maxLength: 24,
+                      style: PixelText.body(17),
+                      decoration: pixelInput('Nome do astronauta', hint: 'Ex.: Gui'),
+                      onSubmitted: (_) => _import(),
                     ),
-                  ),
-                ]),
-              ),
+                    const SizedBox(height: 8),
+                    PixelButton(label: 'Importar agenda (.ics ou .cal)', onPressed: _import),
+                    ErrorText(_error),
+                    const SizedBox(height: 14),
+                    Container(
+                      color: Kanagawa.sumiInk0,
+                      padding: const EdgeInsets.all(12),
+                      child: Text(
+                        '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o astronauta '
+                        'sai de Bauru, roda o mundo, vai para a Lua, os planetas e as estrelas.',
+                        style: PixelText.body(14, color: Kanagawa.springViolet1),
+                      ),
+                    ),
+                  ]),
+                ),
+              ],
             ),
           ),
         ),

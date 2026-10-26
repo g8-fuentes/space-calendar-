@@ -2,8 +2,7 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import '../../../../app/theme/kanagawa.dart';
-import '../../domain/catalog/catalog.dart';
-import '../../domain/catalog/destinations.dart';
+import '../../domain/catalog/places.dart';
 
 /// Grade de pixels: null = transparente.
 typedef PixelGrid = List<List<Color?>>;
@@ -13,16 +12,11 @@ const _skinDark = Color(0xFFC98E66);
 const _hair = Color(0xFF2E1D14);
 const _ink = Kanagawa.sumiInk0;
 
-/// Astronauta: capacete grande, rosto no visor, traje com painel de
-/// luzes e tanques nas costas. [equipped] liga slot -> item da loja.
-PixelGrid astronautGrid({
-  required int rank,
-  required int mk,
-  required Map<String, String> equipped,
-  bool blink = false,
-  int tick = 0,
-}) {
-  const w = 26, h = 32, ox = 5, oy = 3;
+/// Astronauta: capacete grande, rosto no visor, traje com painel de luzes,
+/// tanques nas costas e a bandeira do Brasil no peito. A figura ocupa as
+/// colunas 6 a 20 e as linhas 3 a 25 da grade 26x28.
+PixelGrid astronautGrid({bool blink = false}) {
+  const w = 26, h = 28, ox = 5, oy = 3;
   final g = List.generate(h, (_) => List<Color?>.filled(w, null));
   void r(int x, int y, int rw, int rh, Color c) {
     for (var j = y + oy; j < y + oy + rh; j++) {
@@ -32,19 +26,7 @@ PixelGrid astronautGrid({
     }
   }
 
-  var suit = Color(suitColor(mk));
-  var accent = Color(suitAccent(mk));
-  final skin = equipped['skin'] == null ? null : shopItem(equipped['skin']!);
-  if (skin != null) {
-    suit = skin.isAurora ? Color(hslToArgb(((tick * 2) % 360).toDouble(), .55, .66)) : Color(skin.suit!);
-    accent = Color(skin.accent!);
-  }
-  final head = equipped['head'], face = equipped['face'], body = equipped['body'];
-
-  if (equipped['back'] == 'cape') {
-    r(2, 10, 12, 12, Kanagawa.autumnRed);
-    r(2, 21, 12, 1, const Color(0xFF8A2C2E));
-  }
+  const suit = Color(0xFFE4DFC6), shade = Color(0xFFB9B39A), accent = Kanagawa.surimiOrange;
   // tanques
   r(1, 11, 2, 6, Kanagawa.fujiGray);
   r(13, 11, 2, 6, Kanagawa.fujiGray);
@@ -56,41 +38,16 @@ PixelGrid astronautGrid({
   r(3, 2, 10, 7, Kanagawa.fujiWhite);
   r(4, 9, 8, 1, Kanagawa.oldWhite);
   r(3, 8, 10, 1, Kanagawa.oldWhite);
-  if (head == 'catears') {
-    r(3, 0, 2, 2, Kanagawa.fujiWhite);
-    r(3, -1, 1, 1, Kanagawa.fujiWhite);
-    r(11, 0, 2, 2, Kanagawa.fujiWhite);
-    r(12, -1, 1, 1, Kanagawa.fujiWhite);
-    r(4, 0, 1, 1, Kanagawa.sakuraPink);
-    r(11, 0, 1, 1, Kanagawa.sakuraPink);
-  }
   // visor e rosto
-  r(4, 3, 8, 5, face == 'visor' ? Kanagawa.carpYellow : face == 'neon' ? Kanagawa.waveBlue2 : Kanagawa.waveBlue1);
-  if (face != 'visor') {
-    r(5, 4, 6, 3, _skin);
-    r(5, 4, 6, 1, _hair);
-    r(5, 5, 1, 1, _hair);
-    r(6, 5, 1, 1, blink ? _skinDark : _ink);
-    r(9, 5, 1, 1, blink ? _skinDark : _ink);
-    r(7, 6, 2, 1, _skinDark);
-  }
-  if (face == 'neon') {
-    r(4, 3, 8, 1, Kanagawa.springBlue);
-    r(4, 7, 8, 1, Kanagawa.springBlue);
-  }
+  r(4, 3, 8, 5, Kanagawa.waveBlue1);
+  r(5, 4, 6, 3, _skin);
+  r(5, 4, 6, 1, _hair);
+  r(5, 5, 1, 1, _hair);
+  r(6, 5, 1, 1, blink ? _skinDark : _ink);
+  r(9, 5, 1, 1, blink ? _skinDark : _ink);
+  r(7, 6, 2, 1, _skinDark);
   r(10, 3, 1, 1, Kanagawa.lightBlue);
   r(11, 4, 1, 1, Kanagawa.lightBlue);
-  if (head == 'antenna') {
-    r(11, -2, 1, 2, Kanagawa.fujiGray);
-    r(11, -3, 1, 1, Kanagawa.autumnRed);
-  }
-  if (head == 'crown') {
-    r(5, -2, 6, 2, Kanagawa.carpYellow);
-    r(5, -3, 1, 1, Kanagawa.carpYellow);
-    r(7, -3, 2, 1, Kanagawa.carpYellow);
-    r(10, -3, 1, 1, Kanagawa.carpYellow);
-    r(7, -2, 2, 1, Kanagawa.autumnRed);
-  }
   // corpo
   r(4, 10, 8, 6, suit);
   r(4, 15, 8, 1, accent);
@@ -99,47 +56,25 @@ PixelGrid astronautGrid({
   r(7, 11, 1, 1, Kanagawa.springGreen);
   r(8, 11, 1, 1, Kanagawa.springBlue);
   r(9, 12, 1, 1, Kanagawa.carpYellow);
-  for (var i = 0; i < math.min(5, rank); i++) {
-    r(5 + i, 14, 1, 1, Kanagawa.carpYellow);
-  }
-  if (body == 'stickers') {
-    r(10, 11, 1, 2, Kanagawa.surimiOrange);
-    r(5, 12, 1, 1, Kanagawa.springBlue);
-  }
-  if (body == 'scarf') {
-    r(4, 10, 8, 1, Kanagawa.oniViolet);
-    r(10, 10, 2, 3, Kanagawa.oniViolet);
-    r(11, 13, 1, 1, Kanagawa.sakuraPink);
-  }
+  // bandeira
+  r(5, 13, 3, 2, const Color(0xFF3F8F4A));
+  r(6, 13, 1, 2, const Color(0xFFE6C384));
   // braços
   r(2, 10, 2, 5, suit);
   r(12, 10, 2, 5, suit);
+  r(2, 14, 2, 1, shade);
+  r(12, 14, 2, 1, shade);
   r(2, 15, 2, 1, accent);
   r(12, 15, 2, 1, accent);
-  if (rank >= 2) r(2, 11, 2, 1, accent);
-  if (rank >= 3) r(12, 11, 2, 1, Kanagawa.carpYellow);
   // pernas
   r(4, 16, 3, 5, suit);
   r(9, 16, 3, 5, suit);
-  r(4, 21, 3, 1, accent);
-  r(9, 21, 3, 1, accent);
+  r(4, 18, 3, 1, shade);
+  r(9, 18, 3, 1, shade);
   r(4, 20, 3, 1, _ink);
   r(9, 20, 3, 1, _ink);
-  if (rank >= 4) {
-    r(4, 18, 3, 1, accent);
-    r(9, 18, 3, 1, accent);
-  }
-  final hand = equipped['hand'];
-  if (hand == 'flag') {
-    r(14, 6, 1, 10, Kanagawa.fujiGray);
-    r(15, 6, 4, 3, Kanagawa.autumnRed);
-    r(15, 7, 2, 1, Kanagawa.fujiWhite);
-  }
-  if (hand == 'saber') {
-    r(14, 13, 1, 3, Kanagawa.fujiGray);
-    r(14, 4, 1, 9, (tick >> 3).isOdd ? Kanagawa.lightBlue : Kanagawa.springBlue);
-    r(14, 3, 1, 1, Kanagawa.fujiWhite);
-  }
+  r(4, 21, 3, 1, accent);
+  r(9, 21, 3, 1, accent);
   return outlined(g);
 }
 
@@ -171,178 +106,255 @@ void paintGrid(Canvas canvas, PixelGrid g, Offset origin, double scale) {
   }
 }
 
-final _enemyGrids = <int, PixelGrid>{};
-
-PixelGrid enemyGrid(Enemy e) => _enemyGrids.putIfAbsent(
-    e.level, () => [for (final row in e.grid) [for (final c in row) c == 0 ? null : Color(c)]]);
-
-/// Inimigo centralizado num quadrado de lado [box].
-void paintEnemyFitted(Canvas canvas, Enemy e, Offset topLeft, double box) {
-  final s = (box / e.size).floorToDouble();
-  final pad = (box - e.size * s) / 2;
-  paintGrid(canvas, enemyGrid(e), topLeft + Offset(pad, pad), s);
+void _rect(Canvas canvas, Paint p, double x, double y, double w, double h, Color c) {
+  p.color = c;
+  canvas.drawRect(Rect.fromLTWH(x.roundToDouble(), y.roundToDouble(), w.roundToDouble(), h.roundToDouble()), p);
 }
 
-/// Companheiros da loja.
-void paintPet(Canvas canvas, String id, Offset o, int tick) {
-  final p = Paint();
-  void r(double x, double y, double w, double h, Color c) {
-    p.color = c;
-    canvas.drawRect(Rect.fromLTWH(o.dx + x, o.dy + y, w, h), p);
-  }
-
-  switch (id) {
-    case 'robot':
-      r(0, 0, 10, 8, _ink);
-      r(1, 1, 8, 6, Kanagawa.springViolet1);
-      r(2, 2, 6, 3, Kanagawa.waveBlue1);
-      r(3, 3, 1, 1, Kanagawa.springBlue);
-      r(6, 3, 1, 1, Kanagawa.springBlue);
-      r(4, -2, 1, 2, _ink);
-      r(4, -3, 1, 1, Kanagawa.autumnRed);
-      r(2, 8, 6, 2, _ink);
-      r(3, 8, 4, 1, Kanagawa.surimiOrange);
-    case 'sat':
-      r(0, 2, 4, 3, Kanagawa.springBlue);
-      r(4, 1, 4, 5, _ink);
-      r(5, 2, 2, 3, Kanagawa.carpYellow);
-      r(8, 2, 4, 3, Kanagawa.springBlue);
-      r(5, 0, 2, 1, Kanagawa.fujiWhite);
-    case 'cat':
-      r(-1, -2, 12, 12, const Color(0x40A3D4D5));
-      r(1, 2, 8, 6, _ink);
-      r(2, 3, 6, 5, Kanagawa.surimiOrange);
-      r(2, 1, 2, 2, Kanagawa.surimiOrange);
-      r(6, 1, 2, 2, Kanagawa.surimiOrange);
-      r(3, 4, 1, 1, _ink);
-      r(6, 4, 1, 1, _ink);
-      r(4, 6, 2, 1, Kanagawa.sakuraPink);
-      r(8, 7, 3, 1, Kanagawa.surimiOrange);
-    case 'octo':
-      r(1, 0, 8, 6, _ink);
-      r(2, 1, 6, 5, Kanagawa.oniViolet);
-      r(3, 2, 1, 2, Kanagawa.fujiWhite);
-      r(6, 2, 1, 2, Kanagawa.fujiWhite);
-      r(3, 3, 1, 1, _ink);
-      r(6, 3, 1, 1, _ink);
-      final wv = (tick >> 3) % 2;
-      for (var i = 0; i < 4; i++) {
-        r(2 + i * 2.0, 6, 1, 2 + ((i + wv) % 2).toDouble(), Kanagawa.oniViolet);
-      }
-    case 'dragon':
-      r(0, 3, 10, 5, _ink);
-      r(1, 4, 8, 3, Kanagawa.springGreen);
-      r(7, 1, 4, 4, _ink);
-      r(8, 2, 2, 2, Kanagawa.springGreen);
-      r(9, 2, 1, 1, Kanagawa.carpYellow);
-      r(2, (tick >> 3).isOdd ? 1 : 2, 4, 2, Kanagawa.autumnGreen);
-      r(-2, 6, 3, 1, Kanagawa.springGreen);
-      if ((tick >> 2) % 4 == 0) r(12, 3, 1, 1, Kanagawa.carpYellow);
+/// Triângulo em degraus de pixel, com base em [baseY].
+void _tri(Canvas canvas, Paint p, double cx, double baseY, double baseW, double h, Color c) {
+  for (var i = 0; i < h; i++) {
+    final w = math.max(1.0, baseW * (1 - i / h));
+    _rect(canvas, p, cx - w / 2, baseY - i - 1, w, 1, c);
   }
 }
 
-/// Planeta, lua, cinturão ou estrela desenhado em linhas de pixel.
-void paintBody(Canvas canvas, Destination d, Offset center, double radius, int tick) {
+/// Planeta, lua ou estrela desenhado em linhas de pixel.
+void paintBody(Canvas canvas, Place d, Offset center, double radius, int tick) {
   final paint = Paint();
   final colors = d.colors.map(Color.new).toList();
-  final seed = seedHash(d.index + 7);
+  final c2 = colors.length > 1 ? colors[1] : colors[0];
+  final seed = placeHash(d.index + 7);
   final cx = center.dx, cy = center.dy;
   final r = radius.roundToDouble();
 
-  void rect(double x, double y, double w, double h, Color c) {
-    paint.color = c;
-    canvas.drawRect(Rect.fromLTWH(x.roundToDouble(), y.roundToDouble(), w, h), paint);
-  }
+  void rect(double x, double y, double w, double h, Color c) => _rect(canvas, paint, x, y, w, h, c);
 
-  if (d.kind == BodyKind.belt) {
-    for (var n = 0; n < 14; n++) {
-      final a = n * 2.39 + tick * 0.002;
-      final rr = r * (0.4 + ((seed >> n) % 60) / 100);
-      final s = math.max(1.0, (r / 7).roundToDouble() + n % 3);
-      rect(cx + math.cos(a) * rr, cy + math.sin(a) * rr * 0.5, s, s, colors[n % 2]);
-    }
-    return;
-  }
   final ringH = math.max(1.0, (r * 0.24).roundToDouble());
-  if (d.kind == BodyKind.ring) rect(cx - r * 1.7, cy - ringH / 2, r * 3.4, ringH, colors[1]);
-  if (d.kind == BodyKind.star) {
-    paint.color = colors[1].withAlpha(64);
-    canvas.drawCircle(center, r * 1.4, paint);
+  if (d.kind == PlaceKind.ring) rect(cx - r * 1.7, cy - ringH / 2, r * 3.4, ringH, c2);
+  if (d.kind == PlaceKind.star) {
+    paint.color = c2.withAlpha(50);
+    canvas.drawCircle(center, r * 1.8, paint);
+    paint.color = colors[0].withAlpha(70);
+    canvas.drawCircle(center, r * 1.35, paint);
+    for (var i = 0; i < 8; i++) {
+      final a = i * math.pi / 4 + tick * .004;
+      final len = r * (i.isEven ? .9 : .55) * (1 + .08 * math.sin(tick * .1 + i));
+      for (var k = 0.0; k < len; k += 1) {
+        rect(cx + math.cos(a) * (r + 2 + k), cy + math.sin(a) * (r + 2 + k), 1, 1, colors[0].withAlpha((200 * (1 - k / len)).round()));
+      }
+    }
   }
   for (var yy = -r; yy <= r; yy++) {
     final hw = math.sqrt(math.max(0, r * r - yy * yy)).floorToDouble();
     if (hw <= 0) continue;
     var c = colors[0];
     final yi = yy.toInt();
-    if (d.kind == BodyKind.gas) {
-      c = colors[((yy + r) ~/ math.max(2, r / 4)) % colors.length];
-    } else if (d.kind == BodyKind.earth && (yi * 7 + seed) % 9 < 3) {
-      c = colors[1];
-    } else if (d.kind == BodyKind.rocky && (yi + seed) % 6 == 0) {
-      c = colors[1];
+    if (d.kind == PlaceKind.gas) {
+      c = colors[((yy + r) ~/ math.max(2, r / 5)) % colors.length];
+    } else if (d.kind == PlaceKind.earth && (yi * 7 + seed) % 9 < 3) {
+      c = c2;
+    } else if (d.kind == PlaceKind.rocky && (yi + seed) % 6 == 0) {
+      c = c2;
+    } else if (d.kind == PlaceKind.star && yy.abs() < r * .5 && (yi + tick ~/ 6) % 5 == 0) {
+      c = c2;
     }
     rect(cx - hw, cy + yy, hw * 2, 1, c);
   }
-  if (d.kind == BodyKind.moon || d.kind == BodyKind.rocky) {
-    final s = math.max(1.0, (r / 6).roundToDouble());
-    for (var n = 0; n < 6; n++) {
-      final a = ((seed >> (n * 3)) % 628) / 100;
-      final rr = r * (((seed >> (n * 2)) % 70) / 100);
-      rect(cx + math.cos(a) * rr, cy + math.sin(a) * rr, s, s, colors[1]);
+  if (d.kind == PlaceKind.earth) {
+    // nuvens
+    for (var n = 0; n < 5; n++) {
+      final y = cy - r * .7 + n * r * .33;
+      final w = r * (.3 + ((seed >> n) % 40) / 100);
+      final x = cx - r + ((seed >> (n * 3)) % 100) / 100 * r * 1.4 + tick * .02 % r;
+      final hw = math.sqrt(math.max(0, r * r - (y - cy) * (y - cy)));
+      final x0 = math.max(cx - hw, x), x1 = math.min(cx + hw, x + w);
+      if (x1 > x0) rect(x0, y, x1 - x0, math.max(1, r / 14), Kanagawa.fujiWhite.withAlpha(200));
     }
   }
-  if (d.kind == BodyKind.ring) {
-    rect(cx - r * 1.7, cy - ringH / 2, r * 0.9, ringH, colors[1]);
-    rect(cx + r * 0.8, cy - ringH / 2, r * 0.9, ringH, colors[1]);
+  if (d.kind == PlaceKind.moon || d.kind == PlaceKind.rocky) {
+    final s = math.max(1.0, (r / 6).roundToDouble());
+    for (var n = 0; n < 7; n++) {
+      final a = ((seed >> (n * 3)) % 628) / 100;
+      final rr = r * (((seed >> (n * 2)) % 70) / 100);
+      rect(cx + math.cos(a) * rr, cy + math.sin(a) * rr, s, s, c2);
+    }
   }
-  paint.color = const Color(0x5916161D);
-  for (var yy = -r; yy <= r; yy++) {
-    final hw = math.sqrt(math.max(0, r * r - yy * yy)).floorToDouble();
-    if (hw > 0) canvas.drawRect(Rect.fromLTWH((cx + hw * 0.35).roundToDouble(), cy + yy, hw * 0.65, 1), paint);
+  if (d.kind == PlaceKind.ring) {
+    rect(cx - r * 1.7, cy - ringH / 2, r * 0.9, ringH, c2);
+    rect(cx + r * 0.8, cy - ringH / 2, r * 0.9, ringH, c2);
+  }
+  if (d.kind != PlaceKind.star) {
+    paint.color = const Color(0x5916161D);
+    for (var yy = -r; yy <= r; yy++) {
+      final hw = math.sqrt(math.max(0, r * r - yy * yy)).floorToDouble();
+      if (hw > 0) canvas.drawRect(Rect.fromLTWH((cx + hw * 0.35).roundToDouble(), cy + yy, hw * 0.65, 1), paint);
+    }
   }
 }
 
-/// Miniatura de item da loja num quadro 60x48.
-void paintShopThumb(Canvas canvas, ShopItem it, int tick) {
-  final p = Paint()..color = _ink;
-  canvas.drawRect(const Rect.fromLTWH(0, 0, 60, 48), p);
-  switch (it.category) {
-    case 'skin' || 'look':
-      final eq = <String, String>{it.slot: it.id};
-      paintGrid(canvas, astronautGrid(rank: 0, mk: 1, equipped: eq, tick: tick), const Offset(30 - 13 * 1.4, 1), 1.4);
-    case 'pet':
-      canvas.save();
-      canvas.scale(3);
-      paintPet(canvas, it.id, const Offset(5, 4), tick);
-      canvas.restore();
-    case 'magic':
-      final c = Color(it.color!);
-      for (var i = 0; i < 26; i++) {
-        final a = i * 0.9, rr = 6 + (i % 5) * 3.4;
-        p.color = i % 3 == 0 ? Kanagawa.fujiWhite : c;
-        canvas.drawRect(Rect.fromLTWH((30 + math.cos(a) * rr * 1.4).roundToDouble(), (24 + math.sin(a) * rr).roundToDouble(), 2, 2), p);
+/// Constelação dentro de [area]: linhas fracas e estrelas piscando.
+void paintConstellation(Canvas canvas, Place d, Rect area, int tick, {double alpha = 1}) {
+  final p = Paint();
+  final c = Color(d.colors.first);
+  Offset at((double, double, int) s) => Offset(area.left + s.$1 * area.width, area.top + s.$2 * area.height);
+  final line = Paint()
+    ..color = c.withAlpha((90 * alpha).round())
+    ..strokeWidth = math.max(.6, area.shortestSide / 110);
+  for (final (a, b) in d.lines) {
+    canvas.drawLine(at(d.stars[a]), at(d.stars[b]), line);
+  }
+  for (var i = 0; i < d.stars.length; i++) {
+    final s = d.stars[i];
+    final o = at(s);
+    final tw = .7 + .3 * math.sin(tick * .08 + i * 1.9);
+    final size = s.$3 * area.shortestSide / 60;
+    p.color = c.withAlpha((60 * tw * alpha).round());
+    canvas.drawCircle(o, size * 2.4, p);
+    p.color = Kanagawa.fujiWhite.withAlpha((255 * tw * alpha).round());
+    canvas.drawRect(Rect.fromCenter(center: o, width: size, height: size), p);
+    if (s.$3 >= 2) {
+      p.color = Kanagawa.fujiWhite.withAlpha((150 * tw * alpha).round());
+      canvas.drawRect(Rect.fromCenter(center: o, width: size * 3.2, height: math.max(.5, size / 3)), p);
+      canvas.drawRect(Rect.fromCenter(center: o, width: math.max(.5, size / 3), height: size * 3.2), p);
+    }
+  }
+}
+
+/// Prédios da cidade (fundo e frente) e o monumento, apoiados em [groundY].
+/// [night] acende as janelas.
+void paintSkyline(Canvas canvas, Place city, double groundY, double width,
+    {required double night, double unit = 1, double? landmarkUnit}) {
+  final p = Paint();
+  final seed = placeHash(city.index + 101);
+  final r = math.Random(seed);
+  final accent = Color(city.colors.first);
+  final back = Color.lerp(const Color(0xFF3B4A63), Kanagawa.sumiInk5, night)!;
+  final front = Color.lerp(const Color(0xFF2A3346), Kanagawa.sumiInk4, night)!;
+  // fundo
+  var x = 0.0;
+  while (x < width) {
+    final w = (8 + r.nextInt(14)) * unit, h = (14 + r.nextInt(26)) * unit;
+    _rect(canvas, p, x, groundY - h, w, h, back);
+    x += w + r.nextInt(3) * unit;
+  }
+  paintLandmark(canvas, city.landmark, width * .72, groundY, landmarkUnit ?? unit, accent);
+  // frente, deixando o centro livre para o astronauta e o monumento
+  x = 0;
+  while (x < width) {
+    final w = (10 + r.nextInt(12)) * unit, h = (8 + r.nextInt(16)) * unit;
+    final skip = (x > width * .58 && x < width * .86);
+    if (!skip) {
+      _rect(canvas, p, x, groundY - h, w, h, front);
+      for (var wy = groundY - h + 3 * unit; wy < groundY - 3 * unit; wy += 4 * unit) {
+        for (var wx = x + 2 * unit; wx < x + w - 2 * unit; wx += 4 * unit) {
+          final lit = night > .5 && r.nextInt(3) > 0;
+          _rect(canvas, p, wx, wy, 2 * unit, 2 * unit,
+              lit ? Kanagawa.carpYellow.withAlpha(220) : Color.lerp(const Color(0xFF7FB4CA), Kanagawa.sumiInk6, night)!.withAlpha(140));
+        }
       }
-      final stroke = Paint()
-        ..style = PaintingStyle.stroke
-        ..color = c
-        ..strokeWidth = it.id == 'mg_portal' ? 2 : 1;
-      if (it.id == 'mg_portal') canvas.drawOval(const Rect.fromLTWH(18, 6, 24, 36), stroke);
-      if (it.id == 'mg_halo') canvas.drawOval(const Rect.fromLTWH(16, 20, 28, 8), stroke);
-    case 'power':
-      final c = Color(it.color!);
-      p.color = c;
-      canvas.drawRect(const Rect.fromLTWH(18, 8, 24, 32), p);
-      p.color = _ink;
-      canvas.drawRect(const Rect.fromLTWH(22, 12, 16, 24), p);
-      p.color = c;
-      final shapes = switch (it.id) {
-        'pw_boost' => const [Rect.fromLTWH(28, 14, 4, 20), Rect.fromLTWH(22, 22, 16, 4)],
-        'pw_magnet' => const [Rect.fromLTWH(24, 14, 4, 16), Rect.fromLTWH(32, 14, 4, 16), Rect.fromLTWH(24, 26, 12, 4)],
-        'pw_shield' => const [Rect.fromLTWH(24, 14, 12, 14), Rect.fromLTWH(27, 28, 6, 5)],
-        _ => const [Rect.fromLTWH(28, 14, 4, 10), Rect.fromLTWH(24, 22, 8, 4), Rect.fromLTWH(28, 26, 4, 8)],
-      };
-      for (final s in shapes) {
-        canvas.drawRect(s, p);
+    }
+    x += w + (1 + r.nextInt(3)) * unit;
+  }
+}
+
+/// Monumento de cada cidade, centralizado em [cx] e apoiado em [baseY].
+void paintLandmark(Canvas canvas, Landmark l, double cx, double baseY, double u, Color accent) {
+  final p = Paint();
+  void rect(double x, double y, double w, double h, Color c) => _rect(canvas, p, cx + x * u, baseY + y * u, w * u, h * u, c);
+  void tri(double x, double baseW, double h, Color c, [double y = 0]) => _tri(canvas, p, cx + x * u, baseY + y * u, baseW * u, h * u, c);
+  const stone = Color(0xFFC8C093), dark = Kanagawa.sumiInk3;
+  switch (l) {
+    case Landmark.none:
+      break;
+    case Landmark.obelisk:
+      rect(-2, -38, 4, 38, stone);
+      tri(0, 4, 4, stone, -38);
+      rect(-4, -2, 8, 2, Kanagawa.fujiGray);
+    case Landmark.cityTower:
+      rect(-6, -40, 12, 40, const Color(0xFF7E8BA3));
+      rect(-4, -46, 8, 6, const Color(0xFF7E8BA3));
+      rect(-1, -58, 2, 12, Kanagawa.fujiGray);
+      rect(-1, -59, 2, 1, Kanagawa.autumnRed);
+      for (var y = -38; y < -2; y += 4) {
+        rect(-4, y.toDouble(), 8, 1, dark);
+      }
+    case Landmark.christ:
+      tri(0, 70, 26, const Color(0xFF4F6F3E));
+      tri(0, 40, 18, const Color(0xFF5E8049));
+      rect(-1, -36, 2, 10, stone);
+      rect(-7, -33, 14, 2, stone);
+      rect(-1, -38, 2, 2, stone);
+    case Landmark.needle:
+      rect(-7, -24, 14, 24, const Color(0xFF8FA3BF));
+      rect(-5, -40, 10, 16, const Color(0xFF8FA3BF));
+      rect(-3, -54, 6, 14, const Color(0xFFA3B6CF));
+      rect(-1, -66, 2, 12, Kanagawa.fujiWhite);
+      for (var y = -52; y < 0; y += 5) {
+        rect(-1, y.toDouble(), 2, 1, Kanagawa.lightBlue);
+      }
+    case Landmark.ironTower:
+      for (var i = 0; i < 52; i++) {
+        final w = 24 * math.pow(1 - i / 52, 1.6).toDouble() + 2;
+        final y = -i - 1.0;
+        rect(-w / 2, y, 2, 1, accent);
+        rect(w / 2 - 2, y, 2, 1, accent);
+        if (i == 14 || i == 30) rect(-w / 2, y, w, 2, accent);
+      }
+      rect(-.5, -58, 1, 6, accent);
+    case Landmark.clockTower:
+      rect(-5, -44, 10, 44, stone);
+      rect(-6, -36, 12, 10, const Color(0xFFB9A774));
+      p.color = Kanagawa.fujiWhite;
+      canvas.drawCircle(Offset(cx, baseY - 31 * u), 3.5 * u, p);
+      rect(-.5, -34, 1, 3, dark);
+      rect(-.5, -31.5, 2.5, 1, dark);
+      tri(0, 10, 12, const Color(0xFF54546D), -44);
+    case Landmark.coliseum:
+      rect(-24, -20, 48, 20, stone);
+      rect(-24, -22, 30, 2, stone);
+      for (var row = 0; row < 3; row++) {
+        for (var i = 0; i < 8; i++) {
+          rect(-22.0 + i * 6, -18.0 + row * 6, 3, 4, const Color(0xFF8C7A53));
+        }
+      }
+    case Landmark.pyramids:
+      tri(-12, 46, 30, const Color(0xFFE6C384));
+      tri(-12, 46, 30, const Color(0x33C0A36E));
+      tri(18, 30, 19, const Color(0xFFD4B472));
+      rect(-12, -30, 1, 1, Kanagawa.fujiWhite);
+    case Landmark.onionDome:
+      for (final (x, h, c) in [(-12.0, 28.0, Kanagawa.autumnRed), (0.0, 38.0, Kanagawa.springGreen), (12.0, 26.0, Kanagawa.crystalBlue)]) {
+        rect(x - 4, -h, 8, h, const Color(0xFFC88A6E));
+        p.color = c;
+        canvas.drawCircle(Offset(cx + x * u, baseY - (h + 4) * u), 5.5 * u, p);
+        rect(x - .5, -h - 14, 1, 5, Kanagawa.carpYellow);
+      }
+    case Landmark.pagoda:
+      for (var i = 0; i < 4; i++) {
+        final w = 34.0 - i * 7, y = -8.0 - i * 10;
+        rect(-w / 2 + 3, y, w - 6, 8, Kanagawa.autumnRed);
+        rect(-w / 2, y - 2, w, 2, const Color(0xFF3F5F4A));
+        rect(-w / 2 - 1, y - 3, 2, 1, const Color(0xFF3F5F4A));
+        rect(w / 2 - 1, y - 3, 2, 1, const Color(0xFF3F5F4A));
+      }
+      rect(-.5, -54, 1, 6, Kanagawa.carpYellow);
+    case Landmark.dome:
+      rect(-16, -14, 32, 14, Kanagawa.fujiWhite);
+      p.color = Kanagawa.fujiWhite;
+      canvas.drawCircle(Offset(cx, baseY - 20 * u), 9 * u, p);
+      rect(-.5, -34, 1, 5, Kanagawa.carpYellow);
+      for (final x in [-20.0, 19.0]) {
+        rect(x, -30, 2, 30, Kanagawa.fujiWhite);
+      }
+      rect(-3, -10, 6, 10, const Color(0xFF8C7A53));
+    case Landmark.opera:
+      rect(-26, -4, 52, 4, stone);
+      for (final (x, w, h) in [(-16.0, 16.0, 18.0), (-4.0, 18.0, 24.0), (9.0, 16.0, 20.0), (19.0, 12.0, 14.0)]) {
+        for (var i = 0; i < h; i++) {
+          final wi = w * (1 - i / h);
+          rect(x - wi / 2 + (i / h) * w * .35, -4 - i - 1.0, wi, 1, i.isEven ? Kanagawa.fujiWhite : const Color(0xFFE4DFC6));
+        }
       }
   }
 }
@@ -372,4 +384,24 @@ void paintLaunch(Canvas canvas, double progress, int tick) {
   final fl = 6.0 + (tick % 5);
   r(4, 6, 4, fl, Kanagawa.surimiOrange);
   r(5, 6, 2, fl - 2, Kanagawa.carpYellow);
+}
+
+/// Miniatura de um lugar num quadro [size] (mapa e avisos).
+void paintPlaceThumb(Canvas canvas, Place d, Size size, int tick) {
+  final p = Paint()..color = d.region == Region.earth ? const Color(0xFF2D4F67) : _ink;
+  canvas.drawRect(Offset.zero & size, p);
+  canvas.save();
+  canvas.clipRect(Offset.zero & size);
+  switch (d.kind) {
+    case PlaceKind.city:
+      final u = size.height / 70;
+      paintSkyline(canvas, d, size.height - 4 * u, size.width, night: 0, unit: u);
+      p.color = const Color(0xFF3A3A44);
+      canvas.drawRect(Rect.fromLTWH(0, size.height - 4 * u, size.width, 4 * u), p);
+    case PlaceKind.constellation:
+      paintConstellation(canvas, d, (Offset.zero & size).deflate(size.shortestSide * .12), tick);
+    default:
+      paintBody(canvas, d, size.center(Offset.zero), size.shortestSide * (d.kind == PlaceKind.ring ? .22 : .3), tick);
+  }
+  canvas.restore();
 }

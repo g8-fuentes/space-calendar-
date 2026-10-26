@@ -10,7 +10,7 @@ const _steps = [
   'Lendo o arquivo...',
   'Encontrando os eventos...',
   'Transformando eventos em missões...',
-  'Calculando XP de cada missão...',
+  'Traçando a rota da exploração...',
   'Abastecendo a nave...',
 ];
 

@@ -26,12 +26,13 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   fonts:
-    - family: PressStart2P
+    - family: JetBrainsMono
       fonts:
-        - asset: assets/fonts/PressStart2P-Regular.ttf
-    - family: DotGothic16
-      fonts:
-        - asset: assets/fonts/DotGothic16-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Regular.ttf
+        - asset: assets/fonts/JetBrainsMono-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/JetBrainsMono-ExtraBold.ttf
+          weight: 800
 
 # As versões novas destes plugins Android usam JNI, que quebrou no APK
 # de release. As versões fixadas abaixo usam canal de plataforma.

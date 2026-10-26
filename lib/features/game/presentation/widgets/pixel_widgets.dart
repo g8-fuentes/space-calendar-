@@ -131,31 +131,3 @@ class SectionTitle extends StatelessWidget {
   Widget build(BuildContext context) =>
       Text(text.toUpperCase(), style: PixelText.display(9, color: color));
 }
-
-/// Moeda desenhada em pixel.
-class CoinIcon extends StatelessWidget {
-  const CoinIcon({super.key, this.size = 12});
-  final double size;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: Kanagawa.carpYellow,
-          border: Border.all(color: Kanagawa.sumiInk0, width: 2),
-        ),
-      );
-}
-
-class CoinPrice extends StatelessWidget {
-  const CoinPrice(this.value, {super.key});
-  final int value;
-
-  @override
-  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
-        const CoinIcon(),
-        const SizedBox(width: 6),
-        Text('$value', style: PixelText.display(9, color: Kanagawa.carpYellow)),
-      ]);
-}

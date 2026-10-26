@@ -4,12 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/sound/music.dart';
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
-import '../features/game/presentation/controllers/import_flow.dart';
-import '../features/game/presentation/screens/courses_screen.dart';
+import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
-import '../features/game/presentation/screens/missions_screen.dart';
-import '../features/game/presentation/screens/more_screen.dart';
-import '../features/game/presentation/screens/shop_screen.dart';
+import '../features/game/presentation/screens/map_screen.dart';
+import '../features/game/presentation/screens/settings_screen.dart';
 import '../features/game/presentation/screens/week_screen.dart';
 import '../features/game/presentation/widgets/ui.dart';
 import 'theme/kanagawa.dart';
@@ -71,28 +69,21 @@ class GameShell extends ConsumerStatefulWidget {
 }
 
 class _GameShellState extends ConsumerState<GameShell> {
+  static const _tabs = [
+    (Icons.rocket_launch_outlined, 'EXPLORAR'),
+    (Icons.public, 'MAPA'),
+    (Icons.calendar_view_week_outlined, 'SEMANA'),
+    (Icons.tune, 'AJUSTES'),
+  ];
+
   @override
   void initState() {
     super.initState();
-    // Sincroniza o Google Agenda em silêncio ao abrir (no máximo a cada 15 min).
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final s = ref.read(gameControllerProvider);
-      if (s.alerts) ref.read(missionAlertsProvider).requestPermission();
-      final now = ref.read(gameControllerProvider.notifier).now.millisecondsSinceEpoch;
-      if (s.calendarUrl != null && (s.lastSync == null || now - s.lastSync! > 15 * 60 * 1000)) {
-        syncGoogleCalendar(null, ref, quiet: true);
-      }
+      if (ref.read(gameControllerProvider).alerts) ref.read(missionAlertsProvider).requestPermission();
     });
   }
-
-  static const _tabs = [
-    (Icons.rocket_launch_outlined, 'MISSÕES'),
-    (Icons.school_outlined, 'CURSOS'),
-    (Icons.storefront_outlined, 'LOJA'),
-    (Icons.inventory_2_outlined, 'SEMANA'),
-    (Icons.public, 'MAIS'),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -101,11 +92,10 @@ class _GameShellState extends ConsumerState<GameShell> {
       body: SafeArea(
         bottom: false,
         child: switch (i) {
-          0 => const MissionsScreen(),
-          1 => const CoursesScreen(),
-          2 => const ShopScreen(),
-          3 => const WeekScreen(),
-          _ => const MoreScreen(),
+          0 => const ExploreScreen(),
+          1 => const MapScreen(),
+          2 => const WeekScreen(),
+          _ => const SettingsScreen(),
         },
       ),
       bottomNavigationBar: NavigationBar(

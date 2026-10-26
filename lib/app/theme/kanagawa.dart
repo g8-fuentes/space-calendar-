@@ -27,18 +27,18 @@ abstract final class Kanagawa {
   static const sakuraPink = Color(0xFFD27E99);
 }
 
-/// Tipografia pixel: Press Start 2P para títulos, DotGothic16 para texto.
-/// As duas fontes vão dentro do APK (assets/fonts), então o app abre
-/// igual com ou sem internet.
+/// Tipografia: JetBrains Mono (vai dentro do APK, em assets/fonts).
+/// `display` é a versão extra negrito para títulos; os tamanhos seguem a
+/// escala antiga das telas e são ajustados aqui para a fonte mono.
 abstract final class PixelText {
-  static const displayFamily = 'PressStart2P';
-  static const bodyFamily = 'DotGothic16';
+  static const family = 'JetBrainsMono';
+  static const bodyFamily = family;
 
-  static TextStyle display(double size, {Color color = Kanagawa.fujiWhite}) =>
-      TextStyle(fontFamily: displayFamily, fontSize: size, color: color, height: 1.5);
+  static TextStyle display(double size, {Color color = Kanagawa.fujiWhite}) => TextStyle(
+      fontFamily: family, fontSize: size * 1.45, fontWeight: FontWeight.w800, color: color, height: 1.25, letterSpacing: .4);
 
   static TextStyle body(double size, {Color color = Kanagawa.fujiWhite}) =>
-      TextStyle(fontFamily: bodyFamily, fontSize: size, color: color, height: 1.3);
+      TextStyle(fontFamily: family, fontSize: size * .9, color: color, height: 1.35);
 }
 
 ThemeData buildKanagawaTheme() {

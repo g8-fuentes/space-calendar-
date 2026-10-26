@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/kanagawa.dart';
 import '../../../../core/sound/sfx.dart';
-import '../../domain/catalog/catalog.dart';
+import '../../domain/catalog/places.dart';
 import '../../domain/services/game_rules.dart';
 import '../art/pixel_art.dart';
 import '../controllers/game_providers.dart';
@@ -42,7 +42,6 @@ class _NoticeListenerState extends ConsumerState<NoticeListener> {
           break;
         default:
           Sfx.level.play();
-          if (n.enemyLevel != null) Future.delayed(const Duration(milliseconds: 700), Sfx.foe.play);
       }
       await showNotice(context, n);
     }
@@ -66,15 +65,10 @@ Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(n.title, textAlign: TextAlign.center, style: PixelText.display(13, color: Kanagawa.carpYellow)),
-            if (n.enemyLevel != null) ...[
+            Text(n.title, textAlign: TextAlign.center, style: PixelText.display(12, color: Kanagawa.carpYellow)),
+            if (n.place != null) ...[
               const SizedBox(height: 14),
-              Container(
-                width: 120,
-                height: 120,
-                color: Kanagawa.sumiInk0,
-                child: CustomPaint(painter: EnemyPainter(enemyFor(n.enemyLevel!))),
-              ),
+              SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!))),
             ],
             const SizedBox(height: 14),
             Text(n.text, textAlign: TextAlign.center, style: PixelText.body(16)),
@@ -85,33 +79,29 @@ Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
       ),
     );
 
-class EnemyPainter extends CustomPainter {
-  EnemyPainter(this.enemy);
-  final Enemy enemy;
+/// Miniatura de um lugar da jornada.
+class PlaceThumb extends StatelessWidget {
+  const PlaceThumb(this.place, {super.key, this.locked = false});
+  final Place place;
+  final bool locked;
 
   @override
-  void paint(Canvas canvas, Size size) {
-    final box = size.shortestSide * .86;
-    paintEnemyFitted(canvas, enemy, Offset((size.width - box) / 2, (size.height - box) / 2), box);
-  }
-
-  @override
-  bool shouldRepaint(covariant EnemyPainter old) => old.enemy.level != enemy.level;
+  Widget build(BuildContext context) => Opacity(
+        opacity: locked ? .3 : 1,
+        child: CustomPaint(painter: _ThumbPainter(place)),
+      );
 }
 
-/// Folha de formulário que sobe de baixo, no estilo pixel.
-Future<T?> openSheet<T>(BuildContext context, Widget Function(BuildContext) builder) => showModalBottomSheet<T>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Kanagawa.sumiInk4,
-      shape: const RoundedRectangleBorder(side: BorderSide(color: Kanagawa.sumiInk0, width: 4)),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: SafeArea(
-          child: SingleChildScrollView(padding: const EdgeInsets.all(18), child: builder(ctx)),
-        ),
-      ),
-    );
+class _ThumbPainter extends CustomPainter {
+  _ThumbPainter(this.place);
+  final Place place;
+
+  @override
+  void paint(Canvas canvas, Size size) => paintPlaceThumb(canvas, place, size, 0);
+
+  @override
+  bool shouldRepaint(covariant _ThumbPainter old) => old.place.index != place.index;
+}
 
 InputDecoration pixelInput(String label, {String? hint}) => InputDecoration(
       labelText: label,
@@ -134,7 +124,7 @@ class ErrorText extends StatelessWidget {
         );
 }
 
-/// Pergunta "tem certeza?" dentro da própria folha.
+/// Pergunta "tem certeza?" no lugar dos botões.
 class ConfirmBar extends StatelessWidget {
   const ConfirmBar({super.key, required this.text, required this.onYes, required this.onNo, this.yesLabel = 'Sim'});
   final String text;
@@ -154,24 +144,6 @@ class ConfirmBar extends StatelessWidget {
       );
 }
 
-/// Chip com a cor da categoria ou do curso.
-class TagChip extends StatelessWidget {
-  const TagChip(this.text, {super.key, this.color, this.off = false});
-  final String text;
-  final Color? color;
-  final bool off;
-
-  @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-        decoration: BoxDecoration(
-          color: Kanagawa.sumiInk0,
-          border: off || color == null ? null : Border(left: BorderSide(color: color!, width: 3)),
-        ),
-        child: Text(text, style: PixelText.body(13, color: off ? Kanagawa.springViolet1 : Kanagawa.fujiWhite)),
-      );
-}
-
 class EmptyBox extends StatelessWidget {
   const EmptyBox(this.title, this.subtitle, {super.key});
   final String title;
@@ -188,40 +160,4 @@ class EmptyBox extends StatelessWidget {
           Text(subtitle, style: PixelText.body(14, color: Kanagawa.springViolet1)),
         ]),
       );
-}
-
-/// Seletor de dias da semana (SEG ... DOM).
-class DayPicker extends StatelessWidget {
-  const DayPicker({super.key, required this.selected, required this.onChanged});
-  final Set<int> selected;
-  final ValueChanged<Set<int>> onChanged;
-
-  @override
-  Widget build(BuildContext context) => Row(children: [
-        for (var i = 0; i < 7; i++) ...[
-          if (i > 0) const SizedBox(width: 4),
-          Expanded(
-            child: Semantics(
-              selected: selected.contains(i),
-              button: true,
-              label: dayNames[i],
-              child: InkWell(
-                onTap: () {
-                  Sfx.click.play();
-                  final next = Set.of(selected);
-                  if (!next.remove(i)) next.add(i);
-                  onChanged(next);
-                },
-                child: Container(
-                  height: 36,
-                  alignment: Alignment.center,
-                  color: selected.contains(i) ? Kanagawa.springBlue : Kanagawa.sumiInk0,
-                  child: Text(dayAbbr[i],
-                      style: PixelText.display(7, color: selected.contains(i) ? Kanagawa.sumiInk0 : Kanagawa.fujiWhite)),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ]);
 }
