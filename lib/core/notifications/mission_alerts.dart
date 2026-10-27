@@ -54,7 +54,7 @@ class LocalMissionAlerts implements MissionAlerts {
       channelDescription: 'Avisa quando o horário de uma missão começa.',
       importance: Importance.high,
       priority: Priority.high,
-      icon: 'ic_stat_rocket',
+      icon: 'ic_stat_angel',
       color: Color(0xFFE6C384),
       category: AndroidNotificationCategory.reminder,
     ),
@@ -73,7 +73,7 @@ class LocalMissionAlerts implements MissionAlerts {
         tz.setLocalLocation(tz.getLocation('America/Sao_Paulo'));
       }
       await _plugin.initialize(
-        settings: const InitializationSettings(android: AndroidInitializationSettings('ic_stat_rocket')),
+        settings: const InitializationSettings(android: AndroidInitializationSettings('ic_stat_angel')),
       );
       _ready = true;
     } catch (e) {

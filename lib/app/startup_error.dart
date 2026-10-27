@@ -38,7 +38,7 @@ class StartupErrorBox extends StatelessWidget {
       color: Kanagawa.sumiInk0,
       padding: const EdgeInsets.all(12),
       child: Text(
-        'Ops, algo deu errado no Rotina Quest:\n\n$message',
+        'Ops, algo deu errado no Divine Routine:\n\n$message',
         style: const TextStyle(color: Kanagawa.fujiWhite, fontSize: 12, fontFamily: 'monospace'),
         textDirection: TextDirection.ltr,
       ),

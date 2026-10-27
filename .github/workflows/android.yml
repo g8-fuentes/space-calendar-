@@ -35,9 +35,11 @@ jobs:
         run: flutter test
 
       - name: Gerar APK
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release
+          cp build/app/outputs/flutter-apk/app-release.apk build/divine-routine.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: rotina-quest-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: divine-routine
+          path: build/divine-routine.apk

@@ -1,33 +1,34 @@
-# Rotina Quest
+# Divine Routine
 
-A rotina semanal do Guilherme Fuentes como uma jornada espacial em pixel art.
-Cada evento da agenda "Rotina" é uma missão; cumprir missões dá XP e moedas,
-leva o astronauta mirim por Terra, Lua, Marte… até Proxima Centauri, e depois
-por mundos gerados sem fim.
+A rotina semanal do Guilherme Fuentes como uma jornada de fé em pixel art.
+Importe a agenda (.ics ou .cal) e marque as missões concluídas. Cada missão dá pontos
+ao atributo da categoria dela, e os pontos levam o personagem, um jovem adulto, a novos
+níveis: a cada nível ele fica mais perto de Jesus e de Deus, com mais luz, auréola, raios
+do céu e asas, e recebe uma passagem da Bíblia. Não há nível final. Ao mesmo tempo, ele
+explora as grandes cidades da Terra e depois o universo.
 
 ## Gerar o APK
 
 ### Opção 1: GitHub (sem instalar nada)
 
-1. Crie um repositório no GitHub e envie esta pasta.
-2. A ação **Android APK** roda sozinha (ou em *Actions → Android APK → Run workflow*).
-3. Ao terminar, baixe o artefato **rotina-quest-apk** e instale o `app-release.apk` no celular
+1. A ação **Android APK** roda a cada envio para `main` (ou em *Actions → Android APK → Run workflow*).
+2. Ao terminar, baixe o artefato **divine-routine** e instale o `divine-routine.apk` no celular
    (permita "instalar apps de fontes desconhecidas").
 
 ### Opção 2: no seu computador
 
-Requer Flutter 3.27 ou mais novo, Android SDK e Java 17.
+Requer Flutter, Android SDK e Java 17.
 
 ```bash
-bash tool/prepare_android.sh   # gera a pasta android/ na primeira vez
+bash tool/prepare_android.sh   # recria a pasta android/ se ela tiver sido apagada
 flutter pub get
 flutter test
 flutter build apk --release
 # APK em build/app/outputs/flutter-apk/app-release.apk
 ```
 
-O APK de release é assinado com a chave de debug, o que basta para instalar no seu
-próprio celular. Para publicar na Play Store, configure uma chave de assinatura própria.
+O APK é assinado com a chave fixa `android/app/rotina-quest.jks`, então cada versão
+instala por cima da anterior e mantém o progresso.
 
 ## Arquitetura
 
@@ -36,38 +37,24 @@ Clean Architecture por feature, com estado em Riverpod:
 ```
 lib/
   main.dart                     composição: cria dependências e injeta no Riverpod
-  app/                          MaterialApp, rotas (go_router) e tema Kanagawa
-  core/time/                    Clock injetável e utilitários de semana
+  app/                          MaterialApp, abas e tema Kanagawa
+  core/                         relógio, tempo de Bauru, notificações, música e sons
   features/game/
     domain/                     regras puras, sem Flutter
-      entities/                 Quest, GameState (imutável, serializável)
-      catalog/                  agenda, cursos, ranks, destinos, loja, conquistas
-      services/game_rules.dart  casos de uso: estado -> novo estado
-      services/game_stats.dart  números derivados (XP, moedas, nível, destino)
+      entities/                 Mission, GameState (serializável)
+      catalog/                  categorias, lugares, níveis e passagens da Bíblia
+      services/                 importação .ics, regras e números derivados
       repositories/             contrato de persistência
     data/                       SharedPreferences + implementação do repositório
     presentation/
       controllers/              GameController (Notifier) e providers
       art/                      pixel art desenhada em código (CustomPainter)
-      widgets/                  cena espacial, HUD, componentes pixel
-      screens/                  Missões, Jornada, Semana, Cursos, Loja, Perfil
+      widgets/                  cena, personagem, componentes pixel
+      screens/                  Explorar, Personagem, Mapa, Semana, Ajustes
 test/
   domain/                       regras do jogo
   widget/                       teste de fumaça do app
 ```
 
-Princípios usados:
-
-- **Domínio puro**: as regras não dependem de Flutter nem de armazenamento, então são testáveis isoladamente.
-- **Estado derivado**: só o que você fez é salvo (missões marcadas, compras, aulas). XP, moedas, nível,
-  rank e destino são sempre recalculados, então nunca ficam inconsistentes.
-- **Injeção de dependências**: relógio e repositório entram por providers, e os testes trocam por versões falsas.
-- **Progressão infinita**: níveis, ranks, trajes, destinos, melhorias e medalhas são gerados por fórmulas,
-  sem lista final.
-
-## Atualizar a agenda
-
-A agenda está em `lib/features/game/domain/catalog/schedule.dart`. Para mudar um horário ou
-adicionar uma atividade, edite a lista do dia e gere o APK de novo. O progresso salvo é por
-identificador da missão (dia + posição), então inserir uma missão no meio de um dia pode
-deslocar as marcações daquela semana.
+Os pontos, o nível e o lugar são sempre recalculados a partir das missões marcadas, então
+nunca ficam inconsistentes. O ícone é gerado em pixel art e fica em `android/app/src/main/res`.

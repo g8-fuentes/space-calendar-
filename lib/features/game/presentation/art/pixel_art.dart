@@ -171,7 +171,7 @@ void paintSkyline(Canvas canvas, Place city, double groundY, double width,
     x += w + r.nextInt(3) * unit;
   }
   paintLandmark(canvas, city.landmark, width * .72, groundY, landmarkUnit ?? unit, accent);
-  // frente, deixando o centro livre para o astronauta e o monumento
+  // frente, deixando o centro livre para o personagem e o monumento
   x = 0;
   while (x < width) {
     final w = (10 + r.nextInt(12)) * unit, h = (8 + r.nextInt(16)) * unit;
