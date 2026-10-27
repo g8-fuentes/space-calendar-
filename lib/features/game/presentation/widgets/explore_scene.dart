@@ -36,18 +36,15 @@ class _Spark {
 
 const sceneW = 200.0, sceneH = 150.0;
 
-double _scaleOf(bool earth) => earth ? 3.9 : 4.1;
+const _sc = 3.9;
 
-/// Canto da grade do personagem na cena (sem pulo nem balanço).
-Offset _originOf(bool earth) {
-  final sc = _scaleOf(earth);
-  // na Terra fica em pé no chão; no espaço, flutua
-  return Offset(56 - 13 * sc, earth ? 138 - (feetRow + 1) * sc : 34 - 6 * sc);
-}
+/// Canto da grade do personagem na cena (sem pulo nem balanço): na Terra
+/// fica em pé no chão; no espaço, voa com a aura.
+Offset _originOf(bool earth) => Offset(56 - 13 * _sc, earth ? 138 - (feetRow + 1) * _sc : 132 - (feetRow + 1) * _sc);
 
-/// Cena da exploração: o astronauta grande no lugar atual, com a hora ao
+/// Cena da exploração: o dev lutador grande no lugar atual, com a hora ao
 /// lado, sol ou lua conforme o relógio e, na Terra, o tempo de Bauru.
-/// Toque no astronauta para ele pular.
+/// Toque nele para ele pular.
 class ExploreScene extends ConsumerStatefulWidget {
   const ExploreScene({super.key, this.placeOverride});
 
@@ -113,7 +110,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
       if (p.text == null) p.vy += .05;
     }
     _sparks.removeWhere((p) => p.life <= 0 || p.y > sceneH);
-    stepAura(_aura, figureBox(_originOf(_earth), _scaleOf(_earth)), _form, _rand);
+    stepAura(_aura, figureBox(_originOf(_earth), _sc), _form, auraLevel(_form, space: !_earth), _rand);
   }
 
   void _celebrate({bool text = true}) {
@@ -139,8 +136,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
     final hour = now.hour + now.minute / 60;
     final day = dayLight(hour);
     return Semantics(
-      label:
-          '${_earth ? 'Personagem' : 'Astronauta'} (${_form.name}) em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
+      label: '${_form.name} em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
           '${isSunUp(hour) ? 'com sol' : 'com lua'}${weather != null ? ', ${weather.label} em Bauru, ${weather.tempC.round()} graus' : ''}. '
           'Toque para pular.',
       child: GestureDetector(
@@ -227,7 +223,7 @@ class _ScenePainter extends CustomPainter {
     } else {
       _body(canvas);
     }
-    _astronaut(canvas, p);
+    _hero(canvas, p);
     _plate(canvas, p);
     for (final s in sparks) {
       if (s.text != null) {
@@ -407,8 +403,7 @@ class _ScenePainter extends CustomPainter {
     }
   }
 
-  void _astronaut(Canvas canvas, Paint p) {
-    final sc = _scaleOf(onEarth);
+  void _hero(Canvas canvas, Paint p) {
     const cx = 56.0;
     final jumpY = jump > 0 ? -(math.sin(jump / 26 * math.pi) * 14).roundToDouble() : 0.0;
     var o = _originOf(onEarth).translate(0, jumpY);
@@ -419,18 +414,11 @@ class _ScenePainter extends CustomPainter {
     } else {
       o = o.translate(0, (math.sin(tick * .04) * 4).roundToDouble());
     }
-    final box = figureBox(o, sc);
-    paintAuraBack(canvas, box, form, aura, tick);
-    if (!onEarth) {
-      final flame = 6 + (tick >> 2) % 4;
-      for (final fx in [6.0, 18.0]) {
-        _rect(canvas, p, o.dx + (fx + .5) * sc, o.dy + 23 * sc, 2 * sc, flame.toDouble(), Kanagawa.surimiOrange);
-        _rect(canvas, p, o.dx + (fx + 1) * sc, o.dy + 23 * sc, sc, math.max(2, flame - 3).toDouble(),
-            Kanagawa.carpYellow);
-      }
-    }
-    paintGrid(canvas, characterGrid(form, astronaut: !onEarth, blink: tick % 200 < 6, tick: tick), o, sc);
-    paintAuraFront(canvas, box, form, tick);
+    final box = figureBox(o, _sc);
+    final level = auraLevel(form, space: !onEarth);
+    paintAuraBack(canvas, box, form, level, aura, tick);
+    paintGrid(canvas, characterGrid(form, blink: tick % 200 < 6, tick: tick), o, _sc);
+    paintAuraFront(canvas, box, form, level, tick);
   }
 
   void _clock(Canvas canvas) {

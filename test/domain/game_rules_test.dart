@@ -109,25 +109,32 @@ void main() {
       expect(t.attributes['treino'], 27);
       expect(t.power, 27);
       expect(t.best!.name, 'Força');
-      expect(t.form.name, 'Pessoa comum');
+      expect(t.form.name, 'Dev iniciante');
       expect(t.powerMissing, 13);
-      expect(t.astronaut, isFalse);
+      // só aparecem os atributos das missões
+      expect(t.shown.map((c) => c.name), ['Força']);
+      s.missions.add(Mission(id: 'b', title: 'Ler', days: [3], start: '20:00', end: '21:00', category: 'estudo'));
+      expect(computeStats(s, now).shown.map((c) => c.name), ['Mente', 'Força']);
     });
 
     test('poder libera as transformações, sem fim', () {
       expect(transformationIndexFor(0), 0);
       expect(transformationIndexFor(39), 0);
       expect(transformationIndexFor(40), 1);
-      expect(transformationAt(transformationIndexFor(450)).name, 'Super Guerreiro');
-      expect(transformationIndexFor(3200), namedTransformations - 1);
+      expect(transformationAt(transformationIndexFor(550)).name, 'Super Lutador');
+      expect(transformationIndexFor(7200), namedTransformations - 1);
       expect(transformationAt(namedTransformations).name, 'Ultra Cósmico 2');
-      expect(transformationIndexFor(4200), namedTransformations);
+      expect(transformationIndexFor(8700), namedTransformations);
+      expect(
+          Hair.values
+              .every((h) => [for (var i = 0; i < namedTransformations; i++) transformationAt(i).hair].contains(h)),
+          isTrue);
       for (var i = 1; i < namedTransformations + 3; i++) {
         expect(transformationAt(i).power, greaterThan(transformationAt(i - 1).power));
       }
     });
 
-    test('avisa a transformação e quando vira astronauta', () {
+    test('avisa a transformação e a saída da Terra, sem traje', () {
       final s = GameState.initial(ymd(now))
         ..lastForm = 0
         ..lastPlace = 0;
@@ -151,11 +158,9 @@ void main() {
           ..done['a@0'] = const DoneRecord(day: 0, title: 'Estudar', at: 0, category: 'estudo', minutes: 240);
       }
       final t = computeStats(s, now);
-      expect(t.astronaut, isTrue);
+      expect(t.place.region, isNot(Region.earth));
       notices = GameRules.progressNotices(s, t);
-      expect(
-          notices.map((n) => n.title), containsAllInOrder(['TRANSFORMAÇÃO!', 'VIROU ASTRONAUTA!', 'RUMO AO ESPAÇO!']));
-      expect(notices.firstWhere((n) => n.title == 'VIROU ASTRONAUTA!').astronaut, isTrue);
+      expect(notices.map((n) => n.title), ['TRANSFORMAÇÃO!', 'RUMO AO ESPAÇO!']);
     });
   });
 

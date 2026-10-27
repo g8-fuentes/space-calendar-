@@ -11,7 +11,7 @@ import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
 import 'settings_screen.dart';
 
-/// Primeira tela: nome do astronauta e a agenda (.ics ou .cal).
+/// Primeira tela: nome do personagem e a agenda (.ics ou .cal).
 class IntroScreen extends ConsumerStatefulWidget {
   const IntroScreen({super.key});
 
@@ -32,12 +32,12 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
   Future<void> _import() async {
     final n = _name.text.trim();
     if (n.isEmpty) {
-      setState(() => _error = 'Escreva o nome do astronauta antes de continuar.');
+      setState(() => _error = 'Escreva o nome do personagem antes de continuar.');
       Sfx.error.play();
       return;
     }
     setState(() => _error = null);
-    final err = await importCalendar(context, ref, astronautName: n);
+    final err = await importCalendar(context, ref, heroName: n);
     if (err != null && mounted) setState(() => _error = err);
   }
 
@@ -54,7 +54,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                 Text('ROTINA QUEST',
                     textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
                 const SizedBox(height: 4),
-                Text('Sua agenda vira uma exploração espacial.',
+                Text('Sua agenda vira a jornada de um dev lutador.',
                     textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),
                 const SizedBox(height: 14),
                 PixelPanel(padding: EdgeInsets.zero, child: ExploreScene(placeOverride: placeAt(0))),
@@ -65,7 +65,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       controller: _name,
                       maxLength: 24,
                       style: PixelText.body(17),
-                      decoration: pixelInput('Nome do astronauta', hint: 'Ex.: Gui'),
+                      decoration: pixelInput('Nome do personagem', hint: 'Ex.: Gui'),
                       onSubmitted: (_) => _import(),
                     ),
                     const SizedBox(height: 8),
@@ -76,8 +76,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       color: Kanagawa.sumiInk0,
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o astronauta '
-                        'sai de Bauru, roda o mundo, vai para a Lua, os planetas e as estrelas.',
+                        '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o seu dev lutador '
+                        'ganha poder, sai de Bauru, roda o mundo e depois voa para a Lua, os planetas e as estrelas.',
                         style: PixelText.body(14, color: Kanagawa.springViolet1),
                       ),
                     ),

@@ -8,12 +8,11 @@ import '../../domain/catalog/transformations.dart';
 import '../art/character_art.dart';
 import '../art/pixel_art.dart';
 
-/// O personagem grande, animado e com a aura da transformação, num fundo
-/// escuro (pessoa ou astronauta).
+/// O dev lutador grande, animado e com a aura da transformação, num fundo
+/// escuro.
 class CharacterView extends StatefulWidget {
-  const CharacterView({super.key, required this.form, required this.astronaut, this.locked = false});
+  const CharacterView({super.key, required this.form, this.locked = false});
   final Transformation form;
-  final bool astronaut;
 
   /// Silhueta de uma transformação ainda não liberada.
   final bool locked;
@@ -23,7 +22,7 @@ class CharacterView extends StatefulWidget {
 }
 
 class _CharacterViewState extends State<CharacterView> with SingleTickerProviderStateMixin {
-  static const w = 120.0, h = 110.0, sc = 3.0;
+  static const w = 120.0, h = 120.0, sc = 3.0;
   static const origin = Offset(w / 2 - 13 * sc, h - 4 - (feetRow + 1) * sc);
   late final Ticker _ticker;
   final _rand = math.Random();
@@ -42,7 +41,7 @@ class _CharacterViewState extends State<CharacterView> with SingleTickerProvider
       setState(() {
         for (var i = 0; i < steps; i++) {
           _tick++;
-          if (!widget.locked) stepAura(_aura, figureBox(origin, sc), widget.form, _rand);
+          if (!widget.locked) stepAura(_aura, figureBox(origin, sc), widget.form, widget.form.aura, _rand);
         }
       });
     });
@@ -73,14 +72,12 @@ class _CharacterViewState extends State<CharacterView> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: widget.locked
-            ? 'Transformação ainda bloqueada'
-            : '${widget.astronaut ? 'Astronauta' : 'Personagem'} na forma ${widget.form.name}',
+        label: widget.locked ? 'Transformação ainda bloqueada' : 'Personagem na forma ${widget.form.name}',
         child: RepaintBoundary(
           child: AspectRatio(
             aspectRatio: w / h,
             child: CustomPaint(
-              painter: _CharacterPainter(widget.form, widget.astronaut, widget.locked, _tick, _aura),
+              painter: _CharacterPainter(widget.form, widget.locked, _tick, _aura),
             ),
           ),
         ),
@@ -88,9 +85,9 @@ class _CharacterViewState extends State<CharacterView> with SingleTickerProvider
 }
 
 class _CharacterPainter extends CustomPainter {
-  _CharacterPainter(this.form, this.astronaut, this.locked, this.tick, this.aura);
+  _CharacterPainter(this.form, this.locked, this.tick, this.aura);
   final Transformation form;
-  final bool astronaut, locked;
+  final bool locked;
   final int tick;
   final List<AuraParticle> aura;
 
@@ -110,10 +107,10 @@ class _CharacterPainter extends CustomPainter {
     }
     p.color = Kanagawa.sumiInk5;
     canvas.drawRect(const Rect.fromLTWH(0, h - 4, w, 4), p);
-    final bob = astronaut ? (math.sin(tick * .05) * 2).roundToDouble() - 4 : ((tick ~/ 20) % 2 == 0 ? 0.0 : -1.0);
+    final bob = (tick ~/ 20) % 2 == 0 ? 0.0 : -1.0;
     final o = _CharacterViewState.origin.translate(0, bob);
     final box = figureBox(o, sc);
-    final grid = characterGrid(form, astronaut: astronaut, blink: tick % 180 < 6, tick: tick);
+    final grid = characterGrid(form, blink: tick % 180 < 6, tick: tick);
     if (locked) {
       paintGrid(
           canvas,
@@ -125,9 +122,9 @@ class _CharacterPainter extends CustomPainter {
     } else {
       p.color = const Color(0x55000000);
       canvas.drawOval(Rect.fromCenter(center: const Offset(w / 2, h - 4), width: 44, height: 4), p);
-      paintAuraBack(canvas, box, form, aura, tick);
+      paintAuraBack(canvas, box, form, form.aura, aura, tick);
       paintGrid(canvas, grid, o, sc);
-      paintAuraFront(canvas, box, form, tick);
+      paintAuraFront(canvas, box, form, form.aura, tick);
     }
     canvas.restore();
   }

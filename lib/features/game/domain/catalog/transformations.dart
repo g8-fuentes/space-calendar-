@@ -1,10 +1,9 @@
 import 'catalog.dart' show hslToArgb;
 
 /// Penteado do personagem.
-enum Hair { normal, spiky, long }
+enum Hair { normal, spiky, wild, long, flame }
 
-/// Roupa da pessoa (na Terra). No espaço ele usa o traje de astronauta,
-/// tingido pela transformação.
+/// Roupa do dev lutador.
 enum Outfit { casual, training, gi, giCape, divine }
 
 /// Uma transformação: só visual, liberada pelo poder total (soma dos
@@ -32,7 +31,8 @@ class Transformation {
   final int power;
   final String description;
 
-  /// Força da aura: 0 = nenhuma, 1 = brilho, 2 = chamas, 3 = chamas fortes.
+  /// Força da aura: 0 = nenhuma, 1 = brilho, 2 = chamas, 3 = chamas fortes,
+  /// 4 = com anel de faíscas, 5 = chama dupla gigante.
   final int aura;
   final int auraColor;
   final Hair hair;
@@ -49,108 +49,83 @@ class Transformation {
 
 const _gold = 0xFFFFD84A, _teal = 0xFF2FB5A3;
 
-const _forms = <Transformation>[
-  Transformation(index: 0, name: 'Pessoa comum', power: 0, description: 'Camiseta, jeans e uma agenda cheia.'),
-  Transformation(
-      index: 1,
-      name: 'Focado',
-      power: 40,
-      outfit: Outfit.training,
-      description: 'Roupa de treino nova: a rotina começou de verdade.'),
-  Transformation(
-      index: 2,
-      name: 'Despertar',
-      power: 120,
-      aura: 1,
-      outfit: Outfit.training,
-      description: 'Uma aura branca aparece em volta do corpo.'),
-  Transformation(
-      index: 3,
-      name: 'Guerreiro',
-      power: 250,
-      aura: 1,
-      auraColor: 0xFFA3D4D5,
-      outfit: Outfit.gi,
-      description: 'Uniforme de luta laranja e aura azul-clara.'),
-  Transformation(
-      index: 4,
-      name: 'Super Guerreiro',
-      power: 450,
-      aura: 2,
-      auraColor: _gold,
-      hair: Hair.spiky,
-      hairColor: _gold,
-      outfit: Outfit.gi,
-      eyes: _teal,
-      description: 'Cabelo dourado espetado, olhos verdes e aura de fogo dourada.'),
-  Transformation(
-      index: 5,
-      name: 'Super Guerreiro 2',
-      power: 700,
-      aura: 2,
-      auraColor: _gold,
-      hair: Hair.spiky,
-      hairColor: _gold,
-      outfit: Outfit.gi,
-      eyes: _teal,
-      lightning: true,
-      description: 'Raios elétricos estalam dentro da aura.'),
-  Transformation(
-      index: 6,
-      name: 'Super Guerreiro 3',
-      power: 1000,
+Transformation _f(int i, String name, int power, String description,
+        {int aura = 0,
+        int auraColor = 0xFFFFFFFF,
+        Hair hair = Hair.normal,
+        int hairColor = 0xFF2E1D14,
+        Outfit outfit = Outfit.casual,
+        int eyes = 0xFF16161D,
+        bool lightning = false,
+        bool cosmic = false}) =>
+    Transformation(
+      index: i,
+      name: name,
+      power: power,
+      description: description,
+      aura: aura,
+      auraColor: auraColor,
+      hair: hair,
+      hairColor: hairColor,
+      outfit: outfit,
+      eyes: eyes,
+      lightning: lightning,
+      cosmic: cosmic,
+    );
+
+final _forms = <Transformation>[
+  _f(0, 'Dev iniciante', 0, 'Camiseta com </>, jeans e uma agenda cheia.'),
+  _f(1, 'Dev focado', 40, 'Moletom de treino: entre um commit e outro, ele treina.', outfit: Outfit.training),
+  _f(2, 'Despertar', 120, 'Uma aura branca aparece em volta do corpo.', aura: 1, outfit: Outfit.training),
+  _f(3, 'Lutador', 250, 'Uniforme de luta laranja e aura azul-clara.',
+      aura: 1, auraColor: 0xFFA3D4D5, outfit: Outfit.gi),
+  _f(4, 'Lutador em chamas', 380, 'A aura vira fogo laranja.', aura: 2, auraColor: 0xFFFFA066, outfit: Outfit.gi),
+  _f(5, 'Super Lutador', 550, 'Cabelo dourado espetado, olhos verdes e aura de fogo dourada.',
+      aura: 2, auraColor: _gold, hair: Hair.spiky, hairColor: _gold, outfit: Outfit.gi, eyes: _teal),
+  _f(6, 'Super Lutador 2', 800, 'Raios elétricos estalam dentro da aura.',
+      aura: 2, auraColor: _gold, hair: Hair.spiky, hairColor: _gold, outfit: Outfit.gi, eyes: _teal, lightning: true),
+  _f(7, 'Super Lutador 3', 1100, 'Cabelo dourado até a cintura e uma capa vermelha.',
       aura: 3,
       auraColor: _gold,
       hair: Hair.long,
       hairColor: _gold,
       outfit: Outfit.giCape,
       eyes: _teal,
-      lightning: true,
-      description: 'Cabelo dourado até a cintura e uma capa vermelha.'),
-  Transformation(
-      index: 7,
-      name: 'Guerreiro Divino',
-      power: 1400,
-      aura: 3,
-      auraColor: 0xFFFF5D62,
-      hair: Hair.spiky,
-      hairColor: 0xFFE8506A,
-      outfit: Outfit.giCape,
-      eyes: 0xFFC34043,
-      description: 'Cabelo e aura vermelhos: o poder de um deus.'),
-  Transformation(
-      index: 8,
-      name: 'Supremo Azul',
-      power: 1900,
+      lightning: true),
+  _f(8, 'Fúria Escarlate', 1500, 'Cabelo selvagem vermelho e aura cor de sangue.',
+      aura: 3, auraColor: 0xFFFF5D62, hair: Hair.wild, hairColor: 0xFFE8506A, outfit: Outfit.giCape, eyes: 0xFFC34043),
+  _f(9, 'Supremo Azul', 2000, 'Cabelo azul e aura azul com raios.',
       aura: 3,
       auraColor: 0xFF7FB4CA,
       hair: Hair.spiky,
       hairColor: 0xFF5FB7E8,
       outfit: Outfit.giCape,
       eyes: 0xFF7E9CD8,
-      lightning: true,
-      description: 'Cabelo azul e aura azul com raios.'),
-  Transformation(
-      index: 9,
-      name: 'Instinto Prateado',
-      power: 2500,
-      aura: 3,
-      auraColor: 0xFFDCD7BA,
-      hair: Hair.spiky,
-      hairColor: 0xFFE4E6EE,
+      lightning: true),
+  _f(10, 'Instinto Prateado', 2600, 'Cabelo prateado, roupa sagrada e calma total.',
+      aura: 3, auraColor: 0xFFDCD7BA, hair: Hair.spiky, hairColor: 0xFFE4E6EE, outfit: Outfit.divine, eyes: 0xFFA3D4D5),
+  _f(11, 'Chama Esmeralda', 3300, 'Cabelo em labaredas verdes e um anel de faíscas.',
+      aura: 4, auraColor: 0xFF98BB6C, hair: Hair.flame, hairColor: 0xFF7DDC5A, outfit: Outfit.divine, eyes: 0xFF98BB6C),
+  _f(12, 'Tempestade Violeta', 4100, 'Cabelo selvagem violeta no meio de uma tempestade de raios.',
+      aura: 4,
+      auraColor: 0xFF957FB8,
+      hair: Hair.wild,
+      hairColor: 0xFFB78CF0,
       outfit: Outfit.divine,
-      eyes: 0xFFA3D4D5,
-      description: 'Cabelo prateado, roupa sagrada e calma total.'),
-  Transformation(
-      index: 10,
-      name: 'Ultra Cósmico',
-      power: 3200,
-      aura: 3,
+      eyes: 0xFFD27E99,
+      lightning: true),
+  _f(13, 'Sol Negro', 5000, 'Cabelo escuro em chamas, olhos vermelhos e aura negra com brasas.',
+      aura: 4, auraColor: 0xFFC34043, hair: Hair.flame, hairColor: 0xFF3A3A4A, outfit: Outfit.giCape, eyes: 0xFFFF5D62),
+  _f(14, 'Aurora Boreal', 6000, 'Cabelo longo rosa e uma aura dupla gigante.',
+      aura: 5,
+      auraColor: 0xFF6FE0C8,
       hair: Hair.long,
+      hairColor: 0xFFF2A0C8,
       outfit: Outfit.divine,
-      lightning: true,
-      cosmic: true,
-      description: 'Aura e cabelo mudam de cor como uma galáxia.'),
+      eyes: 0xFF6FE0C8,
+      lightning: true),
+  _f(15, 'Ultra Cósmico', 7200, 'Aura e cabelo mudam de cor como uma galáxia.',
+      aura: 5, hair: Hair.flame, outfit: Outfit.divine, lightning: true, cosmic: true),
 ];
 
 final _cache = <int, Transformation>{};
@@ -164,10 +139,10 @@ Transformation transformationAt(int i) {
     return Transformation(
       index: i,
       name: 'Ultra Cósmico $n',
-      power: _forms.last.power + (n - 1) * 1000,
-      aura: 3,
+      power: _forms.last.power + (n - 1) * 1500,
+      aura: 5,
       auraColor: hslToArgb(hue, .7, .65),
-      hair: Hair.long,
+      hair: const [Hair.flame, Hair.wild, Hair.long, Hair.spiky][n % 4],
       hairColor: hslToArgb(hue, .7, .7),
       outfit: Outfit.divine,
       lightning: true,

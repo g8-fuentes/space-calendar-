@@ -6,7 +6,7 @@ import 'game_stats.dart';
 
 /// Aviso grande (janela) que a interface mostra depois de uma ação.
 class Notice {
-  const Notice(this.title, this.text, {this.sound = 'lvl', this.place, this.form, this.astronaut = false});
+  const Notice(this.title, this.text, {this.sound = 'lvl', this.place, this.form});
   final String title;
   final String text;
   final String sound;
@@ -16,7 +16,6 @@ class Notice {
 
   /// Mostra o personagem nesta transformação.
   final int? form;
-  final bool astronaut;
 }
 
 /// Regras do jogo. Cada função muda o [GameState] recebido (uma cópia
@@ -75,7 +74,7 @@ abstract final class GameRules {
     if (t.formIndex == s.lastForm) return const [];
     s.lastForm = t.formIndex;
     final f = t.form;
-    return [Notice('TRANSFORMAÇÃO!', '${f.name}: ${f.description}', form: f.index, astronaut: t.astronaut)];
+    return [Notice('TRANSFORMAÇÃO!', '${f.name}: ${f.description}', form: f.index)];
   }
 
   static List<Notice> _placeNotices(GameState s, GameStats t) {
@@ -97,12 +96,7 @@ abstract final class GameRules {
             Region.earth => 'NOVO DESTINO',
           }
         : 'NOVO DESTINO';
-    final suit = from.region == Region.earth && p.region != Region.earth;
     return [
-      if (suit)
-        Notice('VIROU ASTRONAUTA!',
-            'Para sair da Terra, você vestiu o traje espacial. As transformações continuam no espaço.',
-            form: t.formIndex, astronaut: true),
       Notice(title, 'Você chegou a ${p.name}. ${p.fact}', place: p.index),
     ];
   }

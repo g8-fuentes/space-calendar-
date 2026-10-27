@@ -60,7 +60,7 @@ class _Header extends ConsumerWidget {
     return Row(children: [
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text((s.name.isEmpty ? 'Astronauta' : s.name).toUpperCase(),
+          Text((s.name.isEmpty ? 'Dev' : s.name).toUpperCase(),
               style: PixelText.display(10), maxLines: 1, overflow: TextOverflow.ellipsis),
           Text(
               '${t.missionsDone} ${t.missionsDone == 1 ? 'missão concluída' : 'missões concluídas'} · hoje ${t.doneToday}/${t.totalToday}',

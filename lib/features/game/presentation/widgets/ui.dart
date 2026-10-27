@@ -70,7 +70,7 @@ Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
             Text(n.title, textAlign: TextAlign.center, style: PixelText.display(12, color: Kanagawa.carpYellow)),
             if (n.form != null) ...[
               const SizedBox(height: 14),
-              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!), astronaut: n.astronaut)),
+              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!))),
             ] else if (n.place != null) ...[
               const SizedBox(height: 14),
               SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!))),

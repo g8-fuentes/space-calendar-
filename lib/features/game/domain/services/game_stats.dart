@@ -61,6 +61,7 @@ class GameStats {
     required this.doneToday,
     required this.totalToday,
     required this.attributes,
+    this.active = const {},
   });
 
   /// Missões concluídas desde o começo.
@@ -71,6 +72,9 @@ class GameStats {
 
   /// Pontos por categoria (Vitalidade, Força...).
   final Map<String, int> attributes;
+
+  /// Categorias das missões importadas e as que já ganharam pontos.
+  final Set<String> active;
 
   int get power => attributes.values.fold(0, (a, b) => a + b);
   int get formIndex => transformationIndexFor(power);
@@ -85,8 +89,12 @@ class GameStats {
     return span <= 0 ? 1 : ((power - form.power) / span).clamp(0.0, 1.0);
   }
 
-  /// Fora da Terra o personagem usa o traje de astronauta.
-  bool get astronaut => place.region != Region.earth;
+  /// Atributos que existem nas missões da agenda (ou que já têm pontos),
+  /// na ordem do catálogo.
+  List<Category> get shown => [
+        for (final c in categories)
+          if (active.contains(c.key)) c
+      ];
 
   /// Atributo com mais pontos (null se ainda não tem nenhum).
   Category? get best {
@@ -132,5 +140,10 @@ GameStats computeStats(GameState s, DateTime now) {
     doneToday: dayDone(s, w, today),
     totalToday: daySlots(s, today).length,
     attributes: attrs,
+    active: {
+      for (final m in s.missions) m.category,
+      for (final e in attrs.entries)
+        if (e.value > 0) e.key,
+    },
   );
 }

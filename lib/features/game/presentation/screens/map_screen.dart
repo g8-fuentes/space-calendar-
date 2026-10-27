@@ -46,8 +46,8 @@ class MapScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 12),
           child: PixelPanel(
             child: Text(
-              'Cada missão concluída leva o astronauta mais longe: primeiro cidades da Terra, '
-              'depois a Lua e os planetas, e por fim constelações e estrelas do espaço profundo.',
+              'Cada missão concluída leva o seu dev lutador mais longe: primeiro as grandes cidades da Terra, '
+              'depois ele voa para a Lua e os planetas, e por fim constelações e estrelas do espaço profundo.',
               style: PixelText.body(14, color: Kanagawa.springViolet1),
             ),
           ),

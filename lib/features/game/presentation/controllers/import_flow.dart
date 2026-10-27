@@ -21,9 +21,9 @@ Future<(String name, String text)?> pickTextFile() async {
 }
 
 /// Importa uma agenda .ics/.cal: escolher o arquivo, tela de carregamento,
-/// trocar as missões e avisar o resultado. Com [astronautName], conclui a
+/// trocar as missões e avisar o resultado. Com [heroName], conclui a
 /// tela inicial. Devolve o erro, se houver.
-Future<String?> importCalendar(BuildContext context, WidgetRef ref, {String? astronautName}) async {
+Future<String?> importCalendar(BuildContext context, WidgetRef ref, {String? heroName}) async {
   final picked = await pickTextFile();
   if (picked == null || !context.mounted) return null;
   final ctrl = ref.read(gameControllerProvider.notifier);
@@ -36,8 +36,8 @@ Future<String?> importCalendar(BuildContext context, WidgetRef ref, {String? ast
     return result.error ?? 'Nenhum evento com horário foi encontrado nessa agenda.';
   }
   ctrl.apply((s) {
-    if (astronautName != null) {
-      s.name = astronautName.trim().isEmpty ? 'Astronauta' : astronautName.trim();
+    if (heroName != null) {
+      s.name = heroName.trim().isEmpty ? 'Dev' : heroName.trim();
       s.onboarded = true;
       s.startDate = ymd(ctrl.now);
     }
@@ -56,7 +56,7 @@ Future<String?> importCalendar(BuildContext context, WidgetRef ref, {String? ast
       'AGENDA CARREGADA!',
       '${missions.length} eventos viraram $slots missões por semana.'
           '${skipped.isEmpty ? '' : ' Ignorei ${skipped.join(', ')}.'}'
-          ' Marque cada missão concluída para levar o astronauta mais longe.',
+          ' Marque cada missão concluída para levar o personagem mais longe.',
       sound: 'none',
     ),
   ]);

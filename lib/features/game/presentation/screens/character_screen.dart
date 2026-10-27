@@ -26,7 +26,7 @@ class CharacterScreen extends ConsumerWidget {
       PixelPanel(
         padding: EdgeInsets.zero,
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          CharacterView(form: form, astronaut: t.astronaut),
+          CharacterView(form: form),
           Padding(
             padding: const EdgeInsets.all(14),
             child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -49,9 +49,8 @@ class CharacterScreen extends ConsumerWidget {
                   style: PixelText.body(14, color: Kanagawa.carpYellow)),
               const SizedBox(height: 8),
               Text(
-                t.astronaut
-                    ? 'Fora da Terra ele usa o traje de astronauta, que muda de cor a cada transformação.'
-                    : 'Quando sair da Terra, ele vira astronauta e continua se transformando.',
+                'Dev de dia, lutador sempre. Primeiro ele explora as grandes cidades da Terra; '
+                'depois voa pelo universo com a aura.',
                 style: PixelText.body(13, color: Kanagawa.springViolet1),
               ),
             ]),
@@ -63,13 +62,19 @@ class CharacterScreen extends ConsumerWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('ATRIBUTOS', style: PixelText.display(10)),
           const SizedBox(height: 4),
-          Text('Cada missão concluída dá pontos ao atributo da categoria dela: 1 ponto a cada 10 minutos, de 3 a 24.',
+          Text(
+              'Só aparecem os atributos das suas missões. Cada missão concluída dá pontos ao atributo da categoria dela: '
+              '1 ponto a cada 10 minutos, de 3 a 24.',
               style: PixelText.body(13, color: Kanagawa.springViolet1)),
           const SizedBox(height: 12),
-          for (final c in categories) ...[
-            _AttributeRow(category: c, points: t.attributes[c.key] ?? 0, top: top),
-            const SizedBox(height: 8),
-          ],
+          if (t.shown.isEmpty)
+            Text('Importe a agenda: os atributos aparecem conforme as categorias das suas missões.',
+                style: PixelText.body(14))
+          else
+            for (final c in t.shown) ...[
+              _AttributeRow(category: c, points: t.attributes[c.key] ?? 0, top: top),
+              const SizedBox(height: 8),
+            ],
         ]),
       ),
       const SizedBox(height: 14),
@@ -80,7 +85,6 @@ class CharacterScreen extends ConsumerWidget {
           for (var i = 0; i <= last; i++) ...[
             _FormTile(
               form: transformationAt(i),
-              astronaut: t.astronaut,
               reached: i <= t.formIndex,
               current: i == t.formIndex,
               next: i == t.formIndex + 1,
@@ -122,14 +126,13 @@ class _AttributeRow extends StatelessWidget {
 class _FormTile extends StatelessWidget {
   const _FormTile({
     required this.form,
-    required this.astronaut,
     required this.reached,
     required this.current,
     required this.next,
     required this.missing,
   });
   final Transformation form;
-  final bool astronaut, reached, current, next;
+  final bool reached, current, next;
   final int missing;
 
   @override
@@ -142,7 +145,7 @@ class _FormTile extends StatelessWidget {
         border: Border.all(color: current ? Kanagawa.carpYellow : Kanagawa.sumiInk0, width: 3),
       ),
       child: Row(children: [
-        SizedBox(width: 72, child: CharacterView(form: form, astronaut: astronaut, locked: !reached)),
+        SizedBox(width: 72, child: CharacterView(form: form, locked: !reached)),
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

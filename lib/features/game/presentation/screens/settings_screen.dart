@@ -99,7 +99,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       const SizedBox(height: 14),
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('ASTRONAUTA', style: PixelText.display(10)),
+          Text('PERSONAGEM', style: PixelText.display(10)),
           const SizedBox(height: 12),
           TextField(controller: _name, maxLength: 24, style: PixelText.body(16), decoration: pixelInput('Nome')),
           Align(
