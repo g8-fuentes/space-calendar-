@@ -4,9 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/kanagawa.dart';
 import '../../../../core/sound/sfx.dart';
 import '../../domain/catalog/places.dart';
+import '../../domain/catalog/transformations.dart';
 import '../../domain/services/game_rules.dart';
 import '../art/pixel_art.dart';
 import '../controllers/game_providers.dart';
+import 'character_view.dart';
 import 'pixel_widgets.dart';
 
 void showToast(BuildContext context, String text) {
@@ -66,7 +68,10 @@ Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
           padding: const EdgeInsets.all(20),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text(n.title, textAlign: TextAlign.center, style: PixelText.display(12, color: Kanagawa.carpYellow)),
-            if (n.place != null) ...[
+            if (n.form != null) ...[
+              const SizedBox(height: 14),
+              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!), astronaut: n.astronaut)),
+            ] else if (n.place != null) ...[
               const SizedBox(height: 14),
               SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!))),
             ],
@@ -138,7 +143,12 @@ class ConfirmBar extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         child: Wrap(spacing: 10, runSpacing: 8, crossAxisAlignment: WrapCrossAlignment.center, children: [
           Text(text, style: PixelText.body(15)),
-          PixelButton(label: yesLabel, color: Kanagawa.autumnRed, textColor: Kanagawa.fujiWhite, onPressed: onYes, sound: false),
+          PixelButton(
+              label: yesLabel,
+              color: Kanagawa.autumnRed,
+              textColor: Kanagawa.fujiWhite,
+              onPressed: onYes,
+              sound: false),
           PixelButton(label: 'Não', color: Kanagawa.sumiInk5, textColor: Kanagawa.fujiWhite, onPressed: onNo),
         ]),
       );

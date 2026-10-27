@@ -44,7 +44,8 @@ class WeekScreen extends ConsumerWidget {
                 SizedBox(
                   width: 44,
                   child: Text(dayAbbr[d],
-                      style: PixelText.display(7, color: d == dayIndexOf(now) ? Kanagawa.carpYellow : Kanagawa.fujiWhite)),
+                      style:
+                          PixelText.display(7, color: d == dayIndexOf(now) ? Kanagawa.carpYellow : Kanagawa.fujiWhite)),
                 ),
                 Expanded(child: PixelBar(value: total == 0 ? 0 : done / total, color: Kanagawa.springBlue, height: 12)),
                 SizedBox(

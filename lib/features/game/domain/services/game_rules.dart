@@ -6,13 +6,17 @@ import 'game_stats.dart';
 
 /// Aviso grande (janela) que a interface mostra depois de uma ação.
 class Notice {
-  const Notice(this.title, this.text, {this.sound = 'lvl', this.place});
+  const Notice(this.title, this.text, {this.sound = 'lvl', this.place, this.form, this.astronaut = false});
   final String title;
   final String text;
   final String sound;
 
   /// Mostra este lugar na janela.
   final int? place;
+
+  /// Mostra o personagem nesta transformação.
+  final int? form;
+  final bool astronaut;
 }
 
 /// Regras do jogo. Cada função muda o [GameState] recebido (uma cópia
@@ -24,9 +28,12 @@ abstract final class GameRules {
     final w = s.week(weekKeyOf(now));
     final k = slotKey(m, day);
     if (w.done.remove(k) != null) return false;
-    w.done[k] = DoneRecord(day: day, title: m.title, at: now.millisecondsSinceEpoch);
+    w.done[k] = _record(m, day, now);
     return true;
   }
+
+  static DoneRecord _record(Mission m, int day, DateTime now) => DoneRecord(
+      day: day, title: m.title, at: now.millisecondsSinceEpoch, category: m.category, minutes: missionMinutes(m));
 
   /// Marca todas as missões de hoje que já começaram. Devolve quantas.
   static int markPastToday(GameState s, DateTime now) {
@@ -37,7 +44,7 @@ abstract final class GameRules {
       final a = minutesOf(m.start);
       final k = slotKey(m, day);
       if (a != null && a <= mm && !w.done.containsKey(k)) {
-        w.done[k] = DoneRecord(day: day, title: m.title, at: now.millisecondsSinceEpoch);
+        w.done[k] = _record(m, day, now);
         n++;
       }
     }
@@ -57,8 +64,21 @@ abstract final class GameRules {
     ];
   }
 
-  /// Avisos de lugar novo (e de fase nova) quando a exploração avança.
-  static List<Notice> progressNotices(GameState s, GameStats t) {
+  /// Avisos de transformação nova e de lugar novo quando o jogo avança.
+  static List<Notice> progressNotices(GameState s, GameStats t) => [..._formNotices(s, t), ..._placeNotices(s, t)];
+
+  static List<Notice> _formNotices(GameState s, GameStats t) {
+    if (s.lastForm < 0 || t.formIndex < s.lastForm) {
+      s.lastForm = t.formIndex;
+      return const [];
+    }
+    if (t.formIndex == s.lastForm) return const [];
+    s.lastForm = t.formIndex;
+    final f = t.form;
+    return [Notice('TRANSFORMAÇÃO!', '${f.name}: ${f.description}', form: f.index, astronaut: t.astronaut)];
+  }
+
+  static List<Notice> _placeNotices(GameState s, GameStats t) {
     if (s.lastPlace < 0) {
       s.lastPlace = t.placeIndex;
       return const [];
@@ -77,6 +97,13 @@ abstract final class GameRules {
             Region.earth => 'NOVO DESTINO',
           }
         : 'NOVO DESTINO';
-    return [Notice(title, 'Você chegou a ${p.name}. ${p.fact}', place: p.index)];
+    final suit = from.region == Region.earth && p.region != Region.earth;
+    return [
+      if (suit)
+        Notice('VIROU ASTRONAUTA!',
+            'Para sair da Terra, você vestiu o traje espacial. As transformações continuam no espaço.',
+            form: t.formIndex, astronaut: true),
+      Notice(title, 'Você chegou a ${p.name}. ${p.fact}', place: p.index),
+    ];
   }
 }

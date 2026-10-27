@@ -51,7 +51,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Text('ROTINA QUEST', textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
+                Text('ROTINA QUEST',
+                    textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
                 const SizedBox(height: 4),
                 Text('Sua agenda vira uma exploração espacial.',
                     textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),

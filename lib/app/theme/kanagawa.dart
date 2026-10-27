@@ -35,7 +35,12 @@ abstract final class PixelText {
   static const bodyFamily = family;
 
   static TextStyle display(double size, {Color color = Kanagawa.fujiWhite}) => TextStyle(
-      fontFamily: family, fontSize: size * 1.45, fontWeight: FontWeight.w800, color: color, height: 1.25, letterSpacing: .4);
+      fontFamily: family,
+      fontSize: size * 1.45,
+      fontWeight: FontWeight.w800,
+      color: color,
+      height: 1.25,
+      letterSpacing: .4);
 
   static TextStyle body(double size, {Color color = Kanagawa.fujiWhite}) =>
       TextStyle(fontFamily: family, fontSize: size * .9, color: color, height: 1.35);

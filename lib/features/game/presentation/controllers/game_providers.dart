@@ -108,7 +108,11 @@ class GameController extends Notifier<GameState> {
   @override
   GameState build() {
     final s = ref.read(initialGameStateProvider);
-    if (s.lastPlace < 0) s.lastPlace = computeStats(s, ref.read(clockProvider).now()).placeIndex;
+    if (s.lastPlace < 0 || s.lastForm < 0) {
+      final t = computeStats(s, ref.read(clockProvider).now());
+      if (s.lastPlace < 0) s.lastPlace = t.placeIndex;
+      if (s.lastForm < 0) s.lastForm = t.formIndex;
+    }
     SoundBoard.instance.enabled = s.sound;
     MusicBox.instance.enabled = s.music;
     ref.onDispose(() => _alertTimer?.cancel());
@@ -146,7 +150,8 @@ class GameController extends Notifier<GameState> {
       ..sound = keep.sound
       ..music = keep.music
       ..alerts = keep.alerts
-      ..lastPlace = 0;
+      ..lastPlace = 0
+      ..lastForm = 0;
     state = fresh;
     _syncAlerts(fresh);
     unawaited(ref.read(gameRepositoryProvider).save(fresh));

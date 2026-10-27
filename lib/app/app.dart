@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/sound/music.dart';
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
+import '../features/game/presentation/screens/character_screen.dart';
 import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
 import '../features/game/presentation/screens/map_screen.dart';
@@ -71,6 +72,7 @@ class GameShell extends ConsumerStatefulWidget {
 class _GameShellState extends ConsumerState<GameShell> {
   static const _tabs = [
     (Icons.rocket_launch_outlined, 'EXPLORAR'),
+    (Icons.bolt, 'PERSONAGEM'),
     (Icons.public, 'MAPA'),
     (Icons.calendar_view_week_outlined, 'SEMANA'),
     (Icons.tune, 'AJUSTES'),
@@ -93,8 +95,9 @@ class _GameShellState extends ConsumerState<GameShell> {
         bottom: false,
         child: switch (i) {
           0 => const ExploreScreen(),
-          1 => const MapScreen(),
-          2 => const WeekScreen(),
+          1 => const CharacterScreen(),
+          2 => const MapScreen(),
+          3 => const WeekScreen(),
           _ => const SettingsScreen(),
         },
       ),

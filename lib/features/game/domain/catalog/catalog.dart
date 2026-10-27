@@ -37,14 +37,28 @@ const categories = <Category>[
   Category('lazer', 'Diversão', 0xFF98BB6C),
 ];
 
-Category categoryOf(String key) =>
-    categories.firstWhere((c) => c.key == key, orElse: () => categories.first);
+Category categoryOf(String key) => categories.firstWhere((c) => c.key == key, orElse: () => categories.first);
 
 final _categoryRules = <(String, RegExp)>[
-  ('treino', RegExp(r'academia|treino|gym|muscul|pilates|yoga|ioga|corrida|correr|run|futebol|futsal|futevolei|volei|basquete|natacao|nadar|bike|ciclismo|crossfit|luta|jiu|boxe|muay|danca|caminhada|alongamento|workout|esporte|tenis|beach')),
-  ('estudo', RegExp(r'aula|estud|curso|leitura|ler |livro|duolingo|idioma|ingles|espanhol|frances|alemao|italiano|japones|english|spanish|study|class|lesson|reading|coddy|program|codigo|faculdade|escola|prova|revis|podcast')),
-  ('trabalho', RegExp(r'trabalho|reuniao|work|meeting|call|expediente|escritorio|cliente|projeto|daily|standup|1:1|freela')),
-  ('arte', RegExp(r'piano|violao|guitarra|musica|canto|bateria|foto|desenho|pintura|arte|escrita|escrever|music|draw|paint|teatro|croche|bordado')),
+  (
+    'treino',
+    RegExp(
+        r'academia|treino|gym|muscul|pilates|yoga|ioga|corrida|correr|run|futebol|futsal|futevolei|volei|basquete|natacao|nadar|bike|ciclismo|crossfit|luta|jiu|boxe|muay|danca|caminhada|alongamento|workout|esporte|tenis|beach')
+  ),
+  (
+    'estudo',
+    RegExp(
+        r'aula|estud|curso|leitura|ler |livro|duolingo|idioma|ingles|espanhol|frances|alemao|italiano|japones|english|spanish|study|class|lesson|reading|coddy|program|codigo|faculdade|escola|prova|revis|podcast')
+  ),
+  (
+    'trabalho',
+    RegExp(r'trabalho|reuniao|work|meeting|call|expediente|escritorio|cliente|projeto|daily|standup|1:1|freela')
+  ),
+  (
+    'arte',
+    RegExp(
+        r'piano|violao|guitarra|musica|canto|bateria|foto|desenho|pintura|arte|escrita|escrever|music|draw|paint|teatro|croche|bordado')
+  ),
   ('espirito', RegExp(r'missa|igreja|culto|oracao|orar|meditac|meditar|terco|biblia|retiro|devocional|gratidao')),
   ('lazer', RegExp(r'jogo|game|filme|serie|lazer|passeio|festa|amigos|cinema|descanso|hobby')),
 ];

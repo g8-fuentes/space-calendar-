@@ -1,12 +1,33 @@
 import 'dart:math' as math;
 
 const _accents = {
-  'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a', 'å': 'a',
-  'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
-  'í': 'i', 'ì': 'i', 'î': 'i', 'ï': 'i',
-  'ó': 'o', 'ò': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
-  'ú': 'u', 'ù': 'u', 'û': 'u', 'ü': 'u',
-  'ç': 'c', 'ñ': 'n', 'ý': 'y', 'ÿ': 'y',
+  'á': 'a',
+  'à': 'a',
+  'â': 'a',
+  'ã': 'a',
+  'ä': 'a',
+  'å': 'a',
+  'é': 'e',
+  'è': 'e',
+  'ê': 'e',
+  'ë': 'e',
+  'í': 'i',
+  'ì': 'i',
+  'î': 'i',
+  'ï': 'i',
+  'ó': 'o',
+  'ò': 'o',
+  'ô': 'o',
+  'õ': 'o',
+  'ö': 'o',
+  'ú': 'u',
+  'ù': 'u',
+  'û': 'u',
+  'ü': 'u',
+  'ç': 'c',
+  'ñ': 'n',
+  'ý': 'y',
+  'ÿ': 'y',
 };
 
 /// Minúsculas, sem acentos e sem espaços nas pontas: para comparar textos.
@@ -24,8 +45,7 @@ String two(int n) => n.toString().padLeft(2, '0');
 final _rand = math.Random();
 
 /// Identificador curto e único o bastante para missões e cursos.
-String uid() =>
-    DateTime.now().microsecondsSinceEpoch.toRadixString(36) + _rand.nextInt(1 << 30).toRadixString(36);
+String uid() => DateTime.now().microsecondsSinceEpoch.toRadixString(36) + _rand.nextInt(1 << 30).toRadixString(36);
 
 /// "07:30" -> 450. Vazio ou inválido -> null.
 int? minutesOf(String? hhmm) {
@@ -44,8 +64,19 @@ String hhmmOf(int minutes) {
 
 String roman(int n) {
   const v = [
-    (1000, 'M'), (900, 'CM'), (500, 'D'), (400, 'CD'), (100, 'C'), (90, 'XC'),
-    (50, 'L'), (40, 'XL'), (10, 'X'), (9, 'IX'), (5, 'V'), (4, 'IV'), (1, 'I'),
+    (1000, 'M'),
+    (900, 'CM'),
+    (500, 'D'),
+    (400, 'CD'),
+    (100, 'C'),
+    (90, 'XC'),
+    (50, 'L'),
+    (40, 'XL'),
+    (10, 'X'),
+    (9, 'IX'),
+    (5, 'V'),
+    (4, 'IV'),
+    (1, 'I'),
   ];
   final b = StringBuffer();
   for (final (a, s) in v) {

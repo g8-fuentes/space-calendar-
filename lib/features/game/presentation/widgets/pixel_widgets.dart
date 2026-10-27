@@ -112,8 +112,7 @@ class PixelButton extends StatelessWidget {
             padding: EdgeInsets.symmetric(horizontal: dense ? 8 : 12, vertical: dense ? 7 : 11),
             child: Text(
               label.toUpperCase(),
-              style: PixelText.display(dense ? 7 : 8,
-                  color: enabled ? textColor : Kanagawa.springViolet1),
+              style: PixelText.display(dense ? 7 : 8, color: enabled ? textColor : Kanagawa.springViolet1),
             ),
           ),
         ),
@@ -128,6 +127,5 @@ class SectionTitle extends StatelessWidget {
   final Color color;
 
   @override
-  Widget build(BuildContext context) =>
-      Text(text.toUpperCase(), style: PixelText.display(9, color: color));
+  Widget build(BuildContext context) => Text(text.toUpperCase(), style: PixelText.display(9, color: color));
 }

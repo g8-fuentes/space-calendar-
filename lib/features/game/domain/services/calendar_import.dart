@@ -33,7 +33,8 @@ String _hm(DateTime d) => '${two(d.hour)}:${two(d.minute)}';
 /// Lê uma agenda .ics/.cal (iCalendar) e devolve os eventos semanais.
 ImportResult parseCalendar(String fileName, String text, DateTime now) {
   if (!RegExp('BEGIN:VCALENDAR|BEGIN:VEVENT', caseSensitive: false).hasMatch(text)) {
-    return ImportResult([], ImportInfo(), 'Esse arquivo não é uma agenda .ics ou .cal. Exporte a agenda no Google Agenda e escolha o arquivo .ics.');
+    return ImportResult([], ImportInfo(),
+        'Esse arquivo não é uma agenda .ics ou .cal. Exporte a agenda no Google Agenda e escolha o arquivo .ics.');
   }
   return parseIcs(text, now);
 }
@@ -48,8 +49,10 @@ ImportResult parseCalendar(String fileName, String text, DateTime now) {
   return (allDay: false, date: date);
 }
 
-String _unescape(String s) =>
-    s.replaceAll(RegExp(r'\\n', caseSensitive: false), ' ').replaceAllMapped(RegExp(r'\\([,;\\])'), (m) => m[1]!).trim();
+String _unescape(String s) => s
+    .replaceAll(RegExp(r'\\n', caseSensitive: false), ' ')
+    .replaceAllMapped(RegExp(r'\\([,;\\])'), (m) => m[1]!)
+    .trim();
 
 /// [thisWeekOnly]: eventos avulsos só entram se caírem na semana de [now]
 /// (usado na sincronização, que roda toda semana).
@@ -161,7 +164,8 @@ ImportResult parseIcs(String text, DateTime now, {bool thisWeekOnly = false}) {
       once.add((ImportedEvent(title, [wd], s, endStr), st.date));
     }
   }
-  var selected = once.where((o) => !o.$2.isBefore(from) && (thisWeekOnly ? o.$2.isBefore(to) : !o.$2.isAfter(to))).toList();
+  var selected =
+      once.where((o) => !o.$2.isBefore(from) && (thisWeekOnly ? o.$2.isBefore(to) : !o.$2.isAfter(to))).toList();
   if (!thisWeekOnly && out.isEmpty && selected.isEmpty) selected = once;
   info.skippedOld += once.length - selected.length;
   out.addAll(selected.map((o) => o.$1));
@@ -197,4 +201,3 @@ List<Mission> toMissions(List<ImportedEvent> list) {
   }
   return arr;
 }
-

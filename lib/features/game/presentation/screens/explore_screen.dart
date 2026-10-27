@@ -62,7 +62,8 @@ class _Header extends ConsumerWidget {
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text((s.name.isEmpty ? 'Astronauta' : s.name).toUpperCase(),
               style: PixelText.display(10), maxLines: 1, overflow: TextOverflow.ellipsis),
-          Text('${t.missionsDone} ${t.missionsDone == 1 ? 'missão concluída' : 'missões concluídas'} · hoje ${t.doneToday}/${t.totalToday}',
+          Text(
+              '${t.missionsDone} ${t.missionsDone == 1 ? 'missão concluída' : 'missões concluídas'} · hoje ${t.doneToday}/${t.totalToday}',
               style: PixelText.body(14, color: Kanagawa.springViolet1)),
         ]),
       ),
@@ -184,7 +185,8 @@ class _Board extends ConsumerWidget {
 }
 
 class _DayChip extends ConsumerWidget {
-  const _DayChip({required this.day, required this.selected, required this.today, required this.done, required this.total});
+  const _DayChip(
+      {required this.day, required this.selected, required this.today, required this.done, required this.total});
   final int day, done, total;
   final bool selected, today;
 
@@ -279,7 +281,8 @@ class _MissionTile extends ConsumerWidget {
                     Text.rich(TextSpan(style: PixelText.body(13, color: color), children: [
                       TextSpan(text: cat.name),
                       if (mission.end.isNotEmpty)
-                        TextSpan(text: ' · até ${mission.end}', style: PixelText.body(13, color: Kanagawa.springViolet1)),
+                        TextSpan(
+                            text: ' · até ${mission.end}', style: PixelText.body(13, color: Kanagawa.springViolet1)),
                       if (live) TextSpan(text: ' · AGORA', style: PixelText.display(6, color: Kanagawa.carpYellow)),
                     ])),
                   ]),

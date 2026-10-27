@@ -7,76 +7,7 @@ import '../../domain/catalog/places.dart';
 /// Grade de pixels: null = transparente.
 typedef PixelGrid = List<List<Color?>>;
 
-const _skin = Color(0xFFE8B48A);
-const _skinDark = Color(0xFFC98E66);
-const _hair = Color(0xFF2E1D14);
 const _ink = Kanagawa.sumiInk0;
-
-/// Astronauta: capacete grande, rosto no visor, traje com painel de luzes,
-/// tanques nas costas e a bandeira do Brasil no peito. A figura ocupa as
-/// colunas 6 a 20 e as linhas 3 a 25 da grade 26x28.
-PixelGrid astronautGrid({bool blink = false}) {
-  const w = 26, h = 28, ox = 5, oy = 3;
-  final g = List.generate(h, (_) => List<Color?>.filled(w, null));
-  void r(int x, int y, int rw, int rh, Color c) {
-    for (var j = y + oy; j < y + oy + rh; j++) {
-      for (var i = x + ox; i < x + ox + rw; i++) {
-        if (j >= 0 && j < h && i >= 0 && i < w) g[j][i] = c;
-      }
-    }
-  }
-
-  const suit = Color(0xFFE4DFC6), shade = Color(0xFFB9B39A), accent = Kanagawa.surimiOrange;
-  // tanques
-  r(1, 11, 2, 6, Kanagawa.fujiGray);
-  r(13, 11, 2, 6, Kanagawa.fujiGray);
-  r(1, 16, 2, 1, Kanagawa.sumiInk6);
-  r(13, 16, 2, 1, Kanagawa.sumiInk6);
-  // capacete
-  r(5, 0, 6, 1, Kanagawa.fujiWhite);
-  r(4, 1, 8, 1, Kanagawa.fujiWhite);
-  r(3, 2, 10, 7, Kanagawa.fujiWhite);
-  r(4, 9, 8, 1, Kanagawa.oldWhite);
-  r(3, 8, 10, 1, Kanagawa.oldWhite);
-  // visor e rosto
-  r(4, 3, 8, 5, Kanagawa.waveBlue1);
-  r(5, 4, 6, 3, _skin);
-  r(5, 4, 6, 1, _hair);
-  r(5, 5, 1, 1, _hair);
-  r(6, 5, 1, 1, blink ? _skinDark : _ink);
-  r(9, 5, 1, 1, blink ? _skinDark : _ink);
-  r(7, 6, 2, 1, _skinDark);
-  r(10, 3, 1, 1, Kanagawa.lightBlue);
-  r(11, 4, 1, 1, Kanagawa.lightBlue);
-  // corpo
-  r(4, 10, 8, 6, suit);
-  r(4, 15, 8, 1, accent);
-  r(6, 11, 4, 2, _ink);
-  r(6, 11, 1, 1, Kanagawa.autumnRed);
-  r(7, 11, 1, 1, Kanagawa.springGreen);
-  r(8, 11, 1, 1, Kanagawa.springBlue);
-  r(9, 12, 1, 1, Kanagawa.carpYellow);
-  // bandeira
-  r(5, 13, 3, 2, const Color(0xFF3F8F4A));
-  r(6, 13, 1, 2, const Color(0xFFE6C384));
-  // braços
-  r(2, 10, 2, 5, suit);
-  r(12, 10, 2, 5, suit);
-  r(2, 14, 2, 1, shade);
-  r(12, 14, 2, 1, shade);
-  r(2, 15, 2, 1, accent);
-  r(12, 15, 2, 1, accent);
-  // pernas
-  r(4, 16, 3, 5, suit);
-  r(9, 16, 3, 5, suit);
-  r(4, 18, 3, 1, shade);
-  r(9, 18, 3, 1, shade);
-  r(4, 20, 3, 1, _ink);
-  r(9, 20, 3, 1, _ink);
-  r(4, 21, 3, 1, accent);
-  r(9, 21, 3, 1, accent);
-  return outlined(g);
-}
 
 PixelGrid outlined(PixelGrid g) {
   final h = g.length, w = g.first.length;
@@ -141,7 +72,8 @@ void paintBody(Canvas canvas, Place d, Offset center, double radius, int tick) {
       final a = i * math.pi / 4 + tick * .004;
       final len = r * (i.isEven ? .9 : .55) * (1 + .08 * math.sin(tick * .1 + i));
       for (var k = 0.0; k < len; k += 1) {
-        rect(cx + math.cos(a) * (r + 2 + k), cy + math.sin(a) * (r + 2 + k), 1, 1, colors[0].withAlpha((200 * (1 - k / len)).round()));
+        rect(cx + math.cos(a) * (r + 2 + k), cy + math.sin(a) * (r + 2 + k), 1, 1,
+            colors[0].withAlpha((200 * (1 - k / len)).round()));
       }
     }
   }
@@ -249,8 +181,16 @@ void paintSkyline(Canvas canvas, Place city, double groundY, double width,
       for (var wy = groundY - h + 3 * unit; wy < groundY - 3 * unit; wy += 4 * unit) {
         for (var wx = x + 2 * unit; wx < x + w - 2 * unit; wx += 4 * unit) {
           final lit = night > .5 && r.nextInt(3) > 0;
-          _rect(canvas, p, wx, wy, 2 * unit, 2 * unit,
-              lit ? Kanagawa.carpYellow.withAlpha(220) : Color.lerp(const Color(0xFF7FB4CA), Kanagawa.sumiInk6, night)!.withAlpha(140));
+          _rect(
+              canvas,
+              p,
+              wx,
+              wy,
+              2 * unit,
+              2 * unit,
+              lit
+                  ? Kanagawa.carpYellow.withAlpha(220)
+                  : Color.lerp(const Color(0xFF7FB4CA), Kanagawa.sumiInk6, night)!.withAlpha(140));
         }
       }
     }
@@ -261,8 +201,10 @@ void paintSkyline(Canvas canvas, Place city, double groundY, double width,
 /// Monumento de cada cidade, centralizado em [cx] e apoiado em [baseY].
 void paintLandmark(Canvas canvas, Landmark l, double cx, double baseY, double u, Color accent) {
   final p = Paint();
-  void rect(double x, double y, double w, double h, Color c) => _rect(canvas, p, cx + x * u, baseY + y * u, w * u, h * u, c);
-  void tri(double x, double baseW, double h, Color c, [double y = 0]) => _tri(canvas, p, cx + x * u, baseY + y * u, baseW * u, h * u, c);
+  void rect(double x, double y, double w, double h, Color c) =>
+      _rect(canvas, p, cx + x * u, baseY + y * u, w * u, h * u, c);
+  void tri(double x, double baseW, double h, Color c, [double y = 0]) =>
+      _tri(canvas, p, cx + x * u, baseY + y * u, baseW * u, h * u, c);
   const stone = Color(0xFFC8C093), dark = Kanagawa.sumiInk3;
   switch (l) {
     case Landmark.none:
@@ -324,7 +266,11 @@ void paintLandmark(Canvas canvas, Landmark l, double cx, double baseY, double u,
       tri(18, 30, 19, const Color(0xFFD4B472));
       rect(-12, -30, 1, 1, Kanagawa.fujiWhite);
     case Landmark.onionDome:
-      for (final (x, h, c) in [(-12.0, 28.0, Kanagawa.autumnRed), (0.0, 38.0, Kanagawa.springGreen), (12.0, 26.0, Kanagawa.crystalBlue)]) {
+      for (final (x, h, c) in [
+        (-12.0, 28.0, Kanagawa.autumnRed),
+        (0.0, 38.0, Kanagawa.springGreen),
+        (12.0, 26.0, Kanagawa.crystalBlue)
+      ]) {
         rect(x - 4, -h, 8, h, const Color(0xFFC88A6E));
         p.color = c;
         canvas.drawCircle(Offset(cx + x * u, baseY - (h + 4) * u), 5.5 * u, p);
@@ -353,7 +299,8 @@ void paintLandmark(Canvas canvas, Landmark l, double cx, double baseY, double u,
       for (final (x, w, h) in [(-16.0, 16.0, 18.0), (-4.0, 18.0, 24.0), (9.0, 16.0, 20.0), (19.0, 12.0, 14.0)]) {
         for (var i = 0; i < h; i++) {
           final wi = w * (1 - i / h);
-          rect(x - wi / 2 + (i / h) * w * .35, -4 - i - 1.0, wi, 1, i.isEven ? Kanagawa.fujiWhite : const Color(0xFFE4DFC6));
+          rect(x - wi / 2 + (i / h) * w * .35, -4 - i - 1.0, wi, 1,
+              i.isEven ? Kanagawa.fujiWhite : const Color(0xFFE4DFC6));
         }
       }
   }

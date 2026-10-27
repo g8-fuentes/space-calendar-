@@ -113,7 +113,8 @@ class LocalMissionAlerts implements MissionAlerts {
           body: a.body,
           scheduledDate: at,
           notificationDetails: _details,
-          androidScheduleMode: exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
+          androidScheduleMode:
+              exact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         );
       }

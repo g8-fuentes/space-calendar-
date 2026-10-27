@@ -31,7 +31,12 @@ class MapScreen extends ConsumerWidget {
         ));
       }
       children
-        ..add(_PlaceTile(place: p, reached: i <= t.placeIndex, current: i == t.placeIndex, next: i == t.placeIndex + 1, missing: t.missing))
+        ..add(_PlaceTile(
+            place: p,
+            reached: i <= t.placeIndex,
+            current: i == t.placeIndex,
+            next: i == t.placeIndex + 1,
+            missing: t.missing))
         ..add(const SizedBox(height: 8));
     }
     return ListView(
@@ -54,7 +59,8 @@ class MapScreen extends ConsumerWidget {
 }
 
 class _PlaceTile extends StatelessWidget {
-  const _PlaceTile({required this.place, required this.reached, required this.current, required this.next, required this.missing});
+  const _PlaceTile(
+      {required this.place, required this.reached, required this.current, required this.next, required this.missing});
   final Place place;
   final bool reached, current, next;
   final int missing;

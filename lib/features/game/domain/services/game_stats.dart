@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import '../../../../core/text/text_utils.dart';
 import '../../../../core/time/week_utils.dart';
+import '../catalog/catalog.dart';
 import '../catalog/places.dart';
+import '../catalog/transformations.dart';
 import '../entities/game_state.dart';
 
 String slotKey(Mission m, int day) => '${m.id}@$day';
@@ -39,15 +41,61 @@ WeekStats weekStatsOf(GameState s, String key) {
   return WeekStats(w == null ? 0 : math.min(w.done.length, math.max(totalSlots(s), w.done.length)), totalSlots(s));
 }
 
+/// Duração da missão em minutos (null sem horário).
+int? missionMinutes(Mission m) {
+  final a = minutesOf(m.start), b = minutesOf(m.end);
+  if (a == null || b == null) return null;
+  final d = b - a;
+  return d <= 0 ? d + 1440 : d;
+}
+
+/// Pontos de atributo de uma missão concluída: 1 a cada 10 minutos,
+/// de 3 a 24.
+int pointsFor(int? minutes) => ((minutes ?? 30) / 10).round().clamp(3, 24);
+
 /// Números derivados do estado. Nada disso é salvo.
 class GameStats {
-  const GameStats({required this.missionsDone, required this.placeIndex, required this.doneToday, required this.totalToday});
+  const GameStats({
+    required this.missionsDone,
+    required this.placeIndex,
+    required this.doneToday,
+    required this.totalToday,
+    required this.attributes,
+  });
 
   /// Missões concluídas desde o começo.
   final int missionsDone;
   final int placeIndex;
   final int doneToday;
   final int totalToday;
+
+  /// Pontos por categoria (Vitalidade, Força...).
+  final Map<String, int> attributes;
+
+  int get power => attributes.values.fold(0, (a, b) => a + b);
+  int get formIndex => transformationIndexFor(power);
+  Transformation get form => transformationAt(formIndex);
+  Transformation get nextForm => transformationAt(formIndex + 1);
+
+  /// Pontos que faltam para a próxima transformação.
+  int get powerMissing => nextForm.power - power;
+
+  double get formProgress {
+    final span = nextForm.power - form.power;
+    return span <= 0 ? 1 : ((power - form.power) / span).clamp(0.0, 1.0);
+  }
+
+  /// Fora da Terra o personagem usa o traje de astronauta.
+  bool get astronaut => place.region != Region.earth;
+
+  /// Atributo com mais pontos (null se ainda não tem nenhum).
+  Category? get best {
+    String? k;
+    for (final e in attributes.entries) {
+      if (e.value > 0 && (k == null || e.value > attributes[k]!)) k = e.key;
+    }
+    return k == null ? null : categoryOf(k);
+  }
 
   Place get place => placeAt(placeIndex);
   Place get next => placeAt(placeIndex + 1);
@@ -64,8 +112,17 @@ class GameStats {
 
 GameStats computeStats(GameState s, DateTime now) {
   var done = 0;
+  final byId = {for (final m in s.missions) m.id: m};
+  final attrs = {for (final c in categories) c.key: 0};
   for (final w in s.weeks.values) {
     done += w.done.length;
+    for (final e in w.done.entries) {
+      final r = e.value;
+      final m = byId[e.key.split('@').first];
+      final cat = r.category ?? m?.category ?? guessCategory(r.title);
+      final pts = pointsFor(r.minutes ?? (m == null ? null : missionMinutes(m)));
+      attrs[cat] = (attrs[cat] ?? 0) + pts;
+    }
   }
   final today = dayIndexOf(now);
   final w = s.weeks[weekKeyOf(now)] ?? WeekRecord();
@@ -74,5 +131,6 @@ GameStats computeStats(GameState s, DateTime now) {
     placeIndex: placeIndexFor(done),
     doneToday: dayDone(s, w, today),
     totalToday: daySlots(s, today).length,
+    attributes: attrs,
   );
 }

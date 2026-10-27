@@ -10,6 +10,8 @@ import '../../../../core/text/text_utils.dart';
 import '../../../../core/weather/weather.dart';
 import '../../domain/catalog/catalog.dart';
 import '../../domain/catalog/places.dart';
+import '../../domain/catalog/transformations.dart';
+import '../art/character_art.dart';
 import '../art/pixel_art.dart';
 import '../controllers/game_providers.dart';
 
@@ -34,6 +36,15 @@ class _Spark {
 
 const sceneW = 200.0, sceneH = 150.0;
 
+double _scaleOf(bool earth) => earth ? 3.9 : 4.1;
+
+/// Canto da grade do personagem na cena (sem pulo nem balanço).
+Offset _originOf(bool earth) {
+  final sc = _scaleOf(earth);
+  // na Terra fica em pé no chão; no espaço, flutua
+  return Offset(56 - 13 * sc, earth ? 138 - (feetRow + 1) * sc : 34 - 6 * sc);
+}
+
 /// Cena da exploração: o astronauta grande no lugar atual, com a hora ao
 /// lado, sol ou lua conforme o relógio e, na Terra, o tempo de Bauru.
 /// Toque no astronauta para ele pular.
@@ -51,6 +62,9 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
   late final Ticker _ticker;
   final _rand = math.Random();
   final _sparks = <_Spark>[];
+  final _aura = <AuraParticle>[];
+  Transformation _form = transformationAt(0);
+  bool _earth = true;
   int _tick = 0, _jump = 0, _lastFrame = -1;
 
   @override
@@ -99,6 +113,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
       if (p.text == null) p.vy += .05;
     }
     _sparks.removeWhere((p) => p.life <= 0 || p.y > sceneH);
+    stepAura(_aura, figureBox(_originOf(_earth), _scaleOf(_earth)), _form, _rand);
   }
 
   void _celebrate({bool text = true}) {
@@ -119,12 +134,15 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
     final place = widget.placeOverride ?? stats.place;
     final now = ref.watch(nowProvider).valueOrNull ?? ref.read(clockProvider).now();
     final weather = place.region == Region.earth ? ref.watch(weatherProvider).valueOrNull : null;
+    _form = stats.form;
+    _earth = place.region == Region.earth;
     final hour = now.hour + now.minute / 60;
     final day = dayLight(hour);
     return Semantics(
-      label: 'Astronauta em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
+      label:
+          '${_earth ? 'Personagem' : 'Astronauta'} (${_form.name}) em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
           '${isSunUp(hour) ? 'com sol' : 'com lua'}${weather != null ? ', ${weather.label} em Bauru, ${weather.tempC.round()} graus' : ''}. '
-          'Toque para o astronauta pular.',
+          'Toque para pular.',
       child: GestureDetector(
         onTap: () {
           Sfx.tab.play();
@@ -144,6 +162,8 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
                 dusk: duskLight(hour),
                 sunUp: isSunUp(hour),
                 weather: weather,
+                form: _form,
+                aura: _aura,
               ),
             ),
           ),
@@ -164,6 +184,8 @@ class _ScenePainter extends CustomPainter {
     required this.dusk,
     required this.sunUp,
     required this.weather,
+    required this.form,
+    required this.aura,
   });
 
   final int tick, jump;
@@ -173,9 +195,9 @@ class _ScenePainter extends CustomPainter {
   final double day, dusk;
   final bool sunUp;
   final WeatherNow? weather;
+  final Transformation form;
+  final List<AuraParticle> aura;
 
-  static final _astro = astronautGrid();
-  static final _astroBlink = astronautGrid(blink: true);
   static final _labels = <String, TextPainter>{};
 
   bool get onEarth => place.region == Region.earth;
@@ -273,7 +295,8 @@ class _ScenePainter extends CustomPainter {
         : [Kanagawa.oniViolet, Kanagawa.crystalBlue, Kanagawa.sakuraPink];
     for (var i = 0; i < (deep ? 9 : 6); i++) {
       p.color = nebula[i % nebula.length].withAlpha(deep ? 34 : 22);
-      canvas.drawCircle(Offset(((i * 61 + place.index * 13) % 200).toDouble(), ((i * 37) % 120).toDouble()), 20.0 + (i % 3) * 10, p);
+      canvas.drawCircle(
+          Offset(((i * 61 + place.index * 13) % 200).toDouble(), ((i * 37) % 120).toDouble()), 20.0 + (i % 3) * 10, p);
     }
     _stars(canvas, p, deep ? 110 : 80, 160 + (night * 95).round());
     if (place.kind == PlaceKind.constellation) {
@@ -385,24 +408,29 @@ class _ScenePainter extends CustomPainter {
   }
 
   void _astronaut(Canvas canvas, Paint p) {
-    final sc = onEarth ? 3.9 : 4.1;
+    final sc = _scaleOf(onEarth);
     const cx = 56.0;
     final jumpY = jump > 0 ? -(math.sin(jump / 26 * math.pi) * 14).roundToDouble() : 0.0;
-    double top;
+    var o = _originOf(onEarth).translate(0, jumpY);
     if (onEarth) {
-      // em pé no chão (pés na linha 25 da grade)
-      top = 138 - 25 * sc + jumpY + ((tick ~/ 20) % 2 == 0 ? 0 : -1);
+      o = o.translate(0, (tick ~/ 20) % 2 == 0 ? 0 : -1);
       p.color = const Color(0x55000000);
       canvas.drawOval(Rect.fromCenter(center: const Offset(cx, 139), width: 40 - jumpY.abs(), height: 4), p);
     } else {
-      top = 34 - 3 * sc + jumpY + (math.sin(tick * .04) * 4).roundToDouble();
+      o = o.translate(0, (math.sin(tick * .04) * 4).roundToDouble());
+    }
+    final box = figureBox(o, sc);
+    paintAuraBack(canvas, box, form, aura, tick);
+    if (!onEarth) {
       final flame = 6 + (tick >> 2) % 4;
       for (final fx in [6.0, 18.0]) {
-        _rect(canvas, p, cx - 13 * sc + (fx + .5) * sc, top + 20 * sc, 2 * sc, flame.toDouble(), Kanagawa.surimiOrange);
-        _rect(canvas, p, cx - 13 * sc + (fx + 1) * sc, top + 20 * sc, sc, math.max(2, flame - 3).toDouble(), Kanagawa.carpYellow);
+        _rect(canvas, p, o.dx + (fx + .5) * sc, o.dy + 23 * sc, 2 * sc, flame.toDouble(), Kanagawa.surimiOrange);
+        _rect(canvas, p, o.dx + (fx + 1) * sc, o.dy + 23 * sc, sc, math.max(2, flame - 3).toDouble(),
+            Kanagawa.carpYellow);
       }
     }
-    paintGrid(canvas, tick % 200 < 6 ? _astroBlink : _astro, Offset(cx - 13 * sc, top), sc);
+    paintGrid(canvas, characterGrid(form, astronaut: !onEarth, blink: tick % 200 < 6, tick: tick), o, sc);
+    paintAuraFront(canvas, box, form, tick);
   }
 
   void _clock(Canvas canvas) {
@@ -437,7 +465,8 @@ class _ScenePainter extends CustomPainter {
     final tp = _labels[key] ??= (TextPainter(
       text: TextSpan(
         text: text,
-        style: TextStyle(fontFamily: PixelText.family, fontWeight: FontWeight.w800, fontSize: size, color: color, height: 1),
+        style: TextStyle(
+            fontFamily: PixelText.family, fontWeight: FontWeight.w800, fontSize: size, color: color, height: 1),
       ),
       textDirection: TextDirection.ltr,
     )..layout());

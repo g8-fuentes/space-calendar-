@@ -32,20 +32,31 @@ class Mission {
       );
 }
 
-/// Missão concluída num dia.
+/// Missão concluída num dia. [category] e [minutes] dão os pontos de
+/// atributo (registros antigos não têm; ver game_stats.dart).
 class DoneRecord {
-  const DoneRecord({required this.day, required this.title, required this.at});
+  const DoneRecord({required this.day, required this.title, required this.at, this.category, this.minutes});
 
   final int day;
   final String title;
   final int at;
+  final String? category;
+  final int? minutes;
 
-  Map<String, Object?> toJson() => {'d': day, 't': title, 'at': at};
+  Map<String, Object?> toJson() => {
+        'd': day,
+        't': title,
+        'at': at,
+        if (category != null) 'cat': category,
+        if (minutes != null) 'min': minutes,
+      };
 
   factory DoneRecord.fromJson(Map<String, Object?> j) => DoneRecord(
         day: (j['d'] as num?)?.toInt() ?? 0,
         title: j['t'] as String? ?? '',
         at: (j['at'] as num?)?.toInt() ?? 0,
+        category: j['cat'] as String?,
+        minutes: (j['min'] as num?)?.toInt(),
       );
 }
 
@@ -54,7 +65,9 @@ class WeekRecord {
   WeekRecord([Map<String, DoneRecord>? done]) : done = done ?? {};
   final Map<String, DoneRecord> done;
 
-  Map<String, Object?> toJson() => {'done': {for (final e in done.entries) e.key: e.value.toJson()}};
+  Map<String, Object?> toJson() => {
+        'done': {for (final e in done.entries) e.key: e.value.toJson()}
+      };
 
   factory WeekRecord.fromJson(Map<String, Object?> j) => WeekRecord({
         for (final e in (j['done'] as Map? ?? {}).entries)
@@ -75,6 +88,7 @@ class GameState {
     this.music = true,
     this.alerts = true,
     this.lastPlace = -1,
+    this.lastForm = -1,
   })  : missions = missions ?? [],
         weeks = weeks ?? {};
 
@@ -96,6 +110,9 @@ class GameState {
   /// Último lugar já anunciado (-1 = ainda não calculado).
   int lastPlace;
 
+  /// Última transformação já anunciada (-1 = ainda não calculada).
+  int lastForm;
+
   WeekRecord week(String key) => weeks.putIfAbsent(key, WeekRecord.new);
 
   Map<String, Object?> toJson() => {
@@ -109,6 +126,7 @@ class GameState {
         'alerts': alerts,
         'start': startDate,
         'lastPlace': lastPlace,
+        'lastForm': lastForm,
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) => GameState(
@@ -126,9 +144,9 @@ class GameState {
         music: j['music'] as bool? ?? true,
         alerts: j['alerts'] as bool? ?? true,
         lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
+        lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
       );
 
   /// Cópia profunda: as regras mexem na cópia e o controlador troca o estado.
-  GameState copy() =>
-      GameState.fromJson(jsonDecode(jsonEncode(toJson())) as Map<String, Object?>, today: startDate);
+  GameState copy() => GameState.fromJson(jsonDecode(jsonEncode(toJson())) as Map<String, Object?>, today: startDate);
 }

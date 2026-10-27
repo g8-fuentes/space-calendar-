@@ -32,10 +32,58 @@ const _major = [0, 2, 4, 5, 7, 9, 11];
 const _minor = [0, 2, 3, 5, 7, 8, 10];
 
 const songs = [
-  Song('Órbita', 60, 128, _major, [[0, 4, 7], [7, 11, 14], [9, 12, 16], [5, 9, 12]], 11),
-  Song('Nebulosa', 57, 96, _minor, [[0, 3, 7], [8, 12, 15], [3, 7, 10], [10, 14, 17]], 23, echo: true, duty: .5),
-  Song('Hiperespaço', 62, 150, _minor, [[0, 3, 7], [5, 9, 12], [0, 3, 7], [10, 14, 17]], 37, duty: .125),
-  Song('Base lunar', 65, 112, _major, [[0, 4, 7], [9, 12, 16], [2, 5, 9], [7, 11, 14]], 41, echo: true),
+  Song(
+      'Órbita',
+      60,
+      128,
+      _major,
+      [
+        [0, 4, 7],
+        [7, 11, 14],
+        [9, 12, 16],
+        [5, 9, 12]
+      ],
+      11),
+  Song(
+      'Nebulosa',
+      57,
+      96,
+      _minor,
+      [
+        [0, 3, 7],
+        [8, 12, 15],
+        [3, 7, 10],
+        [10, 14, 17]
+      ],
+      23,
+      echo: true,
+      duty: .5),
+  Song(
+      'Hiperespaço',
+      62,
+      150,
+      _minor,
+      [
+        [0, 3, 7],
+        [5, 9, 12],
+        [0, 3, 7],
+        [10, 14, 17]
+      ],
+      37,
+      duty: .125),
+  Song(
+      'Base lunar',
+      65,
+      112,
+      _major,
+      [
+        [0, 4, 7],
+        [9, 12, 16],
+        [2, 5, 9],
+        [7, 11, 14]
+      ],
+      41,
+      echo: true),
 ];
 
 const _rate = 22050;
@@ -102,7 +150,8 @@ Float64List renderSong(Song s) {
   final out = Float64List(n);
   final noise = math.Random(s.seed);
 
-  void tone(double startSec, double dur, double freq, double vol, double duty, {bool tri = false, bool vibrato = false}) {
+  void tone(double startSec, double dur, double freq, double vol, double duty,
+      {bool tri = false, bool vibrato = false}) {
     final a = (startSec * _rate).round(), len = (dur * _rate).round();
     var phase = 0.0;
     for (var i = 0; i < len && a + i < n; i++) {
@@ -119,7 +168,13 @@ Float64List renderSong(Song s) {
 
   void drum(double startSec, String kind) {
     final a = (startSec * _rate).round();
-    final len = ((kind == 'kick' ? .14 : kind == 'snare' ? .12 : .035) * _rate).round();
+    final len = ((kind == 'kick'
+                ? .14
+                : kind == 'snare'
+                    ? .12
+                    : .035) *
+            _rate)
+        .round();
     var phase = 0.0, last = 0.0;
     for (var i = 0; i < len && a + i < n; i++) {
       final x = i / len;

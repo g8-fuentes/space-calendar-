@@ -63,10 +63,11 @@ void main() {
     expect(repo.saved!.weeks.values.single.done, hasLength(1));
     expect(find.textContaining('1 missão concluída'), findsOneWidget);
 
-    for (final tab in ['MAPA', 'SEMANA', 'AJUSTES', 'EXPLORAR']) {
+    for (final tab in ['PERSONAGEM', 'MAPA', 'SEMANA', 'AJUSTES', 'EXPLORAR']) {
       await tester.tap(find.text(tab).last);
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull, reason: tab);
+      if (tab == 'PERSONAGEM') expect(find.text('ATRIBUTOS'), findsOneWidget);
     }
     expect(find.text('BAURU, SP'), findsNothing); // a placa é desenhada na cena
     await _end(tester);
