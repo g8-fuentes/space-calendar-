@@ -8,8 +8,7 @@ import '../../domain/catalog/transformations.dart';
 import '../art/character_art.dart';
 import '../art/pixel_art.dart';
 
-/// O dev lutador grande, animado e com a aura da transformação, num fundo
-/// escuro.
+/// O personagem grande, animado e com a luz do nível, num fundo escuro.
 class CharacterView extends StatefulWidget {
   const CharacterView({super.key, required this.form, this.locked = false});
   final Transformation form;
@@ -72,7 +71,7 @@ class _CharacterViewState extends State<CharacterView> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: widget.locked ? 'Transformação ainda bloqueada' : 'Personagem na forma ${widget.form.name}',
+        label: widget.locked ? 'Nível ainda bloqueado' : 'Personagem no ${widget.form.title}',
         child: RepaintBoundary(
           child: AspectRatio(
             aspectRatio: w / h,
@@ -109,8 +108,7 @@ class _CharacterPainter extends CustomPainter {
     canvas.drawRect(const Rect.fromLTWH(0, h - 4, w, 4), p);
     final bob = (tick ~/ 20) % 2 == 0 ? 0.0 : -1.0;
     final o = _CharacterViewState.origin.translate(0, bob);
-    final box = figureBox(o, sc);
-    final grid = characterGrid(form, blink: tick % 180 < 6, tick: tick);
+    final grid = characterGrid(form, blink: tick % 180 < 6);
     if (locked) {
       paintGrid(
           canvas,
@@ -122,9 +120,9 @@ class _CharacterPainter extends CustomPainter {
     } else {
       p.color = const Color(0x55000000);
       canvas.drawOval(Rect.fromCenter(center: const Offset(w / 2, h - 4), width: 44, height: 4), p);
-      paintAuraBack(canvas, box, form, form.aura, aura, tick);
+      paintAuraBack(canvas, o, sc, form, form.aura, aura, tick);
       paintGrid(canvas, grid, o, sc);
-      paintAuraFront(canvas, box, form, form.aura, tick);
+      paintAuraFront(canvas, o, sc, form, form.aura, tick);
     }
     canvas.restore();
   }

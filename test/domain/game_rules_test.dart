@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rotina_quest/core/sound/music.dart';
 import 'package:rotina_quest/core/time/week_utils.dart';
 import 'package:rotina_quest/core/weather/weather.dart';
+import 'package:rotina_quest/features/game/domain/catalog/passages.dart';
 import 'package:rotina_quest/features/game/domain/catalog/places.dart';
 import 'package:rotina_quest/features/game/domain/catalog/transformations.dart';
 import 'package:rotina_quest/features/game/domain/entities/game_state.dart';
@@ -109,7 +110,7 @@ void main() {
       expect(t.attributes['treino'], 27);
       expect(t.power, 27);
       expect(t.best!.name, 'Força');
-      expect(t.form.name, 'Dev iniciante');
+      expect(t.form.title, 'Nível 1 · Buscador');
       expect(t.powerMissing, 13);
       // só aparecem os atributos das missões
       expect(t.shown.map((c) => c.name), ['Força']);
@@ -117,24 +118,30 @@ void main() {
       expect(computeStats(s, now).shown.map((c) => c.name), ['Mente', 'Força']);
     });
 
-    test('poder libera as transformações, sem fim', () {
+    test('cada nível traz uma passagem da Bíblia, sem nível final', () {
       expect(transformationIndexFor(0), 0);
       expect(transformationIndexFor(39), 0);
       expect(transformationIndexFor(40), 1);
-      expect(transformationAt(transformationIndexFor(550)).name, 'Super Lutador');
-      expect(transformationIndexFor(7200), namedTransformations - 1);
-      expect(transformationAt(namedTransformations).name, 'Ultra Cósmico 2');
-      expect(transformationIndexFor(8700), namedTransformations);
-      expect(
-          Hair.values
-              .every((h) => [for (var i = 0; i < namedTransformations; i++) transformationAt(i).hair].contains(h)),
-          isTrue);
-      for (var i = 1; i < namedTransformations + 3; i++) {
-        expect(transformationAt(i).power, greaterThan(transformationAt(i - 1).power));
+      expect(transformationIndexFor(95), 2);
+      expect(transformationAt(0).passage.ref, 'Gênesis 1:1');
+      expect(passages.map((p) => p.ref).toSet(), hasLength(passages.length));
+      for (var i = 1; i < passages.length * 2 + 5; i++) {
+        final f = transformationAt(i);
+        expect(f.power, greaterThan(transformationAt(i - 1).power));
+        expect(f.power - transformationAt(i - 1).power, lessThanOrEqualTo(400));
+        expect(f.passage.text, isNotEmpty);
+        expect(f.aura, greaterThanOrEqualTo(transformationAt(i - 1).aura));
       }
+      // depois da última passagem a lista recomeça, mas os níveis continuam
+      final after = transformationAt(passages.length);
+      expect(after.passage.ref, passages.first.ref);
+      expect(after.level, passages.length + 1);
+      final far = transformationAt(500);
+      expect((far.halo, far.rays, far.wings), (2, true, true));
+      expect(transformationIndexFor(far.power), 500);
     });
 
-    test('avisa a transformação e a saída da Terra, sem traje', () {
+    test('avisa cada nova bênção com a passagem', () {
       final s = GameState.initial(ymd(now))
         ..lastForm = 0
         ..lastPlace = 0;
@@ -145,8 +152,9 @@ void main() {
         GameRules.toggle(s, m, d, now);
       }
       var notices = GameRules.progressNotices(s, computeStats(s, now));
-      expect(notices.map((n) => n.title), ['TRANSFORMAÇÃO!']);
+      expect(notices.map((n) => n.title), ['NOVA BÊNÇÃO!']);
       expect(notices.single.form, 1);
+      expect(notices.single.text, contains(transformationAt(1).passage.ref));
       // muitas missões depois, sai da Terra
       var space = 0;
       while (placeAt(space).region == Region.earth) {
@@ -160,7 +168,7 @@ void main() {
       final t = computeStats(s, now);
       expect(t.place.region, isNot(Region.earth));
       notices = GameRules.progressNotices(s, t);
-      expect(notices.map((n) => n.title), ['TRANSFORMAÇÃO!', 'RUMO AO ESPAÇO!']);
+      expect(notices.map((n) => n.title), ['NOVA BÊNÇÃO!', 'RUMO AO ESPAÇO!']);
     });
   });
 

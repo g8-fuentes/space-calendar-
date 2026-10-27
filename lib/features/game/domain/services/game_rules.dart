@@ -74,7 +74,7 @@ abstract final class GameRules {
     if (t.formIndex == s.lastForm) return const [];
     s.lastForm = t.formIndex;
     final f = t.form;
-    return [Notice('TRANSFORMAÇÃO!', '${f.name}: ${f.description}', form: f.index)];
+    return [Notice('NOVA BÊNÇÃO!', '${f.title}\n\n"${f.passage.text}"\n${f.passage.ref}', form: f.index)];
   }
 
   static List<Notice> _placeNotices(GameState s, GameStats t) {

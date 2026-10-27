@@ -54,7 +54,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                 Text('ROTINA QUEST',
                     textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
                 const SizedBox(height: 4),
-                Text('Sua agenda vira a jornada de um dev lutador.',
+                Text('Sua agenda vira uma jornada de fé.',
                     textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),
                 const SizedBox(height: 14),
                 PixelPanel(padding: EdgeInsets.zero, child: ExploreScene(placeOverride: placeAt(0))),
@@ -76,8 +76,9 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       color: Kanagawa.sumiInk0,
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o seu dev lutador '
-                        'ganha poder, sai de Bauru, roda o mundo e depois voa para a Lua, os planetas e as estrelas.',
+                        '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o seu personagem '
+                        'fica mais perto de Deus a cada nível, sai de Bauru, roda o mundo e depois voa para a Lua, '
+                        'os planetas e as estrelas.',
                         style: PixelText.body(14, color: Kanagawa.springViolet1),
                       ),
                     ),

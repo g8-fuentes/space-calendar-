@@ -37,7 +37,7 @@ Future<String?> importCalendar(BuildContext context, WidgetRef ref, {String? her
   }
   ctrl.apply((s) {
     if (heroName != null) {
-      s.name = heroName.trim().isEmpty ? 'Dev' : heroName.trim();
+      s.name = heroName.trim().isEmpty ? 'Jovem' : heroName.trim();
       s.onboarded = true;
       s.startDate = ymd(ctrl.now);
     }

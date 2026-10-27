@@ -42,7 +42,7 @@ const _sc = 3.9;
 /// fica em pé no chão; no espaço, voa com a aura.
 Offset _originOf(bool earth) => Offset(56 - 13 * _sc, earth ? 138 - (feetRow + 1) * _sc : 132 - (feetRow + 1) * _sc);
 
-/// Cena da exploração: o dev lutador grande no lugar atual, com a hora ao
+/// Cena da exploração: o personagem grande no lugar atual, com a hora ao
 /// lado, sol ou lua conforme o relógio e, na Terra, o tempo de Bauru.
 /// Toque nele para ele pular.
 class ExploreScene extends ConsumerStatefulWidget {
@@ -136,7 +136,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
     final hour = now.hour + now.minute / 60;
     final day = dayLight(hour);
     return Semantics(
-      label: '${_form.name} em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
+      label: '${_form.title} em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
           '${isSunUp(hour) ? 'com sol' : 'com lua'}${weather != null ? ', ${weather.label} em Bauru, ${weather.tempC.round()} graus' : ''}. '
           'Toque para pular.',
       child: GestureDetector(
@@ -414,11 +414,10 @@ class _ScenePainter extends CustomPainter {
     } else {
       o = o.translate(0, (math.sin(tick * .04) * 4).roundToDouble());
     }
-    final box = figureBox(o, _sc);
     final level = auraLevel(form, space: !onEarth);
-    paintAuraBack(canvas, box, form, level, aura, tick);
-    paintGrid(canvas, characterGrid(form, blink: tick % 200 < 6, tick: tick), o, _sc);
-    paintAuraFront(canvas, box, form, level, tick);
+    paintAuraBack(canvas, o, _sc, form, level, aura, tick);
+    paintGrid(canvas, characterGrid(form, blink: tick % 200 < 6), o, _sc);
+    paintAuraFront(canvas, o, _sc, form, level, tick);
   }
 
   void _clock(Canvas canvas) {
