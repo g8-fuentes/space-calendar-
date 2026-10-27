@@ -77,8 +77,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       padding: const EdgeInsets.all(12),
                       child: Text(
                         '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o seu personagem '
-                        'fica mais perto de Deus a cada nível, sai de Bauru, roda o mundo e depois voa para a Lua, '
-                        'os planetas e as estrelas.',
+                        'fica mais perto de Jesus a cada passo: de Belém pela Terra Santa, '
+                        'acima das nuvens e pelos céus, sem fim.',
                         style: PixelText.body(14, color: Kanagawa.springViolet1),
                       ),
                     ),

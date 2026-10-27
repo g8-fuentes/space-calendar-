@@ -54,14 +54,18 @@ void main() {
   });
 
   group('exploração', () {
-    test('começa em Bauru e passa por Terra, Sistema Solar e espaço profundo', () {
-      expect(placeAt(0).name, 'Bauru, SP');
-      expect(placeAt(0).region, Region.earth);
-      final firstSolar = List.generate(80, placeAt).firstWhere((p) => p.region == Region.solar);
-      expect(firstSolar.name, 'Órbita da Terra');
-      expect(placeAt(namedPlaces - 1).region, Region.deep);
-      // depois dos nomeados, continua gerando
-      expect(placeAt(namedPlaces + 5).region, Region.deep);
+    test('começa em Belém e passa pela Terra Santa, o caminho ao céu e os céus', () {
+      expect(placeAt(0).name, 'Belém');
+      expect(placeAt(0).region, Region.land);
+      final firstAscent = List.generate(80, placeAt).firstWhere((p) => p.region == Region.ascent);
+      expect(firstAscent.name, 'Acima das nuvens');
+      expect(placeAt(namedPlaces - 1).region, Region.heaven);
+      expect(placeAt(0).closeness, 0);
+      expect(placeAt(namedPlaces - 1).closeness, 1);
+      // depois dos nomeados, os céus continuam sem fim
+      expect(placeAt(namedPlaces).name, 'Moradas do Pai');
+      expect(placeAt(namedPlaces + 7).name, 'Moradas do Pai II');
+      expect(placeAt(namedPlaces + 5).region, Region.heaven);
       for (var i = 1; i < namedPlaces + 10; i++) {
         expect(placeAt(i).missionsRequired, greaterThan(placeAt(i - 1).missionsRequired));
       }
@@ -76,9 +80,9 @@ void main() {
       }
       final t = computeStats(s, now);
       expect(t.missionsDone, 4);
-      expect(t.place.name, 'São Paulo');
+      expect(t.place.name, 'Nazaré');
       final notices = GameRules.progressNotices(s, t);
-      expect(notices.single.text, contains('São Paulo'));
+      expect(notices.single.text, contains('Nazaré'));
       expect(GameRules.toggle(s, m, 0, now), isFalse);
       expect(computeStats(s, now).missionsDone, 3);
     });
@@ -157,7 +161,7 @@ void main() {
       expect(notices.single.text, contains(transformationAt(1).passage.ref));
       // muitas missões depois, sai da Terra
       var space = 0;
-      while (placeAt(space).region == Region.earth) {
+      while (placeAt(space).region == Region.land) {
         space++;
       }
       final earthEnd = placeAt(space).missionsRequired;
@@ -166,9 +170,9 @@ void main() {
           ..done['a@0'] = const DoneRecord(day: 0, title: 'Estudar', at: 0, category: 'estudo', minutes: 240);
       }
       final t = computeStats(s, now);
-      expect(t.place.region, isNot(Region.earth));
+      expect(t.place.region, isNot(Region.land));
       notices = GameRules.progressNotices(s, t);
-      expect(notices.map((n) => n.title), ['NOVA BÊNÇÃO!', 'RUMO AO ESPAÇO!']);
+      expect(notices.map((n) => n.title), ['NOVA BÊNÇÃO!', 'RUMO AO CÉU!']);
     });
   });
 

@@ -5,7 +5,8 @@ Importe a agenda (.ics ou .cal) e marque as missões concluídas. Cada missão d
 ao atributo da categoria dela, e os pontos levam o personagem, um jovem adulto, a novos
 níveis: a cada nível ele fica mais perto de Jesus e de Deus, com mais luz, auréola, raios
 do céu e asas, e recebe uma passagem da Bíblia. Não há nível final. Ao mesmo tempo, ele
-explora as grandes cidades da Terra e depois o universo.
+caminha pela Terra Santa (de Belém ao Cenáculo), sobe acima das nuvens e segue pelos céus,
+sem fim, com Jesus cada vez mais perto na cena.
 
 ## Gerar o APK
 
@@ -42,7 +43,7 @@ lib/
   features/game/
     domain/                     regras puras, sem Flutter
       entities/                 Mission, GameState (serializável)
-      catalog/                  categorias, lugares, níveis e passagens da Bíblia
+      catalog/                  categorias, lugares da jornada, níveis e passagens da Bíblia
       services/                 importação .ics, regras e números derivados
       repositories/             contrato de persistência
     data/                       SharedPreferences + implementação do repositório

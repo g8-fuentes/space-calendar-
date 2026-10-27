@@ -59,7 +59,7 @@ const songs = [
       echo: true,
       duty: .5),
   Song(
-      'Hiperespaço',
+      'Glória',
       62,
       150,
       _minor,

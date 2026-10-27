@@ -149,8 +149,8 @@ PixelGrid characterGrid(Transformation f, {bool blink = false}) {
 Rect figureBox(Offset origin, double sc) =>
     Rect.fromLTWH(origin.dx + 7 * sc, origin.dy + (_oy - 1) * sc, 12 * sc, 23 * sc);
 
-/// Força da luz; no espaço ele sempre voa com pelo menos um brilho.
-int auraLevel(Transformation f, {bool space = false}) => space ? math.max(1, f.aura) : f.aura;
+/// Força da luz; acima das nuvens ele sempre tem pelo menos um brilho.
+int auraLevel(Transformation f, {bool lifted = false}) => lifted ? math.max(1, f.aura) : f.aura;
 
 class AuraParticle {
   AuraParticle(this.x, this.y, this.vx, this.vy, this.life, this.size);
@@ -319,4 +319,59 @@ void paintAuraFront(Canvas canvas, Offset o, double sc, Transformation f, int le
     ..color = const Color(0xFFFFF6D8)
     ..strokeWidth = sc * .35;
   canvas.drawOval(Rect.fromCenter(center: center, width: 7 * sc, height: 1.8 * sc), p);
+}
+
+PixelGrid? _jesus;
+
+/// Jesus: túnica branca, manto vermelho e braços abertos.
+PixelGrid jesusGrid() => _jesus ??= () {
+      final (g, r) = _canvas();
+      const robe = Color(0xFFFFFDF4), mantle = Color(0xFFC34043), hair = Color(0xFF4A3020);
+      // cabelo até os ombros e barba
+      r(4, 0, 8, 2, hair);
+      r(3, 2, 2, 8, hair);
+      r(11, 2, 2, 8, hair);
+      r(5, 2, 6, 6, _skin);
+      r(5, 2, 6, 1, hair);
+      r(6, 4, 1, 1, _eyes);
+      r(9, 4, 1, 1, _eyes);
+      r(5, 6, 1, 3, hair);
+      r(10, 6, 1, 3, hair);
+      r(6, 7, 4, 2, hair);
+      r(7, 7, 2, 1, _skinDark);
+      // túnica e braços abertos
+      r(4, 10, 8, 11, robe);
+      r(3, 15, 10, 6, robe);
+      r(1, 10, 3, 3, robe);
+      r(-1, 12, 3, 3, robe);
+      r(-1, 15, 2, 1, _skin);
+      r(12, 10, 3, 3, robe);
+      r(14, 12, 3, 3, robe);
+      r(15, 15, 2, 1, _skin);
+      for (var k = 0; k < 5; k++) {
+        r(4 + k * 2, 10 + k * 2, 2, 2, mantle);
+      }
+      r(5, 21, 2, 1, _skin);
+      r(9, 21, 2, 1, _skin);
+      return outlined(g);
+    }();
+
+/// Jesus com a luz em volta, de pés em [feet] e escala [sc].
+void paintJesus(Canvas canvas, Offset feet, double sc, int tick) {
+  final o = Offset(feet.dx - 13 * sc, feet.dy - (feetRow + 1) * sc);
+  final box = figureBox(o, sc);
+  final p = Paint();
+  final pulse = .85 + .15 * math.sin(tick * .07);
+  for (var k = 3; k >= 1; k--) {
+    p.color = const Color(0xFFFFF1C4).withAlpha((38 * pulse).round());
+    canvas.drawOval(
+        Rect.fromCenter(center: box.center, width: box.width * (1 + k * .55), height: box.height * (1 + k * .2)), p);
+  }
+  paintGrid(canvas, jesusGrid(), o, sc);
+  final halo = Offset(o.dx + 13 * sc, o.dy + (_oy - 1.6) * sc);
+  p
+    ..style = PaintingStyle.stroke
+    ..strokeWidth = math.max(1, sc * .8)
+    ..color = _gold;
+  canvas.drawOval(Rect.fromCenter(center: halo, width: 7 * sc, height: 1.8 * sc), p);
 }

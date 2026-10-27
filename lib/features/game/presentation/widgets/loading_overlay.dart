@@ -10,11 +10,11 @@ const _steps = [
   'Lendo o arquivo...',
   'Encontrando os eventos...',
   'Transformando eventos em missões...',
-  'Traçando a rota da exploração...',
-  'Abastecendo a nave...',
+  'Preparando o caminho...',
+  'Abrindo as portas da jornada...',
 ];
 
-/// Tela de carregamento com o foguete decolando. Fecha sozinha.
+/// Tela de carregamento com a pomba subindo. Fecha sozinha.
 Future<void> runLoading(BuildContext context, String title, Duration duration) {
   Sfx.launch.play();
   return showGeneralDialog<void>(
@@ -104,7 +104,7 @@ class _LaunchPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 160, size.height / 90);
     canvas.clipRect(const Rect.fromLTWH(0, 0, 160, 90));
-    paintLaunch(canvas, p, tick);
+    paintAscend(canvas, p, tick);
     canvas.restore();
   }
 

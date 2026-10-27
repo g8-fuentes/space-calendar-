@@ -84,7 +84,7 @@ List<Alert> alertsFor(GameState s) => [
                 minutes: minutesOf(m.start)!,
                 title: '🚀 ${m.title}',
                 body: 'Sua missão começou${m.end.isEmpty ? '' : ' (${m.start} às ${m.end})'}. '
-                    'Marque no app quando concluir para seguir explorando.',
+                    'Marque no app quando concluir para seguir na jornada.',
               ),
     ];
 

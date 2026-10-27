@@ -60,7 +60,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           ErrorText(_importError),
           const SizedBox(height: 6),
-          Text('O progresso da exploração continua ao trocar a agenda.',
+          Text('O progresso da jornada continua ao trocar a agenda.',
               style: PixelText.body(13, color: Kanagawa.springViolet1)),
         ]),
       ),
@@ -121,7 +121,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             Align(
               alignment: Alignment.centerLeft,
               child: PixelButton(
-                label: 'Recomeçar a exploração',
+                label: 'Recomeçar a jornada',
                 color: Kanagawa.sumiInk5,
                 textColor: Kanagawa.fujiWhite,
                 onPressed: () => setState(() => _confirmReset = true),
@@ -129,7 +129,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             )
           else
             ConfirmBar(
-              text: 'Apagar agenda e progresso e voltar a Bauru?',
+              text: 'Apagar agenda e progresso e voltar a Belém?',
               yesLabel: 'Recomeçar',
               onNo: () => setState(() => _confirmReset = false),
               onYes: () async {

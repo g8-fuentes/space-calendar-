@@ -75,7 +75,7 @@ class WeekRecord {
       });
 }
 
-/// Tudo o que é salvo. O lugar da exploração é sempre recalculado a
+/// Tudo o que é salvo. O lugar da jornada é sempre recalculado a
 /// partir das missões concluídas (ver game_stats.dart).
 class GameState {
   GameState({

@@ -91,13 +91,13 @@ abstract final class GameRules {
     final p = t.place;
     final title = p.region != from.region
         ? switch (p.region) {
-            Region.solar => 'RUMO AO ESPAÇO!',
-            Region.deep => 'ALÉM DO SISTEMA SOLAR!',
-            Region.earth => 'NOVO DESTINO',
+            Region.ascent => 'RUMO AO CÉU!',
+            Region.heaven => 'NOS CÉUS!',
+            Region.land => 'NOVO LUGAR',
           }
-        : 'NOVO DESTINO';
+        : 'NOVO LUGAR';
     return [
-      Notice(title, 'Você chegou a ${p.name}. ${p.fact}', place: p.index),
+      Notice(title, '${p.name}. ${p.fact}', place: p.index),
     ];
   }
 }

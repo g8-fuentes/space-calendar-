@@ -9,7 +9,7 @@ import '../controllers/game_providers.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
 
-/// Mapa da jornada: Terra, Sistema Solar e espaço profundo. Os lugares
+/// Mapa da jornada: Terra Santa, Caminho ao Céu e Céus. Os lugares
 /// visitados mostram nome e curiosidade; o próximo mostra quanto falta; o
 /// resto fica em segredo.
 class MapScreen extends ConsumerWidget {
@@ -46,8 +46,8 @@ class MapScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 12),
           child: PixelPanel(
             child: Text(
-              'Cada missão concluída leva o seu personagem mais longe: primeiro as grandes cidades da Terra, '
-              'depois ele voa para a Lua e os planetas, e por fim constelações e estrelas do espaço profundo.',
+              'Cada missão concluída leva o seu personagem mais perto de Jesus: primeiro pela Terra Santa, '
+              'de Belém ao Cenáculo, depois acima das nuvens e, por fim, pelos céus, que não têm fim.',
               style: PixelText.body(14, color: Kanagawa.springViolet1),
             ),
           ),

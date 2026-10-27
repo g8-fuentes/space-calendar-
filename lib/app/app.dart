@@ -71,9 +71,9 @@ class GameShell extends ConsumerStatefulWidget {
 
 class _GameShellState extends ConsumerState<GameShell> {
   static const _tabs = [
-    (Icons.rocket_launch_outlined, 'EXPLORAR'),
+    (Icons.auto_awesome, 'JORNADA'),
     (Icons.bolt, 'PERSONAGEM'),
-    (Icons.public, 'MAPA'),
+    (Icons.map_outlined, 'MAPA'),
     (Icons.calendar_view_week_outlined, 'SEMANA'),
     (Icons.tune, 'AJUSTES'),
   ];
