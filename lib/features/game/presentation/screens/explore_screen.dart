@@ -14,7 +14,7 @@ import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
 
-/// Tela principal: a cena da jornada e as missões da agenda, que só
+/// Tela principal: a cena da exploração e as missões da agenda, que só
 /// podem ser marcadas como concluídas (ou desmarcadas).
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
@@ -60,7 +60,7 @@ class _Header extends ConsumerWidget {
     return Row(children: [
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text((s.name.isEmpty ? 'Jovem' : s.name).toUpperCase(),
+          Text((s.name.isEmpty ? 'Dev' : s.name).toUpperCase(),
               style: PixelText.display(10), maxLines: 1, overflow: TextOverflow.ellipsis),
           Text(
               '${t.missionsDone} ${t.missionsDone == 1 ? 'missão concluída' : 'missões concluídas'} · hoje ${t.doneToday}/${t.totalToday}',
@@ -89,21 +89,23 @@ class _NextStop extends ConsumerWidget {
     return PixelPanel(
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         Row(children: [
-          Expanded(child: Text('PRÓXIMO LUGAR', style: PixelText.display(8, color: Kanagawa.springViolet1))),
-          Text('faltam ${t.missing} ${t.missing == 1 ? 'missão' : 'missões'}',
-              style: PixelText.body(14, color: Kanagawa.carpYellow)),
+          Expanded(
+              child: Text('SEMANA ${t.place.week} · EXPLORANDO',
+                  style: PixelText.display(8, color: Kanagawa.springViolet1))),
+          Text('${t.weekDone}/${t.weekGoal} missões', style: PixelText.body(14, color: Kanagawa.carpYellow)),
         ]),
         const SizedBox(height: 4),
-        Text(t.next.name, style: PixelText.display(11)),
+        Text(t.place.name, style: PixelText.display(11)),
         const SizedBox(height: 8),
-        PixelBar(value: t.progress, color: Kanagawa.springGreen, height: 14),
-        const SizedBox(height: 10),
-        Row(children: [
-          Expanded(child: Text('PERTO DE JESUS', style: PixelText.display(8, color: Kanagawa.springViolet1))),
-          Text('${(t.place.closeness * 100).round()}%', style: PixelText.body(14, color: Kanagawa.carpYellow)),
-        ]),
+        PixelBar(value: t.progress, color: t.explored ? Kanagawa.carpYellow : Kanagawa.springGreen, height: 14),
         const SizedBox(height: 6),
-        PixelBar(value: t.place.closeness, color: Kanagawa.carpYellow, height: 10),
+        Text(
+          t.explored
+              ? 'Explorado! Na segunda-feira a nave parte para ${t.next.name}.'
+              : 'Faltam ${t.missing} ${t.missing == 1 ? 'missão' : 'missões'} nesta semana para explorar '
+                  '${t.place.name}. Depois: ${t.next.name}.',
+          style: PixelText.body(14, color: Kanagawa.springViolet1),
+        ),
       ]),
     );
   }

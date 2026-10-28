@@ -43,9 +43,10 @@ Future<void> _end(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('primeira vez mostra só a importação da agenda', (tester) async {
+  testWidgets('primeira vez pede o Google Agenda', (tester) async {
     await _pump(tester, GameState.initial('2026-10-21'));
-    expect(find.text('IMPORTAR AGENDA (.ICS OU .CAL)'), findsOneWidget);
+    expect(find.text('CONECTAR GOOGLE AGENDA'), findsOneWidget);
+    expect(find.text('Sem Google? Importar arquivo .ics'), findsOneWidget);
     await _end(tester);
   });
 
@@ -62,14 +63,19 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(repo.saved!.weeks.values.single.done, hasLength(1));
     expect(find.textContaining('1 missão concluída'), findsOneWidget);
+    // 1 de 1 missão: a Terra já está explorada nesta semana
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text('DESTINO EXPLORADO!'), findsOneWidget);
+    await tester.tap(find.text('CONTINUAR').last);
+    await tester.pump(const Duration(milliseconds: 300));
 
-    for (final tab in ['PERSONAGEM', 'MAPA', 'SEMANA', 'AJUSTES', 'JORNADA']) {
+    for (final tab in ['PERSONAGEM', 'MAPA', 'SEMANA', 'AJUSTES', 'EXPLORAR']) {
       await tester.tap(find.text(tab).last);
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull, reason: tab);
       if (tab == 'PERSONAGEM') expect(find.text('ATRIBUTOS'), findsOneWidget);
     }
-    expect(find.text('BELÉM'), findsNothing); // a placa é desenhada na cena
+    expect(find.text('TERRA'), findsNothing); // a placa é desenhada na cena
     await _end(tester);
   });
 }

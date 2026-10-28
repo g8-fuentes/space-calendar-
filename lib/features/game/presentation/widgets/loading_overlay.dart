@@ -7,14 +7,14 @@ import '../art/pixel_art.dart';
 import 'pixel_widgets.dart';
 
 const _steps = [
-  'Lendo o arquivo...',
+  'Lendo a agenda...',
   'Encontrando os eventos...',
   'Transformando eventos em missões...',
-  'Preparando o caminho...',
-  'Abrindo as portas da jornada...',
+  'Compilando a rota da exploração...',
+  'Abastecendo a nave...',
 ];
 
-/// Tela de carregamento com a pomba subindo. Fecha sozinha.
+/// Tela de carregamento com o foguete decolando. Fecha sozinha.
 Future<void> runLoading(BuildContext context, String title, Duration duration) {
   Sfx.launch.play();
   return showGeneralDialog<void>(
@@ -104,7 +104,7 @@ class _LaunchPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / 160, size.height / 90);
     canvas.clipRect(const Rect.fromLTWH(0, 0, 160, 90));
-    paintAscend(canvas, p, tick);
+    paintLaunch(canvas, p, tick);
     canvas.restore();
   }
 

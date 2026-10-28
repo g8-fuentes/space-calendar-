@@ -38,13 +38,12 @@ const sceneW = 200.0, sceneH = 150.0;
 
 const _sc = 3.9;
 
-/// Canto da grade do personagem na cena (sem pulo nem balanço), em pé no
-/// chão.
-const _origin = Offset(56 - 13 * _sc, groundY - (feetRow + 1) * _sc);
+/// Canto da grade do personagem na cena (sem pulo nem balanço): na Terra
+/// fica em pé no chão; no espaço, voa com a aura.
+Offset _originOf(bool earth) => Offset(56 - 13 * _sc, earth ? 138 - (feetRow + 1) * _sc : 132 - (feetRow + 1) * _sc);
 
-/// Cena da jornada: o personagem grande no lugar atual, Jesus mais perto a
-/// cada passo, a hora ao lado, sol ou lua conforme o relógio e, na Terra
-/// Santa, o tempo de Bauru.
+/// Cena da exploração: o dev explorador grande no lugar atual, com a hora ao
+/// lado, sol ou lua conforme o relógio e, na Terra, o tempo de Bauru.
 /// Toque nele para ele pular.
 class ExploreScene extends ConsumerStatefulWidget {
   const ExploreScene({super.key, this.placeOverride});
@@ -62,7 +61,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
   final _sparks = <_Spark>[];
   final _aura = <AuraParticle>[];
   Transformation _form = transformationAt(0);
-  bool _land = true;
+  bool _earth = true;
   int _tick = 0, _jump = 0, _lastFrame = -1;
 
   @override
@@ -111,7 +110,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
       if (p.text == null) p.vy += .05;
     }
     _sparks.removeWhere((p) => p.life <= 0 || p.y > sceneH);
-    stepAura(_aura, figureBox(_origin, _sc), _form, auraLevel(_form, lifted: !_land), _rand);
+    stepAura(_aura, figureBox(_originOf(_earth), _sc), _form, auraLevel(_form, space: !_earth), _rand);
   }
 
   void _celebrate({bool text = true}) {
@@ -131,13 +130,13 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
     final stats = ref.watch(statsProvider);
     final place = widget.placeOverride ?? stats.place;
     final now = ref.watch(nowProvider).valueOrNull ?? ref.read(clockProvider).now();
-    final weather = place.region == Region.land ? ref.watch(weatherProvider).valueOrNull : null;
+    final weather = place.kind == PlaceKind.home ? ref.watch(weatherProvider).valueOrNull : null;
     _form = stats.form;
-    _land = place.region == Region.land;
+    _earth = place.kind == PlaceKind.home;
     final hour = now.hour + now.minute / 60;
     final day = dayLight(hour);
     return Semantics(
-      label: '${_form.title} em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
+      label: '${_form.name} em ${place.name}. São ${two(now.hour)}:${two(now.minute)}, '
           '${isSunUp(hour) ? 'com sol' : 'com lua'}${weather != null ? ', ${weather.label} em Bauru, ${weather.tempC.round()} graus' : ''}. '
           'Toque para pular.',
       child: GestureDetector(
@@ -197,7 +196,7 @@ class _ScenePainter extends CustomPainter {
 
   static final _labels = <String, TextPainter>{};
 
-  bool get onLand => place.region == Region.land;
+  bool get onEarth => place.kind == PlaceKind.home;
   double get night => 1 - day;
 
   @override
@@ -206,17 +205,24 @@ class _ScenePainter extends CustomPainter {
     canvas.scale(size.width / sceneW, size.height / sceneH);
     canvas.clipRect(const Rect.fromLTWH(0, 0, sceneW, sceneH));
     final p = Paint();
-    if (onLand) {
+    if (onEarth) {
       _earthSky(canvas, p);
     } else {
-      paintHolySky(canvas, place.region, day, tick);
+      _space(canvas, p);
     }
     _sunOrMoon(canvas, p, const Offset(150, 18));
-    if (onLand) _clouds(canvas, p);
+    if (onEarth) _clouds(canvas, p);
     _clock(canvas);
-    paintPlace(canvas, place, night: night, tick: tick);
-    if (onLand) _rain(canvas, p);
-    _jesus(canvas);
+    if (onEarth) {
+      paintSkyline(canvas, place, 138, sceneW, night: night, landmarkUnit: .85);
+      _rect(canvas, p, 0, 138, sceneW, 12, Color.lerp(const Color(0xFF4A4A55), const Color(0xFF26262F), night)!);
+      for (var x = 4.0; x < sceneW; x += 16) {
+        _rect(canvas, p, x, 143, 7, 1, Kanagawa.carpYellow.withAlpha(120));
+      }
+      _rain(canvas, p);
+    } else {
+      _body(canvas);
+    }
     _hero(canvas, p);
     _plate(canvas, p);
     for (final s in sparks) {
@@ -275,6 +281,21 @@ class _ScenePainter extends CustomPainter {
             ).createShader(full));
     }
     if (night > .5 && gray < .5) _stars(canvas, p, 40, (night * 200).round());
+  }
+
+  void _space(Canvas canvas, Paint p) {
+    _rect(canvas, p, 0, 0, sceneW, sceneH, Kanagawa.sumiInk0);
+    final deep = place.region != Region.solar;
+    final nebula = deep
+        ? [Kanagawa.oniViolet, Kanagawa.sakuraPink, Kanagawa.crystalBlue, Kanagawa.waveRed]
+        : [Kanagawa.oniViolet, Kanagawa.crystalBlue, Kanagawa.sakuraPink];
+    for (var i = 0; i < (deep ? 9 : 6); i++) {
+      p.color = nebula[i % nebula.length].withAlpha(deep ? 34 : 22);
+      canvas.drawCircle(
+          Offset(((i * 61 + place.index * 13) % 200).toDouble(), ((i * 37) % 120).toDouble()), 20.0 + (i % 3) * 10, p);
+    }
+    _stars(canvas, p, deep ? 110 : 80, 160 + (night * 95).round());
+    if (place.kind == PlaceKind.nebula) paintNebula(canvas, place, const Rect.fromLTWH(70, 40, 130, 110), tick);
   }
 
   void _stars(Canvas canvas, Paint p, int n, int alpha) {
@@ -367,35 +388,55 @@ class _ScenePainter extends CustomPainter {
     }
   }
 
-  /// Jesus mais longe no começo e mais perto (e maior) a cada passo.
-  void _jesus(Canvas canvas) {
-    final c = place.closeness;
-    paintJesus(canvas, Offset(106, groundY - (1 - c) * 16), 1.1 + 1.3 * c, tick);
+  void _body(Canvas canvas) {
+    switch (place.kind) {
+      case PlaceKind.nebula:
+        break;
+      case PlaceKind.star:
+        paintBody(canvas, place, const Offset(150, 118), 20, tick);
+      case PlaceKind.ring:
+        paintBody(canvas, place, const Offset(146, 122), 26, tick);
+      case PlaceKind.belt:
+        paintBelt(canvas, place, const Offset(146, 124), 16, tick);
+      case PlaceKind.blackHole:
+        paintBlackHole(canvas, place, const Offset(146, 110), 15, tick);
+      case PlaceKind.galaxy:
+        paintGalaxy(canvas, place, const Offset(142, 112), 52, tick);
+      default:
+        paintBody(canvas, place, const Offset(130, 214), 104, tick);
+    }
   }
 
   void _hero(Canvas canvas, Paint p) {
     const cx = 56.0;
     final jumpY = jump > 0 ? -(math.sin(jump / 26 * math.pi) * 14).roundToDouble() : 0.0;
-    final o = _origin.translate(0, jumpY + ((tick ~/ 20) % 2 == 0 ? 0 : -1));
-    p.color = const Color(0x55000000);
-    canvas.drawOval(Rect.fromCenter(center: const Offset(cx, 139), width: 40 - jumpY.abs(), height: 4), p);
-    final level = auraLevel(form, lifted: !onLand);
-    paintAuraBack(canvas, o, _sc, form, level, aura, tick);
-    paintGrid(canvas, characterGrid(form, blink: tick % 200 < 6), o, _sc);
-    paintAuraFront(canvas, o, _sc, form, level, tick);
+    var o = _originOf(onEarth).translate(0, jumpY);
+    if (onEarth) {
+      o = o.translate(0, (tick ~/ 20) % 2 == 0 ? 0 : -1);
+      p.color = const Color(0x55000000);
+      canvas.drawOval(Rect.fromCenter(center: const Offset(cx, 139), width: 40 - jumpY.abs(), height: 4), p);
+    } else {
+      o = o.translate(0, (math.sin(tick * .04) * 4).roundToDouble());
+    }
+    final box = figureBox(o, _sc);
+    final level = auraLevel(form, space: !onEarth);
+    paintAuraBack(canvas, box, form, level, aura, tick);
+    paintGrid(canvas, characterGrid(form, blink: tick % 200 < 6, tick: tick), o, _sc);
+    if (!onEarth) paintHelmet(canvas, o, _sc, tick);
+    paintAuraFront(canvas, box, form, level, tick);
   }
 
   void _clock(Canvas canvas) {
     final time = '${two(now.hour)}:${two(now.minute)}';
     final colon = (tick ~/ 15).isEven;
-    final ink = day > .5 ? Kanagawa.sumiInk0 : Kanagawa.fujiWhite;
-    final shadow = day > .5 ? Kanagawa.fujiWhite.withAlpha(150) : Kanagawa.sumiInk0;
+    final ink = onEarth && day > .5 ? Kanagawa.sumiInk0 : Kanagawa.fujiWhite;
+    final shadow = onEarth && day > .5 ? Kanagawa.fujiWhite.withAlpha(150) : Kanagawa.sumiInk0;
     _label(canvas, colon ? time : time.replaceFirst(':', ' '), const Offset(151, 34), 20, shadow, center: true);
     _label(canvas, colon ? time : time.replaceFirst(':', ' '), const Offset(150, 33), 20, ink, center: true);
     final date = '${dayAbbr[now.weekday - 1]} ${two(now.day)}/${two(now.month)}';
     _label(canvas, date, const Offset(150, 56), 7, ink.withAlpha(220), center: true);
     final w = weather;
-    if (onLand && w != null) {
+    if (onEarth && w != null) {
       _label(canvas, '${w.tempC.round()}° ${w.label}', const Offset(150, 66), 6.5, ink, center: true);
       _label(canvas, 'Bauru-SP', const Offset(150, 74), 5.5, ink.withAlpha(200), center: true);
     }

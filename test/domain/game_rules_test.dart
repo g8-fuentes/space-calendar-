@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rotina_quest/core/sound/music.dart';
 import 'package:rotina_quest/core/time/week_utils.dart';
 import 'package:rotina_quest/core/weather/weather.dart';
-import 'package:rotina_quest/features/game/domain/catalog/passages.dart';
 import 'package:rotina_quest/features/game/domain/catalog/places.dart';
 import 'package:rotina_quest/features/game/domain/catalog/transformations.dart';
 import 'package:rotina_quest/features/game/domain/entities/game_state.dart';
@@ -54,37 +53,74 @@ void main() {
   });
 
   group('exploração', () {
-    test('começa em Belém e passa pela Terra Santa, o caminho ao céu e os céus', () {
-      expect(placeAt(0).name, 'Belém');
-      expect(placeAt(0).region, Region.land);
-      final firstAscent = List.generate(80, placeAt).firstWhere((p) => p.region == Region.ascent);
-      expect(firstAscent.name, 'Acima das nuvens');
-      expect(placeAt(namedPlaces - 1).region, Region.heaven);
-      expect(placeAt(0).closeness, 0);
-      expect(placeAt(namedPlaces - 1).closeness, 1);
-      // depois dos nomeados, os céus continuam sem fim
-      expect(placeAt(namedPlaces).name, 'Moradas do Pai');
-      expect(placeAt(namedPlaces + 7).name, 'Moradas do Pai II');
-      expect(placeAt(namedPlaces + 5).region, Region.heaven);
-      for (var i = 1; i < namedPlaces + 10; i++) {
-        expect(placeAt(i).missionsRequired, greaterThan(placeAt(i - 1).missionsRequired));
-      }
+    test('um destino por semana: Terra, planetas, estrelas e galáxia, sem fim', () {
+      expect(placeAt(0).name, 'Terra');
+      expect(placeAt(0).kind, PlaceKind.home);
+      expect(placeAt(1).name, 'Lua');
+      expect(placeAt(4).name, 'Marte');
+      final firstStar = List.generate(80, placeAt).firstWhere((p) => p.region == Region.stars);
+      expect(firstStar.name, 'Proxima Centauri b');
+      expect(placeAt(firstStar.index - 1).name, 'Nuvem de Oort');
+      expect(placeAt(namedPlaces - 1).name, 'Andrômeda');
+      // depois dos nomeados, continua gerando
+      final extra = placeAt(namedPlaces + 5);
+      expect(extra.region, Region.galaxy);
+      expect(extra.name, isNotEmpty);
+      expect(placeAt(namedPlaces + 5).week, namedPlaces + 6);
     });
 
-    test('marcar missões avança o lugar e avisa', () {
+    test('metade das missões da semana explora o destino; o próximo vem na segunda', () {
       final s = GameState.initial(ymd(now))..lastPlace = 0;
       final m = Mission(id: 'a', title: 'Estudar', days: [0, 1, 2, 3, 4, 5, 6], start: '08:00', end: '09:00');
       s.missions.add(m);
-      for (var d = 0; d < 4; d++) {
-        expect(GameRules.toggle(s, m, d, now), isTrue);
+      expect(s.weeklyGoal, 4);
+      for (var d = 0; d < 3; d++) {
+        GameRules.toggle(s, m, d, now);
       }
-      final t = computeStats(s, now);
-      expect(t.missionsDone, 4);
-      expect(t.place.name, 'Nazaré');
+      var t = computeStats(s, now);
+      expect((t.place.name, t.weekDone, t.missing, t.explored), ('Terra', 3, 1, false));
+      expect(GameRules.progressNotices(s, t), isEmpty);
+      GameRules.toggle(s, m, 3, now);
+      t = computeStats(s, now);
+      expect(t.explored, isTrue);
+      expect(t.place.name, 'Terra');
       final notices = GameRules.progressNotices(s, t);
-      expect(notices.single.text, contains('Nazaré'));
-      expect(GameRules.toggle(s, m, 0, now), isFalse);
-      expect(computeStats(s, now).missionsDone, 3);
+      expect(notices.single.title, 'DESTINO EXPLORADO!');
+      expect(notices.single.text, contains('Lua'));
+      expect(s.explored, {weekKeyOf(now)});
+      // na semana seguinte, a nave chega à Lua
+      final monday = DateTime(2026, 10, 26, 9);
+      t = computeStats(s, monday);
+      expect((t.place.name, t.weekDone), ('Lua', 0));
+      expect(GameRules.progressNotices(s, t).single.text, contains('Semana 2: Lua.'));
+      // desmarcar na mesma semana tira a exploração
+      GameRules.toggle(s, m, 0, now);
+      GameRules.progressNotices(s, computeStats(s, now));
+      expect(s.explored, isEmpty);
+    });
+
+    test('sair do Sistema Solar avisa', () {
+      final s = GameState.initial(ymd(now));
+      final solar = List.generate(80, placeAt).where((p) => p.region == Region.solar).length;
+      for (var w = 0; w < solar - 1; w++) {
+        s.explored.add(ymd(DateTime(2025, 1, 6 + 7 * w)));
+      }
+      s.lastPlace = computeStats(s, now).placeIndex;
+      s.explored.add(ymd(DateTime(2026, 10, 12)));
+      final t = computeStats(s, now);
+      expect(t.place.region, Region.stars);
+      expect(GameRules.progressNotices(s, t).map((n) => n.title), ['ALÉM DO SISTEMA SOLAR!']);
+    });
+
+    test('saves antigos contam as semanas que já cumpriam a meta', () {
+      final s = GameState.initial(ymd(now))
+        ..missions.add(Mission(id: 'a', title: 'Ler', days: [0, 1], start: '20:00', end: '21:00'));
+      s.weeks['2026-10-12'] = WeekRecord()..done['a@0'] = const DoneRecord(day: 0, title: 'Ler', at: 0);
+      s.weeks['2026-10-05'] = WeekRecord();
+      final json = s.toJson()..remove('explored');
+      final back = GameState.fromJson(json, today: ymd(now));
+      expect(back.explored, {'2026-10-12'});
+      expect(computeStats(back, now).place.name, 'Lua');
     });
 
     test('estado sobrevive a JSON', () {
@@ -114,7 +150,8 @@ void main() {
       expect(t.attributes['treino'], 27);
       expect(t.power, 27);
       expect(t.best!.name, 'Força');
-      expect(t.form.title, 'Nível 1 · Buscador');
+      expect(t.form.title, 'Nível 1 · Estagiário');
+      expect(t.form.quote.author, 'Linus Torvalds');
       expect(t.powerMissing, 13);
       // só aparecem os atributos das missões
       expect(t.shown.map((c) => c.name), ['Força']);
@@ -122,30 +159,24 @@ void main() {
       expect(computeStats(s, now).shown.map((c) => c.name), ['Mente', 'Força']);
     });
 
-    test('cada nível traz uma passagem da Bíblia, sem nível final', () {
+    test('pontos liberam os níveis de dev, sem fim', () {
       expect(transformationIndexFor(0), 0);
       expect(transformationIndexFor(39), 0);
       expect(transformationIndexFor(40), 1);
-      expect(transformationIndexFor(95), 2);
-      expect(transformationAt(0).passage.ref, 'Gênesis 1:1');
-      expect(passages.map((p) => p.ref).toSet(), hasLength(passages.length));
-      for (var i = 1; i < passages.length * 2 + 5; i++) {
-        final f = transformationAt(i);
-        expect(f.power, greaterThan(transformationAt(i - 1).power));
-        expect(f.power - transformationAt(i - 1).power, lessThanOrEqualTo(400));
-        expect(f.passage.text, isNotEmpty);
-        expect(f.aura, greaterThanOrEqualTo(transformationAt(i - 1).aura));
+      expect(transformationAt(transformationIndexFor(550)).name, 'Staff Engineer');
+      expect(transformationIndexFor(7200), namedTransformations - 1);
+      expect(transformationAt(namedTransformations).name, 'Dev Cósmico 2');
+      expect(transformationIndexFor(8700), namedTransformations);
+      expect(
+          Hair.values
+              .every((h) => [for (var i = 0; i < namedTransformations; i++) transformationAt(i).hair].contains(h)),
+          isTrue);
+      for (var i = 1; i < namedTransformations + 3; i++) {
+        expect(transformationAt(i).power, greaterThan(transformationAt(i - 1).power));
       }
-      // depois da última passagem a lista recomeça, mas os níveis continuam
-      final after = transformationAt(passages.length);
-      expect(after.passage.ref, passages.first.ref);
-      expect(after.level, passages.length + 1);
-      final far = transformationAt(500);
-      expect((far.halo, far.rays, far.wings), (2, true, true));
-      expect(transformationIndexFor(far.power), 500);
     });
 
-    test('avisa cada nova bênção com a passagem', () {
+    test('avisa o nível novo', () {
       final s = GameState.initial(ymd(now))
         ..lastForm = 0
         ..lastPlace = 0;
@@ -155,25 +186,45 @@ void main() {
       for (final d in [0, 1]) {
         GameRules.toggle(s, m, d, now);
       }
-      var notices = GameRules.progressNotices(s, computeStats(s, now));
-      expect(notices.map((n) => n.title), ['NOVA BÊNÇÃO!']);
+      final notices = GameRules.progressNotices(s, computeStats(s, now));
+      expect(notices.map((n) => n.title), ['NOVO NÍVEL!']);
+      expect(notices.single.text, startsWith('Nível 2 · Dev Júnior'));
       expect(notices.single.form, 1);
-      expect(notices.single.text, contains(transformationAt(1).passage.ref));
-      // muitas missões depois, sai da Terra
-      var space = 0;
-      while (placeAt(space).region == Region.land) {
-        space++;
-      }
-      final earthEnd = placeAt(space).missionsRequired;
-      for (var w = 0; w < earthEnd; w++) {
-        s.weeks['2020-W${w.toString().padLeft(3, '0')}'] = WeekRecord()
-          ..done['a@0'] = const DoneRecord(day: 0, title: 'Estudar', at: 0, category: 'estudo', minutes: 240);
-      }
-      final t = computeStats(s, now);
-      expect(t.place.region, isNot(Region.land));
-      notices = GameRules.progressNotices(s, t);
-      expect(notices.map((n) => n.title), ['NOVA BÊNÇÃO!', 'RUMO AO CÉU!']);
     });
+  });
+
+  test('eventos do Google Agenda viram missões da semana', () {
+    final items = <Map<String, Object?>>[
+      for (final d in ['2026-10-19', '2026-10-21'])
+        {
+          'summary': 'Academia',
+          'start': {'dateTime': '${d}T07:00:00-03:00'},
+          'end': {'dateTime': '${d}T08:00:00-03:00'},
+        },
+      {
+        'summary': 'Feriado',
+        'start': {'date': '2026-10-20'},
+        'end': {'date': '2026-10-21'},
+      },
+      {
+        'summary': 'Reunião recusada',
+        'start': {'dateTime': '2026-10-20T10:00:00-03:00'},
+        'end': {'dateTime': '2026-10-20T11:00:00-03:00'},
+        'attendees': [
+          {'self': true, 'responseStatus': 'declined'}
+        ],
+      },
+      {
+        'status': 'cancelled',
+        'summary': 'Cancelado',
+        'start': {'dateTime': '2026-10-22T10:00:00-03:00'},
+      },
+    ];
+    final events = eventsFromGoogle(items);
+    expect(events, hasLength(2));
+    final missions = toMissions(events);
+    expect(missions.single.title, 'Academia');
+    expect(missions.single.days, [0, 2]);
   });
 
   test('um aviso por dia de cada missão com horário', () {

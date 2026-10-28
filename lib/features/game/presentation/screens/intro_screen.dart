@@ -6,12 +6,13 @@ import '../../../../core/sound/sfx.dart';
 import '../../domain/catalog/places.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
+import '../controllers/sync_flow.dart';
 import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
-import 'settings_screen.dart';
 
-/// Primeira tela: nome do personagem e a agenda (.ics ou .cal).
+/// Primeira tela: nome do dev e a conexão com o Google Agenda (ou, como
+/// alternativa, um arquivo .ics).
 class IntroScreen extends ConsumerStatefulWidget {
   const IntroScreen({super.key});
 
@@ -22,6 +23,7 @@ class IntroScreen extends ConsumerStatefulWidget {
 class _IntroScreenState extends ConsumerState<IntroScreen> {
   late final _name = TextEditingController(text: ref.read(gameControllerProvider).name);
   String? _error;
+  bool _busy = false;
 
   @override
   void dispose() {
@@ -29,16 +31,25 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
     super.dispose();
   }
 
-  Future<void> _import() async {
+  Future<void> _start({required bool google}) async {
     final n = _name.text.trim();
     if (n.isEmpty) {
       setState(() => _error = 'Escreva o nome do personagem antes de continuar.');
       Sfx.error.play();
       return;
     }
-    setState(() => _error = null);
-    final err = await importCalendar(context, ref, heroName: n);
-    if (err != null && mounted) setState(() => _error = err);
+    setState(() {
+      _error = null;
+      _busy = true;
+    });
+    final err =
+        google ? await connectGoogle(context, ref, heroName: n) : await importCalendar(context, ref, heroName: n);
+    if (mounted) {
+      setState(() {
+        _busy = false;
+        _error = err;
+      });
+    }
   }
 
   @override
@@ -51,10 +62,10 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                Text('DIVINE ROUTINE',
+                Text('DEV ODYSSEY',
                     textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
                 const SizedBox(height: 4),
-                Text('Sua agenda vira uma jornada de fé.',
+                Text('Sua agenda vira a exploração espacial de um dev.',
                     textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),
                 const SizedBox(height: 14),
                 PixelPanel(padding: EdgeInsets.zero, child: ExploreScene(placeOverride: placeAt(0))),
@@ -65,22 +76,30 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       controller: _name,
                       maxLength: 24,
                       style: PixelText.body(17),
-                      decoration: pixelInput('Nome do personagem', hint: 'Ex.: Gui'),
-                      onSubmitted: (_) => _import(),
+                      decoration: pixelInput('Nome do dev', hint: 'Ex.: Gui'),
+                      onSubmitted: (_) => _start(google: true),
                     ),
                     const SizedBox(height: 8),
-                    PixelButton(label: 'Importar agenda (.ics ou .cal)', onPressed: _import),
+                    PixelButton(label: 'Conectar Google Agenda', onPressed: _busy ? null : () => _start(google: true)),
                     ErrorText(_error),
                     const SizedBox(height: 14),
                     Container(
                       color: Kanagawa.sumiInk0,
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        '$exportHelp\n\nCada evento vira uma missão semanal. Marque o que concluir e o seu personagem '
-                        'fica mais perto de Jesus a cada passo: de Belém pela Terra Santa, '
-                        'acima das nuvens e pelos céus, sem fim.',
+                        'O app lê (sem mudar nada) os eventos com horário da semana no seu Google Agenda, e eles '
+                        'viram missões. A agenda atualiza sozinha toda vez que você abre o app.\n\n'
+                        'Cada semana o dev explora um destino: começa na Terra, passa pela Lua e pelos planetas e '
+                        'depois sai do Sistema Solar rumo às estrelas e às galáxias. Cumpra metade das missões da '
+                        'semana para explorar o destino e partir para o próximo na segunda-feira.',
                         style: PixelText.body(14, color: Kanagawa.springViolet1),
                       ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: _busy ? null : () => _start(google: false),
+                      child: Text('Sem Google? Importar arquivo .ics',
+                          style: PixelText.body(14, color: Kanagawa.springBlue)),
                     ),
                   ]),
                 ),

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/sound/music.dart';
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
+import '../features/game/presentation/controllers/sync_flow.dart';
 import '../features/game/presentation/screens/character_screen.dart';
 import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
@@ -41,7 +42,7 @@ class _RotinaQuestAppState extends State<RotinaQuestApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Divine Routine',
+      title: 'Dev Odyssey',
       debugShowCheckedModeBanner: false,
       theme: buildKanagawaTheme(),
       home: const _Root(),
@@ -71,20 +72,37 @@ class GameShell extends ConsumerStatefulWidget {
 
 class _GameShellState extends ConsumerState<GameShell> {
   static const _tabs = [
-    (Icons.auto_awesome, 'JORNADA'),
+    (Icons.rocket_launch_outlined, 'EXPLORAR'),
     (Icons.bolt, 'PERSONAGEM'),
-    (Icons.map_outlined, 'MAPA'),
+    (Icons.public, 'MAPA'),
     (Icons.calendar_view_week_outlined, 'SEMANA'),
     (Icons.tune, 'AJUSTES'),
   ];
 
+  late final AppLifecycleListener _life;
+
   @override
   void initState() {
     super.initState();
+    // Ao voltar para o app: agenda nova do Google e avisos da semana nova.
+    _life = AppLifecycleListener(onResume: _refresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (ref.read(gameControllerProvider).alerts) ref.read(missionAlertsProvider).requestPermission();
+      _refresh();
     });
+  }
+
+  Future<void> _refresh() async {
+    if (!mounted) return;
+    await autoSync(ref);
+    if (mounted) ref.read(gameControllerProvider.notifier).apply((_) {});
+  }
+
+  @override
+  void dispose() {
+    _life.dispose();
+    super.dispose();
   }
 
   @override

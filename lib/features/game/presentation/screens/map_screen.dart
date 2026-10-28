@@ -9,9 +9,9 @@ import '../controllers/game_providers.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
 
-/// Mapa da jornada: Terra Santa, Caminho ao Céu e Céus. Os lugares
-/// visitados mostram nome e curiosidade; o próximo mostra quanto falta; o
-/// resto fica em segredo.
+/// Mapa da jornada, uma semana por destino: Sistema Solar, estrelas
+/// vizinhas e a galáxia, sem fim. Os destinos visitados mostram nome e
+/// curiosidade; o próximo mostra o nome; o resto fica em segredo.
 class MapScreen extends ConsumerWidget {
   const MapScreen({super.key});
 
@@ -46,8 +46,9 @@ class MapScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 12),
           child: PixelPanel(
             child: Text(
-              'Cada missão concluída leva o seu personagem mais perto de Jesus: primeiro pela Terra Santa, '
-              'de Belém ao Cenáculo, depois acima das nuvens e, por fim, pelos céus, que não têm fim.',
+              'Cada semana o dev explora um destino. Cumpra metade das missões da semana para explorar e, na '
+              'segunda-feira, a nave parte para o próximo: primeiro a Lua e os planetas, depois as estrelas '
+              'vizinhas e, por fim, nebulosas e galáxias, sem fim.',
               style: PixelText.body(14, color: Kanagawa.springViolet1),
             ),
           ),
@@ -79,6 +80,8 @@ class _PlaceTile extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('SEMANA ${place.week}', style: PixelText.display(6, color: Kanagawa.springBlue)),
+            const SizedBox(height: 2),
             Text(known ? place.name.toUpperCase() : '???',
                 style: PixelText.display(8, color: reached ? Kanagawa.fujiWhite : Kanagawa.springViolet1)),
             const SizedBox(height: 4),
@@ -86,11 +89,13 @@ class _PlaceTile extends StatelessWidget {
               reached
                   ? place.fact
                   : next
-                      ? 'Faltam $missing ${missing == 1 ? 'missão' : 'missões'} para chegar.'
+                      ? (missing == 0
+                          ? 'Explorado! A nave parte para cá na segunda-feira.'
+                          : 'Próximo destino: faltam $missing ${missing == 1 ? 'missão' : 'missões'} nesta semana.')
                       : 'Ainda não descoberto.',
               style: PixelText.body(13, color: Kanagawa.springViolet1),
             ),
-            if (current) Text('você está aqui', style: PixelText.body(13, color: Kanagawa.carpYellow)),
+            if (current) Text('explorando nesta semana', style: PixelText.body(13, color: Kanagawa.carpYellow)),
           ]),
         ),
       ]),

@@ -63,8 +63,18 @@ abstract final class GameRules {
     ];
   }
 
-  /// Avisos de transformação nova e de lugar novo quando o jogo avança.
-  static List<Notice> progressNotices(GameState s, GameStats t) => [..._formNotices(s, t), ..._placeNotices(s, t)];
+  /// Guarda se a meta desta semana foi cumprida e devolve os avisos de
+  /// transformação nova, destino explorado e destino novo.
+  static List<Notice> progressNotices(GameState s, GameStats t) {
+    if (t.weekKey.isNotEmpty) {
+      if (t.explored) {
+        s.explored.add(t.weekKey);
+      } else {
+        s.explored.remove(t.weekKey);
+      }
+    }
+    return [..._formNotices(s, t), ..._exploredNotices(s, t), ..._placeNotices(s, t)];
+  }
 
   static List<Notice> _formNotices(GameState s, GameStats t) {
     if (s.lastForm < 0 || t.formIndex < s.lastForm) {
@@ -74,7 +84,17 @@ abstract final class GameRules {
     if (t.formIndex == s.lastForm) return const [];
     s.lastForm = t.formIndex;
     final f = t.form;
-    return [Notice('NOVA BÊNÇÃO!', '${f.title}\n\n"${f.passage.text}"\n${f.passage.ref}', form: f.index)];
+    return [Notice('NOVO NÍVEL!', '${f.title}: ${f.description}', form: f.index)];
+  }
+
+  static List<Notice> _exploredNotices(GameState s, GameStats t) {
+    if (!t.explored || t.weekKey.isEmpty || s.lastExplored == t.weekKey) return const [];
+    s.lastExplored = t.weekKey;
+    return [
+      Notice('DESTINO EXPLORADO!',
+          '${t.place.name}: meta da semana cumprida. Na segunda-feira a nave parte para ${t.next.name}.',
+          place: t.place.index),
+    ];
   }
 
   static List<Notice> _placeNotices(GameState s, GameStats t) {
@@ -91,13 +111,13 @@ abstract final class GameRules {
     final p = t.place;
     final title = p.region != from.region
         ? switch (p.region) {
-            Region.ascent => 'RUMO AO CÉU!',
-            Region.heaven => 'NOS CÉUS!',
-            Region.land => 'NOVO LUGAR',
+            Region.stars => 'ALÉM DO SISTEMA SOLAR!',
+            Region.galaxy => 'RUMO À GALÁXIA!',
+            Region.solar => 'NOVO DESTINO',
           }
-        : 'NOVO LUGAR';
+        : 'NOVO DESTINO';
     return [
-      Notice(title, '${p.name}. ${p.fact}', place: p.index),
+      Notice(title, 'Semana ${p.week}: ${p.name}. ${p.fact}', place: p.index),
     ];
   }
 }

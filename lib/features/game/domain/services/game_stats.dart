@@ -62,6 +62,9 @@ class GameStats {
     required this.totalToday,
     required this.attributes,
     this.active = const {},
+    this.weekKey = '',
+    this.weekDone = 0,
+    this.weekGoal = 1,
   });
 
   /// Missões concluídas desde o começo.
@@ -73,8 +76,14 @@ class GameStats {
   /// Pontos por categoria (Vitalidade, Força...).
   final Map<String, int> attributes;
 
-  /// Categorias das missões importadas e as que já ganharam pontos.
+  /// Categorias das missões da agenda e as que já ganharam pontos.
   final Set<String> active;
+
+  /// Semana atual (chave da segunda-feira).
+  final String weekKey;
+
+  /// Missões concluídas nesta semana e a meta que explora o destino.
+  final int weekDone, weekGoal;
 
   int get power => attributes.values.fold(0, (a, b) => a + b);
   int get formIndex => transformationIndexFor(power);
@@ -105,17 +114,18 @@ class GameStats {
     return k == null ? null : categoryOf(k);
   }
 
+  /// Destino desta semana e o da próxima.
   Place get place => placeAt(placeIndex);
   Place get next => placeAt(placeIndex + 1);
 
-  /// Missões que faltam para o próximo lugar.
-  int get missing => next.missionsRequired - missionsDone;
+  /// Meta da semana cumprida: na segunda-feira o dev parte para [next].
+  bool get explored => weekDone >= weekGoal;
 
-  /// Progresso (0 a 1) entre o lugar atual e o próximo.
-  double get progress {
-    final span = next.missionsRequired - place.missionsRequired;
-    return span <= 0 ? 1 : ((missionsDone - place.missionsRequired) / span).clamp(0.0, 1.0);
-  }
+  /// Missões que faltam nesta semana para explorar o destino.
+  int get missing => math.max(0, weekGoal - weekDone);
+
+  /// Exploração do destino desta semana (0 a 1).
+  double get progress => (weekDone / weekGoal).clamp(0.0, 1.0);
 }
 
 GameStats computeStats(GameState s, DateTime now) {
@@ -133,10 +143,16 @@ GameStats computeStats(GameState s, DateTime now) {
     }
   }
   final today = dayIndexOf(now);
-  final w = s.weeks[weekKeyOf(now)] ?? WeekRecord();
+  final key = weekKeyOf(now);
+  final w = s.weeks[key] ?? WeekRecord();
   return GameStats(
     missionsDone: done,
-    placeIndex: placeIndexFor(done),
+    // Um destino novo a cada semana já explorada (as chaves aaaa-mm-dd
+    // ficam em ordem de data).
+    placeIndex: s.explored.where((k) => k.compareTo(key) < 0).length,
+    weekKey: key,
+    weekDone: w.done.length,
+    weekGoal: s.weeklyGoal,
     doneToday: dayDone(s, w, today),
     totalToday: daySlots(s, today).length,
     attributes: attrs,

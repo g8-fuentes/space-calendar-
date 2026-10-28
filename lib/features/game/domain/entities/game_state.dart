@@ -75,8 +75,8 @@ class WeekRecord {
       });
 }
 
-/// Tudo o que é salvo. O lugar da jornada é sempre recalculado a
-/// partir das missões concluídas (ver game_stats.dart).
+/// Tudo o que é salvo. Cada semana o dev explora um destino; as semanas
+/// em que ele cumpriu a meta ficam em [explored] (ver game_rules.dart).
 class GameState {
   GameState({
     required this.startDate,
@@ -89,8 +89,13 @@ class GameState {
     this.alerts = true,
     this.lastPlace = -1,
     this.lastForm = -1,
+    this.lastExplored = '',
+    this.google = false,
+    this.lastSync = 0,
+    Set<String>? explored,
   })  : missions = missions ?? [],
-        weeks = weeks ?? {};
+        weeks = weeks ?? {},
+        explored = explored ?? {};
 
   factory GameState.initial(String today) => GameState(startDate: today);
 
@@ -113,6 +118,26 @@ class GameState {
   /// Última transformação já anunciada (-1 = ainda não calculada).
   int lastForm;
 
+  /// Semanas (chave da segunda-feira) em que a meta foi cumprida: cada uma
+  /// leva o dev a um destino novo na semana seguinte.
+  final Set<String> explored;
+
+  /// Última semana em que o aviso de destino explorado já apareceu.
+  String lastExplored;
+
+  /// Missões vêm do Google Agenda, sincronizado sozinho.
+  bool google;
+
+  /// Hora da última sincronização com o Google (ms desde 1970).
+  int lastSync;
+
+  /// Missões por semana que exploram o destino: metade das missões da
+  /// agenda (pelo menos 1).
+  int get weeklyGoal {
+    final slots = missions.fold(0, (a, m) => a + m.days.length);
+    return slots <= 1 ? 1 : (slots / 2).ceil();
+  }
+
   WeekRecord week(String key) => weeks.putIfAbsent(key, WeekRecord.new);
 
   Map<String, Object?> toJson() => {
@@ -127,25 +152,42 @@ class GameState {
         'start': startDate,
         'lastPlace': lastPlace,
         'lastForm': lastForm,
+        'explored': explored.toList()..sort(),
+        'lastExplored': lastExplored,
+        'google': google,
+        'lastSync': lastSync,
       };
 
-  factory GameState.fromJson(Map<String, Object?> j, {required String today}) => GameState(
-        startDate: j['start'] as String? ?? today,
-        name: j['name'] as String? ?? '',
-        onboarded: j['onboarded'] as bool? ?? false,
-        missions: [
-          for (final m in (j['missions'] as List? ?? const [])) Mission.fromJson((m as Map).cast<String, Object?>()),
-        ],
-        weeks: {
-          for (final e in (j['weeks'] as Map? ?? {}).entries)
-            e.key as String: WeekRecord.fromJson((e.value as Map).cast<String, Object?>()),
-        },
-        sound: j['sound'] as bool? ?? true,
-        music: j['music'] as bool? ?? true,
-        alerts: j['alerts'] as bool? ?? true,
-        lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
-        lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
-      );
+  factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
+    final s = GameState(
+      startDate: j['start'] as String? ?? today,
+      name: j['name'] as String? ?? '',
+      onboarded: j['onboarded'] as bool? ?? false,
+      missions: [
+        for (final m in (j['missions'] as List? ?? const [])) Mission.fromJson((m as Map).cast<String, Object?>()),
+      ],
+      weeks: {
+        for (final e in (j['weeks'] as Map? ?? {}).entries)
+          e.key as String: WeekRecord.fromJson((e.value as Map).cast<String, Object?>()),
+      },
+      sound: j['sound'] as bool? ?? true,
+      music: j['music'] as bool? ?? true,
+      alerts: j['alerts'] as bool? ?? true,
+      lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
+      lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
+      lastExplored: j['lastExplored'] as String? ?? '',
+      google: j['google'] as bool? ?? false,
+      lastSync: (j['lastSync'] as num?)?.toInt() ?? 0,
+      explored: {for (final k in (j['explored'] as List? ?? const [])) k as String},
+    );
+    // Saves antigos: as semanas que já cumpriam a meta contam como exploradas.
+    if (j['explored'] == null) {
+      for (final e in s.weeks.entries) {
+        if (e.value.done.length >= s.weeklyGoal) s.explored.add(e.key);
+      }
+    }
+    return s;
+  }
 
   /// Cópia profunda: as regras mexem na cópia e o controlador troca o estado.
   GameState copy() => GameState.fromJson(jsonDecode(jsonEncode(toJson())) as Map<String, Object?>, today: startDate);

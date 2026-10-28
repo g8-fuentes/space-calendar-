@@ -201,3 +201,28 @@ List<Mission> toMissions(List<ImportedEvent> list) {
   }
   return arr;
 }
+
+/// Eventos com horário vindos da API do Google Agenda (events.list com
+/// singleEvents=true, então repetições já vêm separadas). Pula eventos de
+/// dia inteiro, cancelados, recusados e os que duram mais de um dia.
+List<ImportedEvent> eventsFromGoogle(Iterable<Map<String, Object?>> items) {
+  DateTime? at(Object? v) {
+    final s = v is Map ? v['dateTime'] : null;
+    return s is String ? DateTime.tryParse(s)?.toLocal() : null;
+  }
+
+  final out = <ImportedEvent>[];
+  for (final e in items) {
+    if (e['status'] == 'cancelled') continue;
+    final declined = (e['attendees'] as List? ?? const [])
+        .any((a) => a is Map && a['self'] == true && a['responseStatus'] == 'declined');
+    if (declined) continue;
+    final st = at(e['start']);
+    if (st == null) continue;
+    final en = at(e['end']) ?? st.add(const Duration(hours: 1));
+    if (en.difference(st).inHours >= 24) continue;
+    final raw = (e['summary'] as String? ?? '').trim();
+    out.add(ImportedEvent(raw.isEmpty ? 'Missão' : raw, [_weekday(st)], _hm(st), _hm(en)));
+  }
+  return out;
+}
