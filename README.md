@@ -1,14 +1,15 @@
-# Dev Odyssey
+# Space Routine
 
-A rotina semanal do Guilherme Fuentes como a exploração espacial de um dev, em pixel art.
+A rotina semanal do Guilherme Fuentes como uma missão espacial em pixel art, com
+o Guilherme como astronauta.
 O app sincroniza direto com o Google Agenda (só leitura): os eventos com horário da semana
-viram missões, e a agenda atualiza sozinha toda vez que o app abre. Cada semana o dev explora
+viram missões, e a agenda atualiza sozinha toda vez que o app abre. Cada semana o astronauta explora
 um destino: começa na Terra (Bauru), passa pela Lua e pelos planetas e depois sai do Sistema
 Solar rumo às estrelas vizinhas, nebulosas e galáxias, sem fim. Cumprir metade das missões da
 semana explora o destino, e na segunda-feira a nave parte para o próximo. Cada missão também
-dá pontos ao atributo da categoria dela, e os pontos levam o dev a novos níveis (de Estagiário
-a Dev Cósmico, sem nível final), com roupa, cabelo e aura novos e uma frase de dev ou de
-explorador do espaço.
+dá pontos ao atributo da categoria dela, e os pontos levam o astronauta a novos níveis (de
+Cadete espacial a Astronauta cósmico, sem nível final), com traje, visor, mochila a jato e aura
+novos e uma frase de quem olhou para as estrelas.
 
 ## Google Agenda
 
@@ -28,7 +29,7 @@ Sem Google, dá para importar um arquivo `.ics` em Ajustes.
 ### Opção 1: GitHub (sem instalar nada)
 
 1. A ação **Android APK** roda a cada envio para `main` (ou em *Actions → Android APK → Run workflow*).
-2. Ao terminar, baixe o artefato **dev-odyssey** e instale o `dev-odyssey.apk` no celular
+2. Ao terminar, baixe o artefato **space-routine** e instale o `space-routine.apk` no celular
    (permita "instalar apps de fontes desconhecidas").
 
 ### Opção 2: no seu computador

@@ -30,7 +30,7 @@ String regionName(Region r) => switch (r) {
       Region.galaxy => 'Galáxia e além',
     };
 
-/// Um destino da exploração. Cada semana o dev explora um destino.
+/// Um destino da exploração. Cada semana o astronauta explora um destino.
 class Place {
   const Place({
     required this.index,
@@ -50,14 +50,19 @@ class Place {
   final String fact;
   final Landmark landmark;
 
-  /// Semana da jornada em que o dev explora este lugar (1 = a primeira).
+  /// Semana da jornada em que o astronauta explora este lugar (1 = a primeira).
   int get week => index + 1;
 }
 
 typedef _P = (String, PlaceKind, List<int>, String);
 
 const _solar = <_P>[
-  ('Terra', PlaceKind.home, [0xFF7E9CD8, 0xFF98BB6C], 'Base de lançamento em Bauru. Daqui o dev parte para o espaço.'),
+  (
+    'Terra',
+    PlaceKind.home,
+    [0xFF7E9CD8, 0xFF98BB6C],
+    'Base de lançamento em Bauru. Daqui o astronauta parte para o espaço.'
+  ),
   ('Lua', PlaceKind.moon, [0xFF938AA9, 0xFF727169], 'Fica a 384 mil km. A luz dela leva 1,3 segundo para chegar aqui.'),
   ('Mercúrio', PlaceKind.moon, [0xFF727169, 0xFF54546D], 'O mais perto do Sol: um ano lá dura só 88 dias.'),
   (

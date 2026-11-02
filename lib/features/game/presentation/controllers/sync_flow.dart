@@ -43,7 +43,7 @@ Future<String?> connectGoogle(BuildContext context, WidgetRef ref, {String? hero
     await loading;
     if (heroName != null) {
       ctrl.apply((s) {
-        s.name = heroName.trim().isEmpty ? 'Dev' : heroName.trim();
+        s.name = heroName.trim().isEmpty ? 'Astronauta' : heroName.trim();
         s.onboarded = true;
         s.startDate = ymd(ctrl.now);
       });

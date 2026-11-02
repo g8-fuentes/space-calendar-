@@ -46,7 +46,7 @@ class MapScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 12),
           child: PixelPanel(
             child: Text(
-              'Cada semana o dev explora um destino. Cumpra metade das missões da semana para explorar e, na '
+              'Cada semana o astronauta explora um destino. Cumpra metade das missões da semana para explorar e, na '
               'segunda-feira, a nave parte para o próximo: primeiro a Lua e os planetas, depois as estrelas '
               'vizinhas e, por fim, nebulosas e galáxias, sem fim.',
               style: PixelText.body(14, color: Kanagawa.springViolet1),

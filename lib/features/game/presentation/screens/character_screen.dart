@@ -51,8 +51,8 @@ class CharacterScreen extends ConsumerWidget {
                   style: PixelText.body(14, color: Kanagawa.carpYellow)),
               const SizedBox(height: 8),
               Text(
-                'A cada nível o dev ganha roupa, cabelo e aura novos e uma frase de dev ou de explorador '
-                'do espaço. Os níveis não têm fim.',
+                'A cada nível o astronauta ganha traje, visor e aura novos e uma frase de quem olhou para as '
+                'estrelas. Os níveis não têm fim.',
                 style: PixelText.body(13, color: Kanagawa.springViolet1),
               ),
             ]),
@@ -82,7 +82,7 @@ class CharacterScreen extends ConsumerWidget {
       const SizedBox(height: 14),
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('NÍVEIS DE DEV', style: PixelText.display(10)),
+          Text('NÍVEIS DO ASTRONAUTA', style: PixelText.display(10)),
           const SizedBox(height: 10),
           for (var i = 0; i <= last; i++) ...[
             _FormTile(

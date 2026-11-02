@@ -8,21 +8,19 @@ import 'pixel_art.dart';
 
 const _skin = Color(0xFFE8B48A);
 const _skinDark = Color(0xFFC98E66);
+const _hair = Color(0xFF2E1D14);
 const _ink = Kanagawa.sumiInk0;
 
 /// Grade do personagem: 26 x 34, com a figura entre as colunas 6 e 20
-/// e os pés na linha 30 (há espaço em cima para o cabelo em chamas).
+/// e os pés na linha 30 (há espaço em volta para a aura).
 const gridW = 26, gridH = 34, _ox = 5, _oy = 9;
 
 /// Linha dos pés na grade.
 const feetRow = _oy + 21;
 
-/// Cor de aura e cabelo, com o ciclo de cores das formas cósmicas.
+/// Cor da aura, com o ciclo de cores das formas cósmicas.
 Color auraOf(Transformation f, int tick) =>
     f.cosmic ? Color(hslToArgb(((tick * 3) % 360).toDouble(), .75, .65)) : Color(f.auraColor);
-
-Color hairOf(Transformation f, int tick) =>
-    f.cosmic ? Color(hslToArgb(((tick * 3 + 180) % 360).toDouble(), .7, .7)) : Color(f.hairColor);
 
 typedef _R = void Function(int x, int y, int w, int h, Color c);
 
@@ -39,213 +37,98 @@ typedef _R = void Function(int x, int y, int w, int h, Color c);
   return (g, r);
 }
 
-void _spikes(_R r, Color hair) {
-  r(4, 0, 8, 2, hair);
-  r(4, 2, 1, 3, hair);
-  r(11, 2, 1, 3, hair);
-  r(4, -2, 2, 2, hair);
-  r(5, -4, 1, 2, hair);
-  r(7, -3, 2, 3, hair);
-  r(8, -5, 1, 2, hair);
-  r(10, -2, 2, 2, hair);
-  r(10, -4, 1, 2, hair);
-  r(3, 1, 1, 2, hair);
-  r(12, 1, 1, 2, hair);
-  r(2, 2, 1, 1, hair);
-  r(13, 2, 1, 1, hair);
-  r(5, 2, 1, 2, hair);
-  r(9, 2, 1, 1, hair);
-}
-
-void _wild(_R r, Color hair) {
-  _spikes(r, hair);
-  r(2, 0, 1, 4, hair);
-  r(13, 0, 1, 4, hair);
-  r(1, 1, 1, 2, hair);
-  r(14, 1, 1, 2, hair);
-  r(0, 2, 1, 1, hair);
-  r(15, 2, 1, 1, hair);
-  r(3, -3, 2, 3, hair);
-  r(11, -3, 2, 3, hair);
-  r(2, -4, 1, 2, hair);
-  r(13, -4, 1, 2, hair);
-  r(6, -6, 1, 3, hair);
-  r(9, -6, 1, 4, hair);
-  r(3, 2, 1, 5, hair);
-  r(12, 2, 1, 5, hair);
-}
-
-void _flame(_R r, Color hair, Color tip, int tick) {
-  _spikes(r, hair);
-  final f = (tick ~/ 6) % 2;
-  r(4, -5, 1, 3, hair);
-  r(11, -5, 1, 3, hair);
-  r(5, -7 + f, 1, 3, hair);
-  r(7, -8, 2, 5, hair);
-  r(8, -9 + f, 1, 1, tip);
-  r(10, -7 + f, 1, 3, hair);
-  r(6, -6, 1, 2, hair);
-  r(9, -6, 1, 2, hair);
-  r(5, -7 + f, 1, 1, tip);
-  r(10, -7 + f, 1, 1, tip);
-  r(3, -3, 1, 3, hair);
-  r(12, -3, 1, 3, hair);
-}
-
-/// Logo </> de dev no peito.
-void _dev(_R r, Color c) {
-  for (final (x, y) in const [(5, 11), (4, 12), (5, 13), (8, 11), (7, 12), (7, 13), (10, 11), (11, 12), (10, 13)]) {
-    r(x, y, 1, 1, c);
-  }
-}
-
-/// O dev explorador: roupa e cabelo mudam a cada nível.
-PixelGrid personGrid(Transformation f, {bool blink = false, int tick = 0}) {
+/// O astronauta: o traje, o visor e a mochila mudam a cada nível. O rosto
+/// aparece pelo visor.
+PixelGrid astronautGrid(Transformation f, {bool blink = false, int tick = 0}) {
   final (g, r) = _canvas();
-  final hair = hairOf(f, tick);
-  final eyes = Color(f.eyes);
-  if (f.hair == Hair.long) {
-    r(3, 2, 10, 15, hair);
-    r(4, 17, 8, 2, hair);
+  final aura = auraOf(f, tick);
+  final suit = Color(f.suit), trim = f.cosmic ? aura : Color(f.trim);
+  final shade = Color.lerp(suit, _ink, .22)!;
+  final visor = f.cosmic ? Color.lerp(const Color(0xFF223249), aura, .55)! : Color(f.visor);
+  final helmet = f.gear == Gear.none ? Kanagawa.fujiWhite : Color.lerp(Kanagawa.fujiWhite, suit, .25)!;
+  // mochila
+  if (f.gear != Gear.none) {
+    r(1, 10, 2, 7, Kanagawa.fujiGray);
+    r(13, 10, 2, 7, Kanagawa.fujiGray);
+    r(1, 16, 2, 1, Kanagawa.sumiInk6);
+    r(13, 16, 2, 1, Kanagawa.sumiInk6);
   }
-  if (f.outfit == Outfit.giCape || f.outfit == Outfit.starSuit) {
-    final cape = f.outfit == Outfit.starSuit ? const Color(0xFF7E9CD8) : Kanagawa.autumnRed;
-    r(3, 10, 10, 11, cape);
-    r(2, 15, 12, 6, cape);
-    r(2, 20, 12, 1, Color.lerp(cape, _ink, .35)!);
+  if (f.gear == Gear.jet) {
+    final fl = (tick ~/ 4) % 2;
+    r(1, 17, 2, 2 + fl, Kanagawa.surimiOrange);
+    r(13, 17, 2, 2 + fl, Kanagawa.surimiOrange);
+    r(1, 17, 2, 1, Kanagawa.carpYellow);
+    r(13, 17, 2, 1, Kanagawa.carpYellow);
   }
-  // cabeça
-  r(5, 2, 6, 7, _skin);
-  r(4, 5, 1, 2, _skin);
-  r(11, 5, 1, 2, _skin);
-  switch (f.hair) {
-    case Hair.normal:
-      r(4, 0, 8, 2, hair);
-      r(4, 2, 1, 3, hair);
-      r(11, 2, 1, 2, hair);
-      r(5, 2, 3, 1, hair);
-    case Hair.spiky || Hair.long:
-      _spikes(r, hair);
-    case Hair.wild:
-      _wild(r, hair);
-    case Hair.flame:
-      _flame(r, hair, auraOf(f, tick), tick);
-  }
-  r(6, 5, 1, 1, blink ? _skinDark : eyes);
-  r(9, 5, 1, 1, blink ? _skinDark : eyes);
-  r(7, 7, 2, 1, _skinDark);
-  r(7, 9, 2, 1, _skin);
-  // roupa
-  switch (f.outfit) {
-    case Outfit.casual:
-      const shirt = Color(0xFF7E9CD8), jeans = Color(0xFF2D4F67);
-      r(4, 10, 8, 6, shirt);
-      r(2, 10, 2, 2, shirt);
-      r(12, 10, 2, 2, shirt);
-      r(2, 12, 2, 4, _skin);
-      r(12, 12, 2, 4, _skin);
-      r(4, 16, 8, 1, jeans);
-      r(4, 17, 3, 4, jeans);
-      r(9, 17, 3, 4, jeans);
-      r(3, 21, 4, 1, Kanagawa.fujiWhite);
-      r(9, 21, 4, 1, Kanagawa.fujiWhite);
-      _dev(r, Kanagawa.fujiWhite);
-    case Outfit.training:
-      const hoodie = Color(0xFF727169), pants = Color(0xFF1F1F28);
-      r(4, 10, 8, 6, hoodie);
-      r(2, 10, 2, 5, hoodie);
-      r(12, 10, 2, 5, hoodie);
-      r(4, 15, 8, 1, Kanagawa.autumnRed);
-      _dev(r, Kanagawa.carpYellow);
-      r(2, 15, 2, 1, _skin);
-      r(12, 15, 2, 1, _skin);
-      r(7, 10, 2, 1, Kanagawa.fujiWhite);
-      r(4, 16, 8, 1, pants);
-      r(4, 17, 3, 4, pants);
-      r(9, 17, 3, 4, pants);
-      r(3, 21, 4, 1, Kanagawa.autumnRed);
-      r(9, 21, 4, 1, Kanagawa.autumnRed);
-    case Outfit.gi || Outfit.giCape:
-      const gi = Color(0xFFFFA066), blue = Color(0xFF223249);
-      r(4, 10, 8, 6, gi);
-      r(7, 10, 2, 1, blue);
-      r(4, 15, 8, 1, blue);
-      r(2, 10, 2, 2, gi);
-      r(12, 10, 2, 2, gi);
-      r(2, 12, 2, 2, _skin);
-      r(12, 12, 2, 2, _skin);
-      r(2, 14, 2, 1, blue);
-      r(12, 14, 2, 1, blue);
-      r(2, 15, 2, 1, _skin);
-      r(12, 15, 2, 1, _skin);
-      r(4, 16, 8, 1, gi);
-      r(4, 17, 3, 3, gi);
-      r(9, 17, 3, 3, gi);
-      r(3, 20, 4, 2, blue);
-      r(9, 20, 4, 2, blue);
-      r(3, 20, 4, 1, Kanagawa.autumnRed);
-      r(9, 20, 4, 1, Kanagawa.autumnRed);
-      _dev(r, blue);
-      if (f.outfit == Outfit.giCape) {
-        r(4, 10, 1, 1, Kanagawa.carpYellow);
-        r(11, 10, 1, 1, Kanagawa.carpYellow);
-      }
-    case Outfit.starSuit:
-      const robe = Color(0xFFE4DFC6), sash = Color(0xFF7E9CD8), navy = Color(0xFF223249);
-      r(4, 10, 8, 6, robe);
-      r(4, 14, 8, 2, sash);
-      r(7, 10, 2, 3, navy);
-      r(2, 10, 2, 4, robe);
-      r(12, 10, 2, 4, robe);
-      r(2, 14, 2, 2, _skin);
-      r(12, 14, 2, 2, _skin);
-      r(4, 16, 8, 1, navy);
-      r(4, 17, 3, 4, navy);
-      r(9, 17, 3, 4, navy);
-      r(3, 21, 4, 1, robe);
-      r(9, 21, 4, 1, robe);
-      _dev(r, sash);
-  }
+  // capacete redondo
+  r(5, 0, 6, 1, helmet);
+  r(4, 1, 8, 1, helmet);
+  r(3, 2, 10, 1, helmet);
+  r(2, 3, 12, 4, helmet);
+  r(3, 7, 10, 1, helmet);
+  r(4, 8, 8, 1, Kanagawa.oldWhite);
+  r(3, 9, 10, 1, Kanagawa.oldWhite);
+  r(2, 4, 1, 2, trim);
+  r(13, 4, 1, 2, trim);
+  // visor e rosto
+  r(4, 2, 8, 1, visor);
+  r(3, 3, 10, 4, visor);
+  r(4, 7, 8, 1, visor);
+  r(5, 3, 6, 4, _skin);
+  r(5, 3, 6, 1, _hair);
+  r(5, 4, 1, 1, _hair);
+  r(6, 4, 1, 1, blink ? _skinDark : _ink);
+  r(9, 4, 1, 1, blink ? _skinDark : _ink);
+  r(7, 6, 2, 1, _skinDark);
+  r(10, 2, 1, 1, Kanagawa.lightBlue);
+  r(11, 3, 1, 1, Kanagawa.lightBlue);
+  r(12, 4, 1, 1, Kanagawa.lightBlue);
+  // corpo e painel do peito
+  r(4, 10, 8, 6, suit);
+  r(4, 15, 8, 1, trim);
+  r(6, 11, 4, 2, _ink);
+  r(6, 11, 1, 1, Kanagawa.autumnRed);
+  r(7, 11, 1, 1, Kanagawa.springGreen);
+  r(8, 11, 1, 1, Kanagawa.springBlue);
+  r(9, 12, 1, 1, Kanagawa.carpYellow);
+  // bandeira do Brasil no ombro
+  r(4, 11, 2, 2, const Color(0xFF3F8F4A));
+  r(4, 11, 1, 1, const Color(0xFFE6C384));
+  // braços
+  r(2, 10, 2, 5, suit);
+  r(12, 10, 2, 5, suit);
+  r(2, 12, 2, 1, trim);
+  r(12, 12, 2, 1, trim);
+  r(2, 14, 2, 1, shade);
+  r(12, 14, 2, 1, shade);
+  r(2, 15, 2, 1, Kanagawa.fujiWhite);
+  r(12, 15, 2, 1, Kanagawa.fujiWhite);
+  // pernas e botas
+  r(4, 16, 3, 5, suit);
+  r(9, 16, 3, 5, suit);
+  r(4, 18, 3, 1, shade);
+  r(9, 18, 3, 1, shade);
+  r(4, 20, 3, 1, trim);
+  r(9, 20, 3, 1, trim);
+  r(3, 21, 4, 1, Kanagawa.fujiWhite);
+  r(9, 21, 4, 1, Kanagawa.fujiWhite);
   return outlined(g);
 }
 
 final _grids = <String, PixelGrid>{};
 
-/// Grade do personagem na transformação [f].
+/// Grade do astronauta no nível [f].
 PixelGrid characterGrid(Transformation f, {bool blink = false, int tick = 0}) {
-  final t = f.cosmic ? tick ~/ 4 * 4 : (f.hair == Hair.flame ? tick ~/ 6 * 6 % 12 : 0);
+  final t = f.cosmic ? tick ~/ 4 * 4 : (f.gear == Gear.jet ? tick ~/ 4 % 2 * 4 : 0);
   final key = '${f.index}|$blink|$t';
   if (_grids.length > 40) _grids.clear();
-  return _grids[key] ??= personGrid(f, blink: blink, tick: t);
+  return _grids[key] ??= astronautGrid(f, blink: blink, tick: t);
 }
 
-/// Caixa ocupada pela figura (do topo do cabelo aos pés) com a grade em
+/// Caixa da figura (do capacete aos pés, com folga para a aura) com a grade em
 /// [origin] e escala [sc].
 Rect figureBox(Offset origin, double sc) =>
     Rect.fromLTWH(origin.dx + 7 * sc, origin.dy + (_oy - 5) * sc, 12 * sc, 27 * sc);
-
-/// Capacete de vidro que o dev usa fora da Terra: deixa ver o rosto e o
-/// cabelo de cada nível.
-void paintHelmet(Canvas canvas, Offset origin, double sc, int tick) {
-  final c = Offset(origin.dx + (_ox + 8) * sc, origin.dy + (_oy + 3.5) * sc);
-  final rad = 8.2 * sc;
-  final p = Paint()..color = const Color(0xFFA3D4D5).withAlpha(38);
-  canvas.drawCircle(c, rad, p);
-  p
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = sc
-    ..color = const Color(0xFFDCD7BA).withAlpha(190);
-  canvas.drawCircle(c, rad, p);
-  p
-    ..strokeWidth = sc * .8
-    ..color = Kanagawa.fujiWhite.withAlpha(150 + (40 * math.sin(tick * .05)).round());
-  canvas.drawArc(Rect.fromCircle(center: c, radius: rad - 2 * sc), math.pi * 1.1, math.pi * .35, false, p);
-  // gola do capacete
-  p
-    ..style = PaintingStyle.fill
-    ..color = const Color(0xFF938AA9);
-  canvas.drawRect(Rect.fromLTWH(origin.dx + (_ox + 3) * sc, origin.dy + (_oy + 9) * sc, 10 * sc, 1.2 * sc), p);
-}
 
 /// Força da aura; no espaço ele sempre voa com pelo menos um brilho.
 int auraLevel(Transformation f, {bool space = false}) => space ? math.max(1, f.aura) : f.aura;

@@ -75,7 +75,7 @@ class WeekRecord {
       });
 }
 
-/// Tudo o que é salvo. Cada semana o dev explora um destino; as semanas
+/// Tudo o que é salvo. Cada semana o astronauta explora um destino; as semanas
 /// em que ele cumpriu a meta ficam em [explored] (ver game_rules.dart).
 class GameState {
   GameState({
@@ -119,7 +119,7 @@ class GameState {
   int lastForm;
 
   /// Semanas (chave da segunda-feira) em que a meta foi cumprida: cada uma
-  /// leva o dev a um destino novo na semana seguinte.
+  /// leva o astronauta a um destino novo na semana seguinte.
   final Set<String> explored;
 
   /// Última semana em que o aviso de destino explorado já apareceu.

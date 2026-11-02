@@ -8,7 +8,7 @@ import '../../domain/catalog/transformations.dart';
 import '../art/character_art.dart';
 import '../art/pixel_art.dart';
 
-/// O dev explorador grande, animado e com a aura da transformação, num fundo
+/// O astronauta grande, animado e com a aura da transformação, num fundo
 /// escuro.
 class CharacterView extends StatefulWidget {
   const CharacterView({super.key, required this.form, this.locked = false});

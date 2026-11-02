@@ -118,7 +118,7 @@ class GameStats {
   Place get place => placeAt(placeIndex);
   Place get next => placeAt(placeIndex + 1);
 
-  /// Meta da semana cumprida: na segunda-feira o dev parte para [next].
+  /// Meta da semana cumprida: na segunda-feira o astronauta parte para [next].
   bool get explored => weekDone >= weekGoal;
 
   /// Missões que faltam nesta semana para explorar o destino.

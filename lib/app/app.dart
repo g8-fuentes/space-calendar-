@@ -42,7 +42,7 @@ class _RotinaQuestAppState extends State<RotinaQuestApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Dev Odyssey',
+      title: 'Space Routine',
       debugShowCheckedModeBanner: false,
       theme: buildKanagawaTheme(),
       home: const _Root(),

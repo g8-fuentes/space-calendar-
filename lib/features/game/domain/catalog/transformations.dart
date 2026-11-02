@@ -1,65 +1,54 @@
 import 'catalog.dart' show hslToArgb;
 
-/// Penteado do personagem.
-enum Hair { normal, spiky, wild, long, flame }
+/// Peças extras do traje do astronauta.
+enum Gear {
+  /// Macacão de treino, sem mochila.
+  none,
 
-/// Roupa do dev: camiseta, moletom, macacão de voo, macacão com capa de
-/// comandante e traje cósmico.
-enum Outfit { casual, training, gi, giCape, starSuit }
+  /// Mochila de oxigênio.
+  pack,
 
-/// Frase de um dev ou de um explorador do espaço.
+  /// Mochila a jato com chamas.
+  jet,
+}
+
+/// Frase de um astronauta ou de alguém que olhou para as estrelas.
 typedef Quote = ({String text, String author});
 
 const quotes = <Quote>[
-  (text: 'Talk is cheap. Show me the code.', author: 'Linus Torvalds'),
-  (text: 'Nós escolhemos ir à Lua não porque é fácil, mas porque é difícil.', author: 'John F. Kennedy'),
-  (text: 'Primeiro resolva o problema. Depois escreva o código.', author: 'John Johnson'),
   (text: 'A Terra é azul!', author: 'Yuri Gagarin'),
-  (text: 'Faça funcionar, faça certo, faça rápido.', author: 'Kent Beck'),
-  (text: 'A Terra é o berço da humanidade, mas ninguém vive no berço para sempre.', author: 'Konstantin Tsiolkovsky'),
-  (
-    text: 'Qualquer tolo escreve código que um computador entende. Bons programadores escrevem código que humanos '
-        'entendem.',
-    author: 'Martin Fowler'
-  ),
-  (text: 'Somos feitos de matéria das estrelas.', author: 'Carl Sagan'),
-  (text: 'A simplicidade é pré-requisito para a confiabilidade.', author: 'Edsger Dijkstra'),
   (text: 'Um pequeno passo para um homem, um salto gigante para a humanidade.', author: 'Neil Armstrong'),
-  (text: 'A melhor maneira de prever o futuro é inventá-lo.', author: 'Alan Kay'),
+  (text: 'Nós escolhemos ir à Lua não porque é fácil, mas porque é difícil.', author: 'John F. Kennedy'),
+  (text: 'A Terra é o berço da humanidade, mas ninguém vive no berço para sempre.', author: 'Konstantin Tsiolkovsky'),
+  (text: 'Somos feitos de matéria das estrelas.', author: 'Carl Sagan'),
   (text: 'Houston, tivemos um problema.', author: 'Jack Swigert, Apollo 13'),
-  (text: 'Otimização prematura é a raiz de todo mal.', author: 'Donald Knuth'),
+  (text: 'A Águia pousou.', author: 'Neil Armstrong'),
+  (text: 'Magnífica desolação.', author: 'Buzz Aldrin, na Lua'),
   (text: 'Lembre-se de olhar para as estrelas, e não para os seus pés.', author: 'Stephen Hawking'),
-  (
-    text: 'Só existem duas coisas difíceis na computação: invalidar cache e dar nome às coisas.',
-    author: 'Phil Karlton'
-  ),
+  (text: 'Fracassar não é uma opção.', author: 'Gene Kranz, Apollo 13'),
+  (text: 'A exploração está na nossa natureza. Começamos como andarilhos, e ainda somos.', author: 'Carl Sagan'),
+  (text: 'O universo não tem nenhuma obrigação de fazer sentido para você.', author: 'Neil deGrasse Tyson'),
   (text: 'Ad astra per aspera: às estrelas, por caminhos difíceis.', author: 'ditado latino'),
-  (text: 'Depurar é duas vezes mais difícil do que escrever o código.', author: 'Brian Kernighan'),
-  (text: 'O futuro já chegou. Só não está bem distribuído.', author: 'William Gibson'),
-  (text: 'Simples é melhor que complexo.', author: 'The Zen of Python'),
-  (text: 'Código é como humor: se você precisa explicar, é ruim.', author: 'Cory House'),
-  (
-    text: 'Programas devem ser escritos para pessoas lerem, e só por acaso para máquinas executarem.',
-    author: 'Abelson e Sussman'
-  ),
-  (text: 'Commit cedo, commit sempre.', author: 'ditado dev'),
-  (text: 'Funciona na minha máquina.', author: 'todo dev, um dia'),
+  (text: 'Olhe de novo para aquele ponto. É aqui. É o nosso lar.', author: 'Carl Sagan'),
+  (text: 'Mantenha os olhos nas estrelas e os pés no chão.', author: 'Theodore Roosevelt'),
+  (text: 'Limitar nossa atenção às coisas da Terra seria limitar o espírito humano.', author: 'Stephen Hawking'),
 ];
 
-/// Um nível do dev: só visual, liberado pelo poder total (soma dos pontos
-/// dos atributos). Cada nível traz uma frase, e os níveis não têm fim.
+/// Um nível do astronauta: só visual, liberado pelo poder total (soma dos
+/// pontos dos atributos). Cada nível traz um traje novo e uma frase, e os
+/// níveis não têm fim.
 class Transformation {
   const Transformation({
     required this.index,
     required this.name,
     required this.power,
     required this.description,
+    this.suit = 0xFFE4DFC6,
+    this.trim = 0xFFFFA066,
+    this.visor = 0xFF223249,
+    this.gear = Gear.pack,
     this.aura = 0,
     this.auraColor = 0xFFFFFFFF,
-    this.hair = Hair.normal,
-    this.hairColor = 0xFF2E1D14,
-    this.outfit = Outfit.casual,
-    this.eyes = 0xFF16161D,
     this.lightning = false,
     this.cosmic = false,
   });
@@ -71,14 +60,14 @@ class Transformation {
   final int power;
   final String description;
 
+  /// Cores do traje, das faixas e do visor do capacete.
+  final int suit, trim, visor;
+  final Gear gear;
+
   /// Força da aura: 0 = nenhuma, 1 = brilho, 2 = chamas, 3 = chamas fortes,
   /// 4 = com anel de faíscas, 5 = chama dupla gigante.
   final int aura;
   final int auraColor;
-  final Hair hair;
-  final int hairColor;
-  final Outfit outfit;
-  final int eyes;
 
   /// Raios em volta do corpo.
   final bool lightning;
@@ -91,102 +80,171 @@ class Transformation {
   Quote get quote => quotes[index % quotes.length];
 }
 
-const _gold = 0xFFFFD84A, _teal = 0xFF2FB5A3;
+const _gold = 0xFFFFD84A, _goldVisor = 0xFFC0A36E;
 
-Transformation _f(int i, String name, int power, String description,
-        {int aura = 0,
-        int auraColor = 0xFFFFFFFF,
-        Hair hair = Hair.normal,
-        int hairColor = 0xFF2E1D14,
-        Outfit outfit = Outfit.casual,
-        int eyes = 0xFF16161D,
-        bool lightning = false,
-        bool cosmic = false}) =>
-    Transformation(
-      index: i,
-      name: name,
-      power: power,
-      description: description,
-      aura: aura,
-      auraColor: auraColor,
-      hair: hair,
-      hairColor: hairColor,
-      outfit: outfit,
-      eyes: eyes,
-      lightning: lightning,
-      cosmic: cosmic,
-    );
-
-final _forms = <Transformation>[
-  _f(0, 'Estagiário', 0, 'Camiseta com </>, jeans e uma agenda cheia de missões.'),
-  _f(1, 'Dev Júnior', 40, 'Moletom de hackathon: entre um commit e outro, ele treina.', outfit: Outfit.training),
-  _f(2, 'Dev Pleno', 120, 'Modo foco ligado: uma aura branca aparece em volta do corpo.',
-      aura: 1, outfit: Outfit.training),
-  _f(3, 'Dev Sênior', 250, 'Macacão laranja de voo e aura azul-clara.',
-      aura: 1, auraColor: 0xFFA3D4D5, outfit: Outfit.gi),
-  _f(4, 'Tech Lead', 380, 'A aura vira fogo laranja, como o motor de um foguete.',
-      aura: 2, auraColor: 0xFFFFA066, outfit: Outfit.gi),
-  _f(5, 'Staff Engineer', 550, 'Cabelo dourado espetado, olhos verdes e aura de fogo dourada.',
-      aura: 2, auraColor: _gold, hair: Hair.spiky, hairColor: _gold, outfit: Outfit.gi, eyes: _teal),
-  _f(6, 'Principal Engineer', 800, 'Raios elétricos estalam dentro da aura: deploy em produção.',
-      aura: 2, auraColor: _gold, hair: Hair.spiky, hairColor: _gold, outfit: Outfit.gi, eyes: _teal, lightning: true),
-  _f(7, 'Arquiteto de Software', 1100, 'Cabelo dourado até a cintura e capa vermelha de comandante.',
+const _forms = <Transformation>[
+  Transformation(
+      index: 0,
+      name: 'Cadete espacial',
+      power: 0,
+      description: 'Macacão laranja de treino e o primeiro capacete.',
+      suit: 0xFFFFA066,
+      trim: 0xFF223249,
+      gear: Gear.none),
+  Transformation(
+      index: 1, name: 'Astronauta em treino', power: 40, description: 'Traje branco de verdade e mochila de oxigênio.'),
+  Transformation(
+      index: 2,
+      name: 'Astronauta',
+      power: 120,
+      description: 'Pronto para a primeira caminhada no espaço: uma luz branca em volta do traje.',
+      aura: 1),
+  Transformation(
+      index: 3,
+      name: 'Especialista de missão',
+      power: 250,
+      description: 'Faixas azuis no traje e brilho azul-claro.',
+      trim: 0xFF7E9CD8,
+      aura: 1,
+      auraColor: 0xFFA3D4D5),
+  Transformation(
+      index: 4,
+      name: 'Piloto',
+      power: 380,
+      description: 'Visor dourado e mochila a jato acesa.',
+      trim: 0xFF7E9CD8,
+      visor: _goldVisor,
+      gear: Gear.jet,
+      aura: 2,
+      auraColor: 0xFFFFA066),
+  Transformation(
+      index: 5,
+      name: 'Comandante',
+      power: 550,
+      description: 'Faixas vermelhas de comando e aura dourada.',
+      trim: 0xFFC34043,
+      visor: _goldVisor,
+      gear: Gear.jet,
+      aura: 2,
+      auraColor: _gold),
+  Transformation(
+      index: 6,
+      name: 'Caminhante espacial',
+      power: 800,
+      description: 'Raios de energia estalam em volta do traje.',
+      trim: 0xFFC34043,
+      visor: _goldVisor,
+      gear: Gear.jet,
+      aura: 2,
+      auraColor: _gold,
+      lightning: true),
+  Transformation(
+      index: 7,
+      name: 'Capitão da frota',
+      power: 1100,
+      description: 'Traje dourado de capitão e chamas fortes.',
+      suit: 0xFFE6C384,
+      trim: 0xFFC34043,
+      visor: 0xFF223249,
+      gear: Gear.jet,
       aura: 3,
       auraColor: _gold,
-      hair: Hair.long,
-      hairColor: _gold,
-      outfit: Outfit.giCape,
-      eyes: _teal,
       lightning: true),
-  _f(8, 'Hacker Escarlate', 1500, 'Cabelo selvagem vermelho e aura cor de sangue.',
-      aura: 3, auraColor: 0xFFFF5D62, hair: Hair.wild, hairColor: 0xFFE8506A, outfit: Outfit.giCape, eyes: 0xFFC34043),
-  _f(9, 'Distinguished Engineer', 2000, 'Cabelo azul e aura azul com raios.',
+  Transformation(
+      index: 8,
+      name: 'Explorador interestelar',
+      power: 1500,
+      description: 'Traje azul-noite e aura azul das estrelas vizinhas.',
+      suit: 0xFF2D4F67,
+      trim: 0xFF7FB4CA,
+      visor: 0xFF7FB4CA,
+      gear: Gear.jet,
       aura: 3,
-      auraColor: 0xFF7FB4CA,
-      hair: Hair.spiky,
-      hairColor: 0xFF5FB7E8,
-      outfit: Outfit.giCape,
-      eyes: 0xFF7E9CD8,
+      auraColor: 0xFF7FB4CA),
+  Transformation(
+      index: 9,
+      name: 'Almirante estelar',
+      power: 2000,
+      description: 'Traje vermelho, visor dourado e raios.',
+      suit: 0xFFC34043,
+      trim: 0xFFE6C384,
+      visor: _goldVisor,
+      gear: Gear.jet,
+      aura: 3,
+      auraColor: 0xFFFF5D62,
       lightning: true),
-  _f(10, 'Fellow', 2600, 'Cabelo prateado, traje cósmico e calma total.',
+  Transformation(
+      index: 10,
+      name: 'Guardião da galáxia',
+      power: 2600,
+      description: 'Traje prateado e uma calma total.',
+      suit: 0xFFE4E6EE,
+      trim: 0xFF938AA9,
+      visor: 0xFFA3D4D5,
+      gear: Gear.jet,
       aura: 3,
-      auraColor: 0xFFDCD7BA,
-      hair: Hair.spiky,
-      hairColor: 0xFFE4E6EE,
-      outfit: Outfit.starSuit,
-      eyes: 0xFFA3D4D5),
-  _f(11, 'Mestre do Kernel', 3300, 'Cabelo em labaredas verdes e um anel de faíscas.',
+      auraColor: 0xFFDCD7BA),
+  Transformation(
+      index: 11,
+      name: 'Viajante de nebulosas',
+      power: 3300,
+      description: 'Traje verde-água e um anel de faíscas.',
+      suit: 0xFF6A9589,
+      trim: 0xFF98BB6C,
+      visor: 0xFF98BB6C,
+      gear: Gear.jet,
       aura: 4,
-      auraColor: 0xFF98BB6C,
-      hair: Hair.flame,
-      hairColor: 0xFF7DDC5A,
-      outfit: Outfit.starSuit,
-      eyes: 0xFF98BB6C),
-  _f(12, 'Lenda do Open Source', 4100, 'Cabelo selvagem violeta no meio de uma tempestade de raios.',
+      auraColor: 0xFF98BB6C),
+  Transformation(
+      index: 12,
+      name: 'Senhor do hiperespaço',
+      power: 4100,
+      description: 'Traje violeta no meio de uma tempestade de raios.',
+      suit: 0xFF957FB8,
+      trim: 0xFFD27E99,
+      visor: 0xFFD27E99,
+      gear: Gear.jet,
       aura: 4,
       auraColor: 0xFF957FB8,
-      hair: Hair.wild,
-      hairColor: 0xFFB78CF0,
-      outfit: Outfit.starSuit,
-      eyes: 0xFFD27E99,
       lightning: true),
-  _f(13, 'Dev Buraco Negro', 5000, 'Cabelo escuro em chamas, olhos vermelhos e aura negra com brasas.',
-      aura: 4, auraColor: 0xFFC34043, hair: Hair.flame, hairColor: 0xFF3A3A4A, outfit: Outfit.giCape, eyes: 0xFFFF5D62),
-  _f(14, 'Arquiteto do Cosmos', 6000, 'Cabelo longo rosa e uma aura dupla gigante, como uma aurora.',
+  Transformation(
+      index: 13,
+      name: 'Domador de buracos negros',
+      power: 5000,
+      description: 'Traje negro, visor vermelho e aura escura com brasas.',
+      suit: 0xFF363646,
+      trim: 0xFFFF5D62,
+      visor: 0xFFC34043,
+      gear: Gear.jet,
+      aura: 4,
+      auraColor: 0xFFC34043),
+  Transformation(
+      index: 14,
+      name: 'Lenda da aurora',
+      power: 6000,
+      description: 'Traje rosa e uma aura dupla gigante, como uma aurora.',
+      suit: 0xFFF2A0C8,
+      trim: 0xFF6FE0C8,
+      visor: 0xFF6FE0C8,
+      gear: Gear.jet,
       aura: 5,
       auraColor: 0xFF6FE0C8,
-      hair: Hair.long,
-      hairColor: 0xFFF2A0C8,
-      outfit: Outfit.starSuit,
-      eyes: 0xFF6FE0C8,
       lightning: true),
-  _f(15, 'Dev Cósmico', 7200, 'Aura e cabelo mudam de cor como uma galáxia.',
-      aura: 5, hair: Hair.flame, outfit: Outfit.starSuit, lightning: true, cosmic: true),
+  Transformation(
+      index: 15,
+      name: 'Astronauta cósmico',
+      power: 7200,
+      description: 'Aura e visor mudam de cor como uma galáxia.',
+      gear: Gear.jet,
+      aura: 5,
+      lightning: true,
+      cosmic: true),
 ];
 
 final _cache = <int, Transformation>{};
 
-/// Nível [i]. Depois do Dev Cósmico, um novo nível a cada 1.500 pontos, sem fim.
+/// Nível [i]. Depois do Astronauta cósmico, um novo nível a cada 1.500
+/// pontos, sem fim.
 Transformation transformationAt(int i) {
   if (i < _forms.length) return _forms[i];
   return _cache.putIfAbsent(i, () {
@@ -194,13 +252,13 @@ Transformation transformationAt(int i) {
     final hue = (i * 47 % 360).toDouble();
     return Transformation(
       index: i,
-      name: 'Dev Cósmico $n',
+      name: 'Astronauta cósmico $n',
       power: _forms.last.power + (n - 1) * 1500,
+      suit: hslToArgb(hue, .35, .8),
+      trim: hslToArgb((hue + 120) % 360, .6, .6),
+      gear: Gear.jet,
       aura: 5,
       auraColor: hslToArgb(hue, .7, .65),
-      hair: const [Hair.flame, Hair.wild, Hair.long, Hair.spiky][n % 4],
-      hairColor: hslToArgb(hue, .7, .7),
-      outfit: Outfit.starSuit,
       lightning: true,
       cosmic: true,
       description: 'Mais um nível de poder cósmico. A jornada não tem fim.',

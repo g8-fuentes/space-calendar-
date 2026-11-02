@@ -42,7 +42,7 @@ const _sc = 3.9;
 /// fica em pé no chão; no espaço, voa com a aura.
 Offset _originOf(bool earth) => Offset(56 - 13 * _sc, earth ? 138 - (feetRow + 1) * _sc : 132 - (feetRow + 1) * _sc);
 
-/// Cena da exploração: o dev explorador grande no lugar atual, com a hora ao
+/// Cena da exploração: o astronauta grande no lugar atual, com a hora ao
 /// lado, sol ou lua conforme o relógio e, na Terra, o tempo de Bauru.
 /// Toque nele para ele pular.
 class ExploreScene extends ConsumerStatefulWidget {
@@ -422,7 +422,6 @@ class _ScenePainter extends CustomPainter {
     final level = auraLevel(form, space: !onEarth);
     paintAuraBack(canvas, box, form, level, aura, tick);
     paintGrid(canvas, characterGrid(form, blink: tick % 200 < 6, tick: tick), o, _sc);
-    if (!onEarth) paintHelmet(canvas, o, _sc, tick);
     paintAuraFront(canvas, box, form, level, tick);
   }
 

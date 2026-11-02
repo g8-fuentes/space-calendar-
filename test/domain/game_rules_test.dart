@@ -150,8 +150,8 @@ void main() {
       expect(t.attributes['treino'], 27);
       expect(t.power, 27);
       expect(t.best!.name, 'Força');
-      expect(t.form.title, 'Nível 1 · Estagiário');
-      expect(t.form.quote.author, 'Linus Torvalds');
+      expect(t.form.title, 'Nível 1 · Cadete espacial');
+      expect(t.form.quote.author, 'Yuri Gagarin');
       expect(t.powerMissing, 13);
       // só aparecem os atributos das missões
       expect(t.shown.map((c) => c.name), ['Força']);
@@ -163,13 +163,13 @@ void main() {
       expect(transformationIndexFor(0), 0);
       expect(transformationIndexFor(39), 0);
       expect(transformationIndexFor(40), 1);
-      expect(transformationAt(transformationIndexFor(550)).name, 'Staff Engineer');
+      expect(transformationAt(transformationIndexFor(550)).name, 'Comandante');
       expect(transformationIndexFor(7200), namedTransformations - 1);
-      expect(transformationAt(namedTransformations).name, 'Dev Cósmico 2');
+      expect(transformationAt(namedTransformations).name, 'Astronauta cósmico 2');
       expect(transformationIndexFor(8700), namedTransformations);
       expect(
-          Hair.values
-              .every((h) => [for (var i = 0; i < namedTransformations; i++) transformationAt(i).hair].contains(h)),
+          Gear.values
+              .every((g) => [for (var i = 0; i < namedTransformations; i++) transformationAt(i).gear].contains(g)),
           isTrue);
       for (var i = 1; i < namedTransformations + 3; i++) {
         expect(transformationAt(i).power, greaterThan(transformationAt(i - 1).power));
@@ -188,7 +188,7 @@ void main() {
       }
       final notices = GameRules.progressNotices(s, computeStats(s, now));
       expect(notices.map((n) => n.title), ['NOVO NÍVEL!']);
-      expect(notices.single.text, startsWith('Nível 2 · Dev Júnior'));
+      expect(notices.single.text, startsWith('Nível 2 · Astronauta em treino'));
       expect(notices.single.form, 1);
     });
   });
