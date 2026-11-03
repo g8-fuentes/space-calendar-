@@ -66,7 +66,7 @@ class CharacterScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
               'Só aparecem os atributos das suas missões. Cada missão concluída dá pontos ao atributo da categoria dela: '
-              '1 ponto a cada 10 minutos, de 3 a 24.',
+              '1 ponto a cada 10 minutos, de 3 a 24. Cada tarefa do dia concluída dá 4 pontos de Disciplina.',
               style: PixelText.body(13, color: Kanagawa.springViolet1)),
           const SizedBox(height: 12),
           if (t.shown.isEmpty)

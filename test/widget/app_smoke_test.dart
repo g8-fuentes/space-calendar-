@@ -68,11 +68,21 @@ void main() {
     await tester.tap(find.text('CONTINUAR').last);
     await tester.pump(const Duration(milliseconds: 300));
 
-    for (final tab in ['PERSONAGEM', 'MAPA', 'SEMANA', 'AJUSTES', 'EXPLORAR']) {
+    for (final tab in ['TAREFAS', 'PERSONAGEM', 'MAPA', 'SEMANA', 'AJUSTES', 'EXPLORAR']) {
       await tester.tap(find.text(tab).last);
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull, reason: tab);
       if (tab == 'PERSONAGEM') expect(find.text('ATRIBUTOS'), findsOneWidget);
+      if (tab == 'TAREFAS') {
+        await tester.enterText(find.byType(TextField), 'Pagar a luz');
+        await tester.tap(find.text('ADICIONAR'));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.tap(find.text('Pagar a luz'));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(repo.saved!.todos.single.done, isTrue);
+        expect(find.text('CONCLUÍDAS HOJE'), findsOneWidget);
+        await tester.pump(const Duration(seconds: 3));
+      }
     }
     expect(find.text('TERRA'), findsNothing); // a placa é desenhada na cena
     await _end(tester);

@@ -35,6 +35,7 @@ const categories = <Category>[
   Category('arte', 'Criatividade', 0xFF957FB8),
   Category('espirito', 'Espírito', 0xFFE6C384),
   Category('lazer', 'Diversão', 0xFF98BB6C),
+  Category('disciplina', 'Disciplina', 0xFFFFA066),
 ];
 
 Category categoryOf(String key) => categories.firstWhere((c) => c.key == key, orElse: () => categories.first);

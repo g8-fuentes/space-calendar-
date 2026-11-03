@@ -9,6 +9,7 @@ import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
 import '../features/game/presentation/screens/map_screen.dart';
 import '../features/game/presentation/screens/settings_screen.dart';
+import '../features/game/presentation/screens/todo_screen.dart';
 import '../features/game/presentation/screens/week_screen.dart';
 import '../features/game/presentation/widgets/ui.dart';
 import 'theme/kanagawa.dart';
@@ -72,6 +73,7 @@ class GameShell extends ConsumerStatefulWidget {
 class _GameShellState extends ConsumerState<GameShell> {
   static const _tabs = [
     (Icons.rocket_launch_outlined, 'EXPLORAR'),
+    (Icons.checklist, 'TAREFAS'),
     (Icons.bolt, 'PERSONAGEM'),
     (Icons.public, 'MAPA'),
     (Icons.calendar_view_week_outlined, 'SEMANA'),
@@ -110,9 +112,10 @@ class _GameShellState extends ConsumerState<GameShell> {
         bottom: false,
         child: switch (i) {
           0 => const ExploreScreen(),
-          1 => const CharacterScreen(),
-          2 => const MapScreen(),
-          3 => const WeekScreen(),
+          1 => const TodoScreen(),
+          2 => const CharacterScreen(),
+          3 => const MapScreen(),
+          4 => const WeekScreen(),
           _ => const SettingsScreen(),
         },
       ),

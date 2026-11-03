@@ -50,6 +50,35 @@ abstract final class GameRules {
     return n;
   }
 
+  /// Anota uma tarefa do dia. Devolve false se o texto estiver vazio.
+  static bool addTodo(GameState s, String text) {
+    final t = text.trim();
+    if (t.isEmpty) return false;
+    s.todos.add(Todo(id: uid(), text: t.length > 120 ? t.substring(0, 120) : t));
+    return true;
+  }
+
+  static void editTodo(GameState s, String id, String text) {
+    final t = text.trim();
+    if (t.isEmpty) return;
+    for (final x in s.todos) {
+      if (x.id == id) x.text = t.length > 120 ? t.substring(0, 120) : t;
+    }
+  }
+
+  /// Marca ou desmarca a tarefa. Devolve true quando marcou.
+  static bool toggleTodo(GameState s, String id, DateTime now) {
+    for (final x in s.todos) {
+      if (x.id != id) continue;
+      x.doneAt = x.done ? null : now.millisecondsSinceEpoch;
+      return x.done;
+    }
+    return false;
+  }
+
+  /// Exclui a tarefa (e os pontos dela, se estava concluída).
+  static void deleteTodo(GameState s, String id) => s.todos.removeWhere((x) => x.id == id);
+
   /// Troca as missões pelas da agenda importada. Missões que continuam
   /// na agenda mantêm o id, então o que já foi marcado continua marcado.
   static void importMissions(GameState s, List<Mission> list) {

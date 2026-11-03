@@ -193,6 +193,34 @@ void main() {
     });
   });
 
+  test('tarefas do dia dão Disciplina e alimentam a chama', () {
+    final s = GameState.initial(ymd(now));
+    expect(GameRules.addTodo(s, '   '), isFalse);
+    expect(GameRules.addTodo(s, 'Pagar a luz'), isTrue);
+    GameRules.addTodo(s, 'Ligar para a mãe');
+    final id = s.todos.first.id;
+    GameRules.editTodo(s, id, 'Pagar a conta de luz');
+    expect(s.todos.first.text, 'Pagar a conta de luz');
+    var t = computeStats(s, now);
+    expect(t.attributes['disciplina'], 0);
+    expect(t.shown.map((c) => c.name), ['Disciplina']);
+    expect(t.flame, 0);
+    expect(GameRules.toggleTodo(s, id, now), isTrue);
+    t = computeStats(s, now);
+    expect(t.attributes['disciplina'], todoPoints);
+    expect(t.flame, greaterThan(0));
+    // a chama baixa com o tempo e apaga depois de 7 dias sem tarefas
+    expect(computeStats(s, now.add(const Duration(days: 4))).flame, lessThan(t.flame));
+    expect(computeStats(s, now.add(const Duration(days: 8))).flame, 0);
+    // os pontos ficam; excluir a tarefa tira os pontos dela
+    expect(computeStats(s, now.add(const Duration(days: 8))).attributes['disciplina'], todoPoints);
+    expect(s.copy().todos.first.done, isTrue);
+    GameRules.deleteTodo(s, id);
+    expect(computeStats(s, now).attributes['disciplina'], 0);
+    expect(GameRules.toggleTodo(s, s.todos.single.id, now), isTrue);
+    expect(GameRules.toggleTodo(s, s.todos.single.id, now), isFalse);
+  });
+
   test('um aviso por dia de cada missão com horário', () {
     final s = GameState.initial('2026-10-21')
       ..missions.addAll([

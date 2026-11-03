@@ -75,6 +75,25 @@ class WeekRecord {
       });
 }
 
+/// Tarefa avulsa do dia, anotada no app. Concluída, dá pontos de
+/// Disciplina.
+class Todo {
+  Todo({required this.id, required this.text, this.doneAt});
+
+  final String id;
+  String text;
+
+  /// Quando foi concluída (ms desde 1970); null = pendente.
+  int? doneAt;
+
+  bool get done => doneAt != null;
+
+  Map<String, Object?> toJson() => {'id': id, 't': text, if (doneAt != null) 'at': doneAt};
+
+  factory Todo.fromJson(Map<String, Object?> j) =>
+      Todo(id: j['id']! as String, text: j['t'] as String? ?? '', doneAt: (j['at'] as num?)?.toInt());
+}
+
 /// Tudo o que é salvo. Cada semana o astronauta explora um destino; as semanas
 /// em que ele cumpriu a meta ficam em [explored] (ver game_rules.dart).
 class GameState {
@@ -91,7 +110,9 @@ class GameState {
     this.lastForm = -1,
     this.lastExplored = '',
     Set<String>? explored,
-  })  : missions = missions ?? [],
+    List<Todo>? todos,
+  })  : todos = todos ?? [],
+        missions = missions ?? [],
         weeks = weeks ?? {},
         explored = explored ?? {};
 
@@ -123,6 +144,9 @@ class GameState {
   /// Última semana em que o aviso de destino explorado já apareceu.
   String lastExplored;
 
+  /// Tarefas do dia (pendentes e concluídas).
+  final List<Todo> todos;
+
   /// Missões por semana que exploram o destino: metade das missões da
   /// agenda (pelo menos 1).
   int get weeklyGoal {
@@ -146,6 +170,7 @@ class GameState {
         'lastForm': lastForm,
         'explored': explored.toList()..sort(),
         'lastExplored': lastExplored,
+        'todos': [for (final t in todos) t.toJson()],
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
@@ -166,6 +191,7 @@ class GameState {
       lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
       lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
       lastExplored: j['lastExplored'] as String? ?? '',
+      todos: [for (final t in (j['todos'] as List? ?? const [])) Todo.fromJson((t as Map).cast<String, Object?>())],
       explored: {for (final k in (j['explored'] as List? ?? const [])) k as String},
     );
     // Saves antigos: as semanas que já cumpriam a meta contam como exploradas.

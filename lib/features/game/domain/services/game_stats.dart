@@ -53,6 +53,22 @@ int? missionMinutes(Mission m) {
 /// de 3 a 24.
 int pointsFor(int? minutes) => ((minutes ?? 30) / 10).round().clamp(3, 24);
 
+/// Pontos de Disciplina por tarefa do dia concluída.
+const todoPoints = 4;
+
+/// Força da chama da disciplina (0 a 1): tarefas concluídas nos últimos 7
+/// dias, as mais recentes valendo mais. Cerca de 8 tarefas recentes deixam
+/// a chama no máximo; sem tarefas, ela vai apagando.
+double disciplineFlame(GameState s, DateTime now) {
+  const week = Duration.millisecondsPerDay * 7;
+  var heat = 0.0;
+  for (final t in s.todos) {
+    final age = now.millisecondsSinceEpoch - (t.doneAt ?? -week);
+    if (t.done && age >= 0 && age < week) heat += 1 - age / week;
+  }
+  return (heat / 8).clamp(0.0, 1.0);
+}
+
 /// Números derivados do estado. Nada disso é salvo.
 class GameStats {
   const GameStats({
@@ -65,6 +81,7 @@ class GameStats {
     this.weekKey = '',
     this.weekDone = 0,
     this.weekGoal = 1,
+    this.flame = 0,
   });
 
   /// Missões concluídas desde o começo.
@@ -84,6 +101,9 @@ class GameStats {
 
   /// Missões concluídas nesta semana e a meta que explora o destino.
   final int weekDone, weekGoal;
+
+  /// Chama da disciplina (0 a 1), ver [disciplineFlame].
+  final double flame;
 
   int get power => attributes.values.fold(0, (a, b) => a + b);
   int get formIndex => transformationIndexFor(power);
@@ -142,6 +162,8 @@ GameStats computeStats(GameState s, DateTime now) {
       attrs[cat] = (attrs[cat] ?? 0) + pts;
     }
   }
+  final todosDone = s.todos.where((t) => t.done).length;
+  attrs['disciplina'] = (attrs['disciplina'] ?? 0) + todosDone * todoPoints;
   final today = dayIndexOf(now);
   final key = weekKeyOf(now);
   final w = s.weeks[key] ?? WeekRecord();
@@ -153,11 +175,13 @@ GameStats computeStats(GameState s, DateTime now) {
     weekKey: key,
     weekDone: w.done.length,
     weekGoal: s.weeklyGoal,
+    flame: disciplineFlame(s, now),
     doneToday: dayDone(s, w, today),
     totalToday: daySlots(s, today).length,
     attributes: attrs,
     active: {
       for (final m in s.missions) m.category,
+      if (s.todos.isNotEmpty) 'disciplina',
       for (final e in attrs.entries)
         if (e.value > 0) e.key,
     },

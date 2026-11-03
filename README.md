@@ -11,6 +11,10 @@ dá pontos ao atributo da categoria dela, e os pontos levam o astronauta a novos
 Cadete espacial a Astronauta cósmico, sem nível final), com traje, visor, mochila a jato e aura
 novos e uma frase de quem olhou para as estrelas.
 
+Na aba Tarefas dá para anotar o que fazer no dia (criar, editar, excluir e marcar como
+concluída). Cada tarefa concluída dá pontos de Disciplina, e uma chama em pixel art cresce
+com as tarefas dos últimos 7 dias e vai baixando quando elas param.
+
 ## Gerar o APK
 
 ### Opção 1: GitHub (sem instalar nada)
@@ -54,7 +58,7 @@ lib/
       controllers/              GameController (Notifier) e providers
       art/                      pixel art desenhada em código (CustomPainter)
       widgets/                  cena, personagem, componentes pixel
-      screens/                  Explorar, Personagem, Mapa, Semana, Ajustes
+      screens/                  Explorar, Tarefas, Personagem, Mapa, Semana, Ajustes
 test/
   domain/                       regras do jogo
   widget/                       teste de fumaça do app
