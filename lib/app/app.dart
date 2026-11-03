@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/sound/music.dart';
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
-import '../features/game/presentation/controllers/sync_flow.dart';
 import '../features/game/presentation/screens/character_screen.dart';
 import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
@@ -84,7 +83,7 @@ class _GameShellState extends ConsumerState<GameShell> {
   @override
   void initState() {
     super.initState();
-    // Ao voltar para o app: agenda nova do Google e avisos da semana nova.
+    // Ao voltar para o app: avisos da semana nova (destino novo na segunda).
     _life = AppLifecycleListener(onResume: _refresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -93,9 +92,7 @@ class _GameShellState extends ConsumerState<GameShell> {
     });
   }
 
-  Future<void> _refresh() async {
-    if (!mounted) return;
-    await autoSync(ref);
+  void _refresh() {
     if (mounted) ref.read(gameControllerProvider.notifier).apply((_) {});
   }
 

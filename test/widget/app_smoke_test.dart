@@ -43,10 +43,9 @@ Future<void> _end(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('primeira vez pede o Google Agenda', (tester) async {
+  testWidgets('primeira vez pede o arquivo da agenda', (tester) async {
     await _pump(tester, GameState.initial('2026-10-21'));
-    expect(find.text('CONECTAR GOOGLE AGENDA'), findsOneWidget);
-    expect(find.text('Sem Google? Importar arquivo .ics'), findsOneWidget);
+    expect(find.text('IMPORTAR AGENDA (.ICS OU .ICAL)'), findsOneWidget);
     await _end(tester);
   });
 

@@ -90,8 +90,6 @@ class GameState {
     this.lastPlace = -1,
     this.lastForm = -1,
     this.lastExplored = '',
-    this.google = false,
-    this.lastSync = 0,
     Set<String>? explored,
   })  : missions = missions ?? [],
         weeks = weeks ?? {},
@@ -125,12 +123,6 @@ class GameState {
   /// Última semana em que o aviso de destino explorado já apareceu.
   String lastExplored;
 
-  /// Missões vêm do Google Agenda, sincronizado sozinho.
-  bool google;
-
-  /// Hora da última sincronização com o Google (ms desde 1970).
-  int lastSync;
-
   /// Missões por semana que exploram o destino: metade das missões da
   /// agenda (pelo menos 1).
   int get weeklyGoal {
@@ -154,8 +146,6 @@ class GameState {
         'lastForm': lastForm,
         'explored': explored.toList()..sort(),
         'lastExplored': lastExplored,
-        'google': google,
-        'lastSync': lastSync,
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
@@ -176,8 +166,6 @@ class GameState {
       lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
       lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
       lastExplored: j['lastExplored'] as String? ?? '',
-      google: j['google'] as bool? ?? false,
-      lastSync: (j['lastSync'] as num?)?.toInt() ?? 0,
       explored: {for (final k in (j['explored'] as List? ?? const [])) k as String},
     );
     // Saves antigos: as semanas que já cumpriam a meta contam como exploradas.

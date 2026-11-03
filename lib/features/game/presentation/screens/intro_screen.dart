@@ -6,13 +6,12 @@ import '../../../../core/sound/sfx.dart';
 import '../../domain/catalog/places.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
-import '../controllers/sync_flow.dart';
 import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
+import 'settings_screen.dart' show exportHelp;
 
-/// Primeira tela: nome do astronauta e a conexão com o Google Agenda (ou, como
-/// alternativa, um arquivo .ics).
+/// Primeira tela: nome do astronauta e a agenda (.ics ou .ical).
 class IntroScreen extends ConsumerStatefulWidget {
   const IntroScreen({super.key});
 
@@ -31,7 +30,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
     super.dispose();
   }
 
-  Future<void> _start({required bool google}) async {
+  Future<void> _start() async {
     final n = _name.text.trim();
     if (n.isEmpty) {
       setState(() => _error = 'Escreva o nome do personagem antes de continuar.');
@@ -42,8 +41,7 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
       _error = null;
       _busy = true;
     });
-    final err =
-        google ? await connectGoogle(context, ref, heroName: n) : await importCalendar(context, ref, heroName: n);
+    final err = await importCalendar(context, ref, heroName: n);
     if (mounted) {
       setState(() {
         _busy = false;
@@ -77,29 +75,23 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       maxLength: 24,
                       style: PixelText.body(17),
                       decoration: pixelInput('Nome do astronauta', hint: 'Ex.: Gui'),
-                      onSubmitted: (_) => _start(google: true),
+                      onSubmitted: (_) => _start(),
                     ),
                     const SizedBox(height: 8),
-                    PixelButton(label: 'Conectar Google Agenda', onPressed: _busy ? null : () => _start(google: true)),
+                    PixelButton(label: 'Importar agenda (.ics ou .ical)', onPressed: _busy ? null : _start),
                     ErrorText(_error),
                     const SizedBox(height: 14),
                     Container(
                       color: Kanagawa.sumiInk0,
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        'O app lê (sem mudar nada) os eventos com horário da semana no seu Google Agenda, e eles '
-                        'viram missões. A agenda atualiza sozinha toda vez que você abre o app.\n\n'
+                        '$exportHelp\n\n'
+                        'Cada evento com horário vira uma missão semanal.\n\n'
                         'Cada semana o astronauta explora um destino: começa na Terra, passa pela Lua e pelos planetas e '
                         'depois sai do Sistema Solar rumo às estrelas e às galáxias. Cumpra metade das missões da '
                         'semana para explorar o destino e partir para o próximo na segunda-feira.',
                         style: PixelText.body(14, color: Kanagawa.springViolet1),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: _busy ? null : () => _start(google: false),
-                      child: Text('Sem Google? Importar arquivo .ics',
-                          style: PixelText.body(14, color: Kanagawa.springBlue)),
                     ),
                   ]),
                 ),

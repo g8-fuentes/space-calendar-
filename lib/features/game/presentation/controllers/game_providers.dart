@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/calendar/google_calendar.dart';
 import '../../../../core/notifications/mission_alerts.dart';
 import '../../../../core/sound/music.dart';
 import '../../../../core/sound/sfx.dart';
@@ -21,7 +20,6 @@ final gameRepositoryProvider = Provider<GameRepository>((ref) => throw Unimpleme
 final initialGameStateProvider = Provider<GameState>((ref) => throw UnimplementedError('override em main'));
 final missionAlertsProvider = Provider<MissionAlerts>((ref) => const NoMissionAlerts());
 final weatherSourceProvider = Provider<Future<WeatherNow?> Function()>((ref) => fetchBauruWeather);
-final calendarSourceProvider = Provider<CalendarSource>((ref) => GoogleCalendarSource());
 
 /// Relógio da tela: atualiza a cada 15 segundos.
 final nowProvider = StreamProvider<DateTime>((ref) {

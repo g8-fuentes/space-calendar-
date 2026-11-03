@@ -2,27 +2,14 @@
 
 A rotina semanal do Guilherme Fuentes como uma missão espacial em pixel art, com
 o Guilherme como astronauta.
-O app sincroniza direto com o Google Agenda (só leitura): os eventos com horário da semana
-viram missões, e a agenda atualiza sozinha toda vez que o app abre. Cada semana o astronauta explora
+Importe a agenda num arquivo .ics ou .ical (no Google Agenda: Configurações > Importar e
+exportar > Exportar): cada evento com horário vira uma missão semanal. Cada semana o astronauta explora
 um destino: começa na Terra (Bauru), passa pela Lua e pelos planetas e depois sai do Sistema
 Solar rumo às estrelas vizinhas, nebulosas e galáxias, sem fim. Cumprir metade das missões da
 semana explora o destino, e na segunda-feira a nave parte para o próximo. Cada missão também
 dá pontos ao atributo da categoria dela, e os pontos levam o astronauta a novos níveis (de
 Cadete espacial a Astronauta cósmico, sem nível final), com traje, visor, mochila a jato e aura
 novos e uma frase de quem olhou para as estrelas.
-
-## Google Agenda
-
-O app pede a conta Google do celular e a permissão `calendar.readonly`. Para o Google
-reconhecer o app, o projeto do Google Cloud precisa ter:
-
-1. A **Google Calendar API** ativada.
-2. A tela de consentimento OAuth (Externo, em Teste) com a sua conta nos usuários de teste.
-3. Um cliente OAuth **Android** com o pacote `com.guilhermefuentes.rotina_quest` e o SHA-1
-   da chave `android/app/rotina-quest.jks`:
-   `47:EB:96:0A:EF:B5:A2:1F:D1:87:7E:83:8F:C8:E3:D1:13:06:5D:71`.
-
-Sem Google, dá para importar um arquivo `.ics` em Ajustes.
 
 ## Gerar o APK
 
@@ -55,12 +42,12 @@ Clean Architecture por feature, com estado em Riverpod:
 lib/
   main.dart                     composição: cria dependências e injeta no Riverpod
   app/                          MaterialApp, abas e tema Kanagawa
-  core/                         relógio, Google Agenda, tempo de Bauru, notificações, música e sons
+  core/                         relógio, tempo de Bauru, notificações, música e sons
   features/game/
     domain/                     regras puras, sem Flutter
       entities/                 Mission, GameState (serializável)
       catalog/                  categorias, destinos de cada semana, níveis e frases
-      services/                 eventos do Google e .ics, regras e números derivados
+      services/                 importação .ics/.ical, regras e números derivados
       repositories/             contrato de persistência
     data/                       SharedPreferences + implementação do repositório
     presentation/

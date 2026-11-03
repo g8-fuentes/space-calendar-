@@ -193,40 +193,6 @@ void main() {
     });
   });
 
-  test('eventos do Google Agenda viram missões da semana', () {
-    final items = <Map<String, Object?>>[
-      for (final d in ['2026-10-19', '2026-10-21'])
-        {
-          'summary': 'Academia',
-          'start': {'dateTime': '${d}T07:00:00-03:00'},
-          'end': {'dateTime': '${d}T08:00:00-03:00'},
-        },
-      {
-        'summary': 'Feriado',
-        'start': {'date': '2026-10-20'},
-        'end': {'date': '2026-10-21'},
-      },
-      {
-        'summary': 'Reunião recusada',
-        'start': {'dateTime': '2026-10-20T10:00:00-03:00'},
-        'end': {'dateTime': '2026-10-20T11:00:00-03:00'},
-        'attendees': [
-          {'self': true, 'responseStatus': 'declined'}
-        ],
-      },
-      {
-        'status': 'cancelled',
-        'summary': 'Cancelado',
-        'start': {'dateTime': '2026-10-22T10:00:00-03:00'},
-      },
-    ];
-    final events = eventsFromGoogle(items);
-    expect(events, hasLength(2));
-    final missions = toMissions(events);
-    expect(missions.single.title, 'Academia');
-    expect(missions.single.days, [0, 2]);
-  });
-
   test('um aviso por dia de cada missão com horário', () {
     final s = GameState.initial('2026-10-21')
       ..missions.addAll([

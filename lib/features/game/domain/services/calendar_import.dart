@@ -30,11 +30,11 @@ const _icsDays = {'MO': 0, 'TU': 1, 'WE': 2, 'TH': 3, 'FR': 4, 'SA': 5, 'SU': 6}
 int _weekday(DateTime d) => d.weekday - 1;
 String _hm(DateTime d) => '${two(d.hour)}:${two(d.minute)}';
 
-/// Lê uma agenda .ics/.cal (iCalendar) e devolve os eventos semanais.
+/// Lê uma agenda .ics/.ical (iCalendar) e devolve os eventos semanais.
 ImportResult parseCalendar(String fileName, String text, DateTime now) {
   if (!RegExp('BEGIN:VCALENDAR|BEGIN:VEVENT', caseSensitive: false).hasMatch(text)) {
     return ImportResult([], ImportInfo(),
-        'Esse arquivo não é uma agenda .ics ou .cal. Exporte a agenda no Google Agenda e escolha o arquivo .ics.');
+        'Esse arquivo não é uma agenda .ics ou .ical. Exporte a agenda (no Google Agenda, por exemplo) e escolha o arquivo .ics.');
   }
   return parseIcs(text, now);
 }
@@ -200,29 +200,4 @@ List<Mission> toMissions(List<ImportedEvent> list) {
     m.days.sort();
   }
   return arr;
-}
-
-/// Eventos com horário vindos da API do Google Agenda (events.list com
-/// singleEvents=true, então repetições já vêm separadas). Pula eventos de
-/// dia inteiro, cancelados, recusados e os que duram mais de um dia.
-List<ImportedEvent> eventsFromGoogle(Iterable<Map<String, Object?>> items) {
-  DateTime? at(Object? v) {
-    final s = v is Map ? v['dateTime'] : null;
-    return s is String ? DateTime.tryParse(s)?.toLocal() : null;
-  }
-
-  final out = <ImportedEvent>[];
-  for (final e in items) {
-    if (e['status'] == 'cancelled') continue;
-    final declined = (e['attendees'] as List? ?? const [])
-        .any((a) => a is Map && a['self'] == true && a['responseStatus'] == 'declined');
-    if (declined) continue;
-    final st = at(e['start']);
-    if (st == null) continue;
-    final en = at(e['end']) ?? st.add(const Duration(hours: 1));
-    if (en.difference(st).inHours >= 24) continue;
-    final raw = (e['summary'] as String? ?? '').trim();
-    out.add(ImportedEvent(raw.isEmpty ? 'Missão' : raw, [_weekday(st)], _hm(st), _hm(en)));
-  }
-  return out;
 }

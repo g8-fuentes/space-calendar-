@@ -3,15 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../app/theme/kanagawa.dart';
 import '../../../../core/sound/sfx.dart';
-import '../../../../core/text/text_utils.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
-import '../controllers/sync_flow.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
 
-/// Passo a passo para tirar o arquivo .ics do Google Agenda (alternativa
-/// para quem não conecta a conta Google).
+/// Passo a passo para tirar o arquivo .ics do Google Agenda.
 const exportHelp = 'No computador, abra calendar.google.com, vá em Configurações > Importar e exportar > Exportar. '
     'Vem um .zip: descompacte e mande o arquivo .ics da sua agenda para o celular.';
 
@@ -26,9 +23,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final TextEditingController _name = TextEditingController(text: ref.read(gameControllerProvider).name);
   String? _importError;
   bool _confirmReset = false;
-  bool _syncing = false;
-
-  static String _when(DateTime d) => '${two(d.day)}/${two(d.month)} às ${two(d.hour)}:${two(d.minute)}';
 
   @override
   void dispose() {
@@ -43,71 +37,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return ListView(padding: const EdgeInsets.fromLTRB(12, 16, 12, 32), children: [
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('GOOGLE AGENDA', style: PixelText.display(10)),
+          Text('AGENDA', style: PixelText.display(10)),
           const SizedBox(height: 6),
           Text(
-            s.google
-                ? 'Conectado. ${s.missions.length} eventos desta semana são missões.'
-                    '${s.lastSync > 0 ? ' Última sincronização: ${_when(DateTime.fromMillisecondsSinceEpoch(s.lastSync))}.' : ''}'
-                : s.missions.isEmpty
-                    ? 'Nenhuma agenda conectada ainda.'
-                    : '${s.missions.length} eventos vieram de um arquivo. Conecte o Google para atualizar sozinho.',
+            s.missions.isEmpty
+                ? 'Nenhuma agenda importada ainda.'
+                : '${s.missions.length} eventos da agenda viram missões toda semana.',
             style: PixelText.body(15),
           ),
           const SizedBox(height: 6),
-          Text(
-              'O app só lê a agenda: os eventos com horário da semana viram missões e atualizam sozinhos ao abrir o '
-              'app. O progresso da exploração continua quando a agenda muda.',
-              style: PixelText.body(13, color: Kanagawa.springViolet1)),
+          Text(exportHelp, style: PixelText.body(14, color: Kanagawa.springViolet1)),
           const SizedBox(height: 10),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            PixelButton(
-              label: _syncing ? 'Sincronizando...' : (s.google ? 'Sincronizar agora' : 'Conectar Google Agenda'),
-              onPressed: _syncing
-                  ? null
-                  : () async {
-                      setState(() => _syncing = true);
-                      final err = await connectGoogle(context, ref);
-                      if (mounted) {
-                        setState(() {
-                          _syncing = false;
-                          _importError = err;
-                        });
-                      }
-                    },
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PixelButton(
+              label: s.missions.isEmpty ? 'Importar agenda (.ics ou .ical)' : 'Importar agenda atualizada',
+              onPressed: () async {
+                final err = await importCalendar(context, ref);
+                if (mounted) setState(() => _importError = err);
+              },
             ),
-            if (s.google)
-              PixelButton(
-                label: 'Desconectar',
-                color: Kanagawa.sumiInk5,
-                textColor: Kanagawa.fujiWhite,
-                onPressed: () async {
-                  await disconnectGoogle(ref);
-                  if (context.mounted) showToast(context, 'Google Agenda desconectado');
-                },
-              ),
-          ]),
+          ),
           ErrorText(_importError),
-          if (!s.google) ...[
-            const SizedBox(height: 14),
-            Text('SEM GOOGLE?', style: PixelText.display(8, color: Kanagawa.springViolet1)),
-            const SizedBox(height: 4),
-            Text(exportHelp, style: PixelText.body(13, color: Kanagawa.springViolet1)),
-            const SizedBox(height: 8),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: PixelButton(
-                label: 'Importar arquivo .ics',
-                dense: true,
-                color: Kanagawa.sumiInk5,
-                textColor: Kanagawa.fujiWhite,
-                onPressed: () async {
-                  final err = await importCalendar(context, ref);
-                  if (mounted) setState(() => _importError = err);
-                },
-              ),
-            ),
-          ],
+          const SizedBox(height: 6),
+          Text('O progresso da exploração continua ao trocar a agenda.',
+              style: PixelText.body(13, color: Kanagawa.springViolet1)),
         ]),
       ),
       const SizedBox(height: 14),
