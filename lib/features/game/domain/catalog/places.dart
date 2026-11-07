@@ -1,40 +1,20 @@
 import 'catalog.dart' show hslToArgb;
+import 'professions.dart';
 
-/// As três fases da exploração: o Sistema Solar, as estrelas vizinhas
-/// (exoplanetas) e a galáxia e além.
-enum Region { solar, stars, galaxy }
+export 'professions.dart' show Landmark;
 
-/// Como o lugar é desenhado.
-enum PlaceKind { home, earth, moon, rocky, gas, ring, belt, star, nebula, blackHole, galaxy }
+/// Como o lugar é desenhado. [home] e [city] ficam na Terra, com prédios e
+/// um monumento; o resto fica no espaço.
+enum PlaceKind { home, earth, moon, rocky, gas, ring, belt, star, nebula, blackHole, galaxy, city }
 
-/// Monumento desenhado no horizonte de uma cidade.
-enum Landmark {
-  none,
-  christ,
-  cityTower,
-  needle,
-  ironTower,
-  clockTower,
-  coliseum,
-  pyramids,
-  onionDome,
-  pagoda,
-  dome,
-  opera,
-  obelisk
-}
-
-String regionName(Region r) => switch (r) {
-      Region.solar => 'Sistema Solar',
-      Region.stars => 'Estrelas vizinhas',
-      Region.galaxy => 'Galáxia e além',
-    };
+const _spaceRegions = ['Sistema Solar', 'Estrelas vizinhas', 'Galáxia e além'];
 
 /// Um destino da exploração. Cada semana o astronauta explora um destino.
 class Place {
   const Place({
     required this.index,
     required this.name,
+    required this.stage,
     required this.region,
     required this.kind,
     required this.colors,
@@ -44,14 +24,20 @@ class Place {
 
   final int index;
   final String name;
-  final Region region;
+
+  /// Fase da jornada (0, 1 ou 2) e o nome dela.
+  final int stage;
+  final String region;
   final PlaceKind kind;
   final List<int> colors;
   final String fact;
   final Landmark landmark;
 
-  /// Semana da jornada em que o astronauta explora este lugar (1 = a primeira).
+  /// Semana da jornada em que o personagem explora este lugar (1 = a primeira).
   int get week => index + 1;
+
+  /// Na Terra: céu, prédios e monumento em vez do espaço.
+  bool get onEarth => kind == PlaceKind.home || kind == PlaceKind.city;
 }
 
 typedef _P = (String, PlaceKind, List<int>, String);
@@ -179,20 +165,79 @@ int placeHash(int n) {
   return h;
 }
 
-final _cache = <int, Place>{};
+final _cache = <String, Place>{};
 
-/// Destino da semana [index] da jornada (0 = a primeira semana, na Terra).
-Place placeAt(int index) => _cache.putIfAbsent(index, () => _build(index));
+/// Destino da semana [index] da jornada da profissão [p] (0 = a primeira
+/// semana, em Bauru).
+Place placeAt(int index, [Profession p = astronaut]) =>
+    _cache.putIfAbsent('${p.key}|$index', () => p.space ? _build(index) : _buildEarth(p, index));
+
+/// Cidades das paradas geradas depois das conhecidas.
+const _worldTour = <(String, Landmark)>[
+  ('Lisboa', Landmark.clockTower),
+  ('Cidade do Cabo', Landmark.mountain),
+  ('Moscou', Landmark.onionDome),
+  ('Sydney', Landmark.opera),
+  ('Toronto', Landmark.needle),
+  ('Dubai', Landmark.cityTower),
+  ('Pequim', Landmark.pagoda),
+  ('Cairo', Landmark.pyramids),
+  ('Roma', Landmark.coliseum),
+  ('Paris', Landmark.ironTower),
+  ('Istambul', Landmark.dome),
+  ('Rio de Janeiro', Landmark.christ),
+  ('Buenos Aires', Landmark.obelisk),
+  ('Londres', Landmark.clockTower),
+];
+
+Place _buildEarth(Profession p, int index) {
+  var j = index;
+  for (var st = 0; st < p.stages.length; st++) {
+    final (region, stops) = p.stages[st];
+    if (j < stops.length) {
+      final (name, landmark, fact) = stops[j];
+      return Place(
+        index: index,
+        name: name,
+        stage: st,
+        region: region,
+        kind: index == 0 ? PlaceKind.home : PlaceKind.city,
+        colors: [hslToArgb((placeHash(index + 3) % 360).toDouble(), .35, .62)],
+        fact: fact,
+        landmark: landmark,
+      );
+    }
+    j -= stops.length;
+  }
+  final (city, landmark) = _worldTour[j % _worldTour.length];
+  final round = j ~/ _worldTour.length + 1;
+  return Place(
+    index: index,
+    name: '${p.event} em $city${round > 1 ? ' $round' : ''}',
+    stage: p.stages.length - 1,
+    region: p.stages.last.$1,
+    kind: PlaceKind.city,
+    colors: [hslToArgb((placeHash(index + 3) % 360).toDouble(), .35, .62)],
+    fact: 'Mais uma parada da sua jornada pelo mundo. A jornada não tem fim.',
+    landmark: landmark,
+  );
+}
+
+/// Quantos lugares nomeados a profissão tem (o resto é gerado).
+int namedPlacesOf(Profession p) => p.space ? namedPlaces : p.stages.fold(0, (a, s) => a + s.$2.length);
 
 Place _build(int index) {
   var j = index;
-  for (final (list, region) in [(_solar, Region.solar), (_stars, Region.stars), (_galaxy, Region.galaxy)]) {
+  final lists = [_solar, _stars, _galaxy];
+  for (var st = 0; st < lists.length; st++) {
+    final list = lists[st];
     if (j < list.length) {
       final (name, kind, colors, fact) = list[j];
       return Place(
         index: index,
         name: name,
-        region: region,
+        stage: st,
+        region: _spaceRegions[st],
         kind: kind,
         colors: colors,
         fact: fact,
@@ -212,7 +257,8 @@ Place _build(int index) {
     return Place(
       index: index,
       name: 'Nebulosa $word',
-      region: Region.galaxy,
+      stage: 2,
+      region: _spaceRegions[2],
       kind: kind,
       colors: colors,
       fact: 'Nuvem de gás a ${1000 + h % 90000} anos-luz, ainda sem mapa. Você é o primeiro a ver.',
@@ -221,7 +267,8 @@ Place _build(int index) {
   return Place(
     index: index,
     name: '$word-${10 + (h >> 4) % 990} b',
-    region: Region.galaxy,
+    stage: 2,
+    region: _spaceRegions[2],
     kind: kind,
     colors: colors,
     fact: 'Exoplaneta a ${40 + h % 9000} anos-luz, descoberto pela sua nave.',

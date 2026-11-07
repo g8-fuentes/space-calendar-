@@ -14,7 +14,7 @@ class CharacterView extends StatefulWidget {
   const CharacterView({super.key, required this.form, this.locked = false});
   final Transformation form;
 
-  /// Silhueta de uma transformação ainda não liberada.
+  /// Nível ainda não liberado: aparece inteiro, mas apagado.
   final bool locked;
 
   @override
@@ -41,7 +41,7 @@ class _CharacterViewState extends State<CharacterView> with SingleTickerProvider
       setState(() {
         for (var i = 0; i < steps; i++) {
           _tick++;
-          if (!widget.locked) stepAura(_aura, figureBox(origin, sc), widget.form, widget.form.aura, _rand);
+          stepAura(_aura, figureBox(origin, sc), widget.form, widget.form.aura, _rand);
         }
       });
     });
@@ -72,7 +72,7 @@ class _CharacterViewState extends State<CharacterView> with SingleTickerProvider
 
   @override
   Widget build(BuildContext context) => Semantics(
-        label: widget.locked ? 'Transformação ainda bloqueada' : 'Personagem na forma ${widget.form.name}',
+        label: '${widget.form.name}${widget.locked ? ', ainda bloqueado' : ''}',
         child: RepaintBoundary(
           child: AspectRatio(
             aspectRatio: w / h,
@@ -111,21 +111,13 @@ class _CharacterPainter extends CustomPainter {
     final o = _CharacterViewState.origin.translate(0, bob);
     final box = figureBox(o, sc);
     final grid = characterGrid(form, blink: tick % 180 < 6, tick: tick);
-    if (locked) {
-      paintGrid(
-          canvas,
-          [
-            for (final row in grid) [for (final c in row) c == null ? null : Kanagawa.sumiInk5]
-          ],
-          o,
-          sc);
-    } else {
-      p.color = const Color(0x55000000);
-      canvas.drawOval(Rect.fromCenter(center: const Offset(w / 2, h - 4), width: 44, height: 4), p);
-      paintAuraBack(canvas, box, form, form.aura, aura, tick);
-      paintGrid(canvas, grid, o, sc);
-      paintAuraFront(canvas, box, form, form.aura, tick);
-    }
+    if (locked) canvas.saveLayer(const Rect.fromLTWH(0, 0, w, h), Paint()..color = const Color(0x99000000));
+    p.color = const Color(0x55000000);
+    canvas.drawOval(Rect.fromCenter(center: const Offset(w / 2, h - 4), width: 44, height: 4), p);
+    paintAuraBack(canvas, box, form, form.aura, aura, tick);
+    paintGrid(canvas, grid, o, sc);
+    paintAuraFront(canvas, box, form, form.aura, tick);
+    if (locked) canvas.restore();
     canvas.restore();
   }
 

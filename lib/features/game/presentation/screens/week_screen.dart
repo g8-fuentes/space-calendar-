@@ -15,9 +15,10 @@ String fmtWeek(String k) {
   return '${two(a.day)}/${two(a.month)} a ${two(b.day)}/${two(b.month)}';
 }
 
-/// Resumo da semana atual, dia a dia, e o histórico das semanas.
-class WeekScreen extends ConsumerWidget {
-  const WeekScreen({super.key});
+/// Resumo da semana atual, dia a dia, e o histórico das semanas. Fica no
+/// fim da tela Explorar.
+class WeekSummary extends ConsumerWidget {
+  const WeekSummary({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -27,7 +28,7 @@ class WeekScreen extends ConsumerWidget {
     final st = weekStatsOf(s, k);
     final w = s.weeks[k] ?? WeekRecord();
     final history = s.weeks.keys.toList()..sort((a, b) => b.compareTo(a));
-    return ListView(padding: const EdgeInsets.fromLTRB(12, 16, 12, 32), children: [
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('ESTA SEMANA · ${fmtWeek(k)}', style: PixelText.display(9)),

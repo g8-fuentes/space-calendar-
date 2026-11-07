@@ -1,4 +1,9 @@
+import 'dart:math' as math;
+
 import 'catalog.dart' show hslToArgb;
+import 'professions.dart';
+
+export 'professions.dart' show Quote, Outfit, Profession, professions, professionOf, astronaut;
 
 /// Peças extras do traje do astronauta.
 enum Gear {
@@ -11,9 +16,6 @@ enum Gear {
   /// Mochila a jato com chamas.
   jet,
 }
-
-/// Frase de um astronauta ou de alguém que olhou para as estrelas.
-typedef Quote = ({String text, String author});
 
 const quotes = <Quote>[
   (text: 'A Terra é azul!', author: 'Yuri Gagarin'),
@@ -51,6 +53,7 @@ class Transformation {
     this.auraColor = 0xFFFFFFFF,
     this.lightning = false,
     this.cosmic = false,
+    this.profession = 'astronauta',
   });
 
   final int index;
@@ -75,9 +78,17 @@ class Transformation {
   /// Cores mudando sem parar.
   final bool cosmic;
 
+  /// Profissão do personagem (ver professions.dart).
+  final String profession;
+
+  Outfit get outfit => professionOf(profession).outfit;
+
   int get level => index + 1;
   String get title => 'Nível $level · $name';
-  Quote get quote => quotes[index % quotes.length];
+  Quote get quote {
+    final list = professionOf(profession).quotes;
+    return list.isEmpty ? quotes[index % quotes.length] : list[index % list.length];
+  }
 }
 
 const _gold = 0xFFFFD84A, _goldVisor = 0xFFC0A36E;
@@ -241,29 +252,191 @@ const _forms = <Transformation>[
       cosmic: true),
 ];
 
-final _cache = <int, Transformation>{};
+final _cache = <String, Transformation>{};
 
-/// Nível [i]. Depois do Astronauta cósmico, um novo nível a cada 1.500
-/// pontos, sem fim.
-Transformation transformationAt(int i) {
+/// Visual de cada nível das outras profissões, na mesma escada do
+/// astronauta: acessórios, cores e aura ficam mais fortes a cada nível.
+typedef _Tier = ({Gear gear, int aura, int auraColor, bool lightning, int? suit, int? trim, String look});
+
+const _tiers = <_Tier>[
+  (gear: Gear.none, aura: 0, auraColor: 0xFFFFFFFF, lightning: false, suit: null, trim: null, look: '{base}'),
+  (gear: Gear.pack, aura: 0, auraColor: 0xFFFFFFFF, lightning: false, suit: null, trim: null, look: '{pack}'),
+  (
+    gear: Gear.pack,
+    aura: 1,
+    auraColor: 0xFFFFFFFF,
+    lightning: false,
+    suit: null,
+    trim: null,
+    look: 'Uma primeira luz branca em volta do corpo.'
+  ),
+  (
+    gear: Gear.pack,
+    aura: 1,
+    auraColor: 0xFFA3D4D5,
+    lightning: false,
+    suit: null,
+    trim: 0xFF7E9CD8,
+    look: 'Detalhes azuis e brilho azul-claro.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 2,
+    auraColor: 0xFFFFA066,
+    lightning: false,
+    suit: null,
+    trim: 0xFF7E9CD8,
+    look: '{full} E as primeiras chamas na aura.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 2,
+    auraColor: _gold,
+    lightning: false,
+    suit: null,
+    trim: 0xFFC34043,
+    look: 'Detalhes vermelhos e aura dourada.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 2,
+    auraColor: _gold,
+    lightning: true,
+    suit: null,
+    trim: 0xFFC34043,
+    look: 'Raios de energia estalam em volta do corpo.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 3,
+    auraColor: _gold,
+    lightning: true,
+    suit: 0xFFE6C384,
+    trim: 0xFFC34043,
+    look: 'Roupa dourada e chamas fortes.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 3,
+    auraColor: 0xFF7FB4CA,
+    lightning: false,
+    suit: 0xFF2D4F67,
+    trim: 0xFF7FB4CA,
+    look: 'Roupa azul-noite e aura azul.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 3,
+    auraColor: 0xFFFF5D62,
+    lightning: true,
+    suit: 0xFFC34043,
+    trim: 0xFFE6C384,
+    look: 'Roupa vermelha e raios.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 3,
+    auraColor: 0xFFDCD7BA,
+    lightning: false,
+    suit: 0xFFE4E6EE,
+    trim: 0xFF938AA9,
+    look: 'Roupa prateada e uma calma total.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 4,
+    auraColor: 0xFF98BB6C,
+    lightning: false,
+    suit: 0xFF6A9589,
+    trim: 0xFF98BB6C,
+    look: 'Roupa verde-água e um anel de faíscas.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 4,
+    auraColor: 0xFF957FB8,
+    lightning: true,
+    suit: 0xFF957FB8,
+    trim: 0xFFD27E99,
+    look: 'Roupa violeta no meio de uma tempestade de raios.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 4,
+    auraColor: 0xFFC34043,
+    lightning: false,
+    suit: 0xFF363646,
+    trim: 0xFFFF5D62,
+    look: 'Roupa negra e aura escura com brasas.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 5,
+    auraColor: 0xFF6FE0C8,
+    lightning: true,
+    suit: 0xFFF2A0C8,
+    trim: 0xFF6FE0C8,
+    look: 'Roupa rosa e uma aura dupla gigante, como uma aurora.'
+  ),
+  (
+    gear: Gear.jet,
+    aura: 5,
+    auraColor: 0xFFFFFFFF,
+    lightning: true,
+    suit: null,
+    trim: null,
+    look: 'Aura e cores mudando como uma galáxia.'
+  ),
+];
+
+/// Nível [i] da profissão [p] (o astronauta, se nada for dito). Os pontos
+/// de cada nível são os mesmos em todas as profissões; depois do último
+/// nível com nome, um novo nível a cada 1.500 pontos, sem fim.
+Transformation transformationAt(int i, [Profession p = astronaut]) =>
+    _cache.putIfAbsent('${p.key}|$i', () => p.space ? _astronautAt(i) : _professionAt(p, i));
+
+Transformation _professionAt(Profession p, int i) {
+  final named = i < _forms.length;
+  final tier = _tiers[math.min(i, _tiers.length - 1)];
+  final n = i - _forms.length + 2;
+  final hue = (i * 47 % 360).toDouble();
+  final (base, pack, full) = p.items;
+  return Transformation(
+    index: i,
+    profession: p.key,
+    name: named ? p.levelNames[i] : '${p.levelNames.last} $n',
+    power: _forms[math.min(i, _forms.length - 1)].power + (named ? 0 : (n - 1) * 1500),
+    description: named
+        ? tier.look.replaceFirst('{base}', base).replaceFirst('{pack}', pack).replaceFirst('{full}', full)
+        : 'Mais um nível de poder cósmico. A jornada não tem fim.',
+    suit: named ? (tier.suit ?? p.suit) : hslToArgb(hue, .35, .8),
+    trim: named ? (tier.trim ?? p.trim) : hslToArgb((hue + 120) % 360, .6, .6),
+    visor: p.low,
+    gear: tier.gear,
+    aura: tier.aura,
+    auraColor: named ? tier.auraColor : hslToArgb(hue, .7, .65),
+    lightning: tier.lightning,
+    cosmic: i >= _forms.length - 1,
+  );
+}
+
+Transformation _astronautAt(int i) {
   if (i < _forms.length) return _forms[i];
-  return _cache.putIfAbsent(i, () {
-    final n = i - _forms.length + 2;
-    final hue = (i * 47 % 360).toDouble();
-    return Transformation(
-      index: i,
-      name: 'Astronauta cósmico $n',
-      power: _forms.last.power + (n - 1) * 1500,
-      suit: hslToArgb(hue, .35, .8),
-      trim: hslToArgb((hue + 120) % 360, .6, .6),
-      gear: Gear.jet,
-      aura: 5,
-      auraColor: hslToArgb(hue, .7, .65),
-      lightning: true,
-      cosmic: true,
-      description: 'Mais um nível de poder cósmico. A jornada não tem fim.',
-    );
-  });
+  final n = i - _forms.length + 2;
+  final hue = (i * 47 % 360).toDouble();
+  return Transformation(
+    index: i,
+    name: 'Astronauta cósmico $n',
+    power: _forms.last.power + (n - 1) * 1500,
+    suit: hslToArgb(hue, .35, .8),
+    trim: hslToArgb((hue + 120) % 360, .6, .6),
+    gear: Gear.jet,
+    aura: 5,
+    auraColor: hslToArgb(hue, .7, .65),
+    lightning: true,
+    cosmic: true,
+    description: 'Mais um nível de poder cósmico. A jornada não tem fim.',
+  );
 }
 
 int transformationIndexFor(int power) {

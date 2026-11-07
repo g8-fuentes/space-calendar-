@@ -6,6 +6,7 @@ import '../../../../core/sound/sfx.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
 import '../widgets/pixel_widgets.dart';
+import '../widgets/profession_picker.dart';
 import '../widgets/ui.dart';
 
 /// Passo a passo para tirar o arquivo .ics do Google Agenda.
@@ -100,6 +101,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('PERSONAGEM', style: PixelText.display(10)),
+          const SizedBox(height: 6),
+          Text('Profissão: muda o personagem, os níveis e o mapa. Os pontos continuam.',
+              style: PixelText.body(14, color: Kanagawa.springViolet1)),
+          const SizedBox(height: 8),
+          const ProfessionPicker(),
           const SizedBox(height: 12),
           TextField(controller: _name, maxLength: 24, style: PixelText.body(16), decoration: pixelInput('Nome')),
           Align(
@@ -129,7 +135,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             )
           else
             ConfirmBar(
-              text: 'Apagar agenda e progresso e voltar para a Terra?',
+              text: 'Apagar agenda e progresso e voltar para o começo?',
               yesLabel: 'Recomeçar',
               onNo: () => setState(() => _confirmReset = false),
               onYes: () async {

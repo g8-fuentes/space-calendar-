@@ -51,8 +51,11 @@ class CharacterScreen extends ConsumerWidget {
                   style: PixelText.body(14, color: Kanagawa.carpYellow)),
               const SizedBox(height: 8),
               Text(
-                'A cada nível o astronauta ganha traje, visor e aura novos e uma frase de quem olhou para as '
-                'estrelas. Os níveis não têm fim.',
+                t.profession.space
+                    ? 'A cada nível o astronauta ganha traje, visor e aura novos e uma frase de quem olhou para as '
+                        'estrelas. Os níveis não têm fim.'
+                    : 'A cada nível o personagem ganha roupa, acessórios e aura novos e uma frase de inspiração. '
+                        'Os níveis não têm fim. A profissão muda em Ajustes, sem perder os pontos.',
                 style: PixelText.body(13, color: Kanagawa.springViolet1),
               ),
             ]),
@@ -82,11 +85,14 @@ class CharacterScreen extends ConsumerWidget {
       const SizedBox(height: 14),
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('NÍVEIS DO ASTRONAUTA', style: PixelText.display(10)),
+          Text('NÍVEIS · ${t.profession.name.toUpperCase()}', style: PixelText.display(10)),
+          const SizedBox(height: 4),
+          Text('Todos os níveis aparecem; os que faltam ficam apagados até você chegar lá.',
+              style: PixelText.body(13, color: Kanagawa.springViolet1)),
           const SizedBox(height: 10),
           for (var i = 0; i <= last; i++) ...[
             _FormTile(
-              form: transformationAt(i),
+              form: transformationAt(i, t.profession),
               reached: i <= t.formIndex,
               current: i == t.formIndex,
               next: i == t.formIndex + 1,
@@ -139,8 +145,7 @@ class _FormTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final known = reached || next;
-    return Container(
+    final tile = Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: current ? Kanagawa.waveBlue1 : Kanagawa.sumiInk5,
@@ -151,27 +156,24 @@ class _FormTile extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(known ? form.title.toUpperCase() : 'NÍVEL ${form.level} · ???',
+            Text(form.title.toUpperCase(),
                 style: PixelText.display(8, color: reached ? Kanagawa.fujiWhite : Kanagawa.springViolet1)),
             const SizedBox(height: 4),
-            Text(
-              reached
-                  ? form.description
-                  : next
-                      ? 'Faltam $missing ${missing == 1 ? 'ponto' : 'pontos'}.'
-                      : 'Libera com ${form.power} pontos.',
-              style: PixelText.body(13, color: Kanagawa.springViolet1),
-            ),
-            if (reached) ...[
-              const SizedBox(height: 4),
-              _QuoteText(form.quote, size: 13),
-            ],
+            Text(form.description, style: PixelText.body(13, color: Kanagawa.springViolet1)),
+            const SizedBox(height: 4),
+            _QuoteText(form.quote, size: 13),
             if (current) Text('nível atual', style: PixelText.body(13, color: Kanagawa.carpYellow)),
             if (reached && !current) Text('✓ liberado', style: PixelText.body(13, color: Kanagawa.springGreen)),
+            if (next)
+              Text('🔒 faltam $missing ${missing == 1 ? 'ponto' : 'pontos'}',
+                  style: PixelText.body(13, color: Kanagawa.carpYellow)),
+            if (!reached && !next)
+              Text('🔒 libera com ${form.power} pontos', style: PixelText.body(13, color: Kanagawa.fujiGray)),
           ]),
         ),
       ]),
     );
+    return reached ? tile : Opacity(opacity: .75, child: tile);
   }
 }
 

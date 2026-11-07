@@ -109,6 +109,7 @@ class GameState {
     this.lastPlace = -1,
     this.lastForm = -1,
     this.lastExplored = '',
+    this.profession = 'astronauta',
     Set<String>? explored,
     List<Todo>? todos,
   })  : todos = todos ?? [],
@@ -147,6 +148,10 @@ class GameState {
   /// Tarefas do dia (pendentes e concluídas).
   final List<Todo> todos;
 
+  /// Profissão do personagem (ver professions.dart): muda o personagem, os
+  /// nomes dos níveis e a jornada. Os pontos são os mesmos.
+  String profession;
+
   /// Missões por semana que exploram o destino: metade das missões da
   /// agenda (pelo menos 1).
   int get weeklyGoal {
@@ -157,7 +162,7 @@ class GameState {
   WeekRecord week(String key) => weeks.putIfAbsent(key, WeekRecord.new);
 
   Map<String, Object?> toJson() => {
-        'v': 3,
+        'v': 4,
         'name': name,
         'onboarded': onboarded,
         'missions': [for (final m in missions) m.toJson()],
@@ -171,6 +176,7 @@ class GameState {
         'explored': explored.toList()..sort(),
         'lastExplored': lastExplored,
         'todos': [for (final t in todos) t.toJson()],
+        'profession': profession,
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
@@ -191,6 +197,7 @@ class GameState {
       lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
       lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
       lastExplored: j['lastExplored'] as String? ?? '',
+      profession: j['profession'] as String? ?? 'astronauta',
       todos: [for (final t in (j['todos'] as List? ?? const [])) Todo.fromJson((t as Map).cast<String, Object?>())],
       explored: {for (final k in (j['explored'] as List? ?? const [])) k as String},
     );

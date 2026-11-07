@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rotina_quest/core/sound/music.dart';
 import 'package:rotina_quest/core/time/week_utils.dart';
 import 'package:rotina_quest/core/weather/weather.dart';
+import 'package:rotina_quest/features/game/domain/catalog/catalog.dart';
 import 'package:rotina_quest/features/game/domain/catalog/places.dart';
 import 'package:rotina_quest/features/game/domain/catalog/transformations.dart';
 import 'package:rotina_quest/features/game/domain/entities/game_state.dart';
@@ -58,13 +59,13 @@ void main() {
       expect(placeAt(0).kind, PlaceKind.home);
       expect(placeAt(1).name, 'Lua');
       expect(placeAt(4).name, 'Marte');
-      final firstStar = List.generate(80, placeAt).firstWhere((p) => p.region == Region.stars);
+      final firstStar = List.generate(80, placeAt).firstWhere((p) => p.stage == 1);
       expect(firstStar.name, 'Proxima Centauri b');
       expect(placeAt(firstStar.index - 1).name, 'Nuvem de Oort');
       expect(placeAt(namedPlaces - 1).name, 'Andrômeda');
       // depois dos nomeados, continua gerando
       final extra = placeAt(namedPlaces + 5);
-      expect(extra.region, Region.galaxy);
+      expect(extra.stage, 2);
       expect(extra.name, isNotEmpty);
       expect(placeAt(namedPlaces + 5).week, namedPlaces + 6);
     });
@@ -101,14 +102,14 @@ void main() {
 
     test('sair do Sistema Solar avisa', () {
       final s = GameState.initial(ymd(now));
-      final solar = List.generate(80, placeAt).where((p) => p.region == Region.solar).length;
+      final solar = List.generate(80, placeAt).where((p) => p.stage == 0).length;
       for (var w = 0; w < solar - 1; w++) {
         s.explored.add(ymd(DateTime(2025, 1, 6 + 7 * w)));
       }
       s.lastPlace = computeStats(s, now).placeIndex;
       s.explored.add(ymd(DateTime(2026, 10, 12)));
       final t = computeStats(s, now);
-      expect(t.place.region, Region.stars);
+      expect(t.place.region, 'Estrelas vizinhas');
       expect(GameRules.progressNotices(s, t).map((n) => n.title), ['ALÉM DO SISTEMA SOLAR!']);
     });
 
@@ -256,5 +257,72 @@ void main() {
       expect(samples.length, greaterThan(22050 * 20), reason: s.title);
       expect(samples.every((v) => v.isFinite && v.abs() <= 1), isTrue, reason: s.title);
     }
+  });
+
+  group('profissões', () {
+    test('cada profissão tem personagem, 16 níveis e mapa próprios', () {
+      expect(professions.length, greaterThanOrEqualTo(8));
+      expect(professions.map((p) => p.name), contains('Personal trainer'));
+      for (final p in professions) {
+        expect(professionOf(p.key), same(p));
+        if (p.space) continue;
+        expect(p.levelNames.length, namedTransformations, reason: p.key);
+        expect(p.quotes, isNotEmpty);
+        expect(placeAt(0, p).kind, PlaceKind.home);
+        expect(placeAt(1, p).kind, PlaceKind.city);
+        final named = namedPlacesOf(p);
+        expect(named, greaterThanOrEqualTo(10));
+        final extra = placeAt(named + 3, p);
+        expect(extra.name, startsWith(p.event));
+        expect(extra.week, named + 4);
+        // mesmos pontos em qualquer profissão
+        for (var i = 0; i < namedTransformations + 2; i++) {
+          expect(transformationAt(i, p).power, transformationAt(i).power);
+        }
+        expect(transformationAt(0, p).name, p.levelNames.first);
+        expect(transformationAt(namedTransformations, p).name, '${p.levelNames.last} 2');
+      }
+      final pt = professionOf('personal');
+      expect(transformationAt(2, pt).name, 'Personal trainer');
+      expect(placeAt(0, pt).name, 'Academia do bairro');
+      expect(professionOf('nao-existe'), same(astronaut));
+    });
+
+    test('a profissão é salva e muda nível e destino, sem mudar os pontos', () {
+      final s = GameState.initial(ymd(now))
+        ..missions.add(Mission(id: 'a', title: 'Ler', days: [0, 1], start: '20:00', end: '22:00'));
+      GameRules.toggle(s, s.missions.first, 0, now);
+      final a = computeStats(s, now);
+      expect(a.place.name, 'Terra');
+      s.profession = 'chef';
+      final back = GameState.fromJson(s.toJson(), today: ymd(now));
+      expect(back.profession, 'chef');
+      final b = computeStats(back, now);
+      expect(b.power, a.power);
+      expect(b.formIndex, a.formIndex);
+      expect(b.form.name, 'Ajudante de cozinha');
+      expect(b.place.name, 'Cozinha em Bauru');
+      expect(GameState.fromJson({}, today: ymd(now)).profession, 'astronauta');
+    });
+  });
+
+  test('só atividade física conta como Força', () {
+    expect(guessCategory('Academia'), 'treino');
+    expect(guessCategory('Corrida no parque'), 'treino');
+    expect(guessCategory('Aula de natação'), 'treino');
+    expect(guessCategory('Treino'), 'treino');
+    expect(guessCategory('Treino de piano'), 'arte');
+    expect(guessCategory('Treino de inglês'), 'estudo');
+    expect(guessCategory('Treinar violão'), 'arte');
+    // saves antigos: "treino de piano" que caiu em Força vai para Criatividade
+    final s = GameState.initial(ymd(now))
+      ..missions
+          .add(Mission(id: 'p', title: 'Treino de piano', days: [0], start: '18:00', end: '19:00', category: 'treino'));
+    s.weeks[weekKeyOf(now)] = WeekRecord()
+      ..done['p@0'] = const DoneRecord(day: 0, title: 'Treino de piano', at: 0, category: 'treino', minutes: 60);
+    final t = computeStats(s, now);
+    expect(t.attributes['treino'], 0);
+    expect(t.attributes['arte'], 6);
+    expect(t.active, isNot(contains('treino')));
   });
 }

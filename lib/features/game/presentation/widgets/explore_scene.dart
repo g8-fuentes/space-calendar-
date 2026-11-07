@@ -132,7 +132,7 @@ class _ExploreSceneState extends ConsumerState<ExploreScene> with SingleTickerPr
     final now = ref.watch(nowProvider).valueOrNull ?? ref.read(clockProvider).now();
     final weather = place.kind == PlaceKind.home ? ref.watch(weatherProvider).valueOrNull : null;
     _form = stats.form;
-    _earth = place.kind == PlaceKind.home;
+    _earth = place.onEarth;
     final hour = now.hour + now.minute / 60;
     final day = dayLight(hour);
     return Semantics(
@@ -196,7 +196,7 @@ class _ScenePainter extends CustomPainter {
 
   static final _labels = <String, TextPainter>{};
 
-  bool get onEarth => place.kind == PlaceKind.home;
+  bool get onEarth => place.onEarth;
   double get night => 1 - day;
 
   @override
@@ -285,7 +285,7 @@ class _ScenePainter extends CustomPainter {
 
   void _space(Canvas canvas, Paint p) {
     _rect(canvas, p, 0, 0, sceneW, sceneH, Kanagawa.sumiInk0);
-    final deep = place.region != Region.solar;
+    final deep = place.stage > 0;
     final nebula = deep
         ? [Kanagawa.oniViolet, Kanagawa.sakuraPink, Kanagawa.crystalBlue, Kanagawa.waveRed]
         : [Kanagawa.oniViolet, Kanagawa.crystalBlue, Kanagawa.sakuraPink];
@@ -443,7 +443,7 @@ class _ScenePainter extends CustomPainter {
 
   void _plate(Canvas canvas, Paint p) {
     final name = place.name.toUpperCase();
-    final region = regionName(place.region).toUpperCase();
+    final region = place.region.toUpperCase();
     final tp = _painter(name, 6.5, Kanagawa.carpYellow);
     final w = math.max(tp.width, _painter(region, 4.5, Kanagawa.springViolet1).width) + 10;
     _rect(canvas, p, 3, 3, w + 2, 22, Kanagawa.sumiInk0);

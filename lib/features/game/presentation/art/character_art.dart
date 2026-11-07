@@ -22,11 +22,11 @@ const feetRow = _oy + 21;
 Color auraOf(Transformation f, int tick) =>
     f.cosmic ? Color(hslToArgb(((tick * 3) % 360).toDouble(), .75, .65)) : Color(f.auraColor);
 
-typedef _R = void Function(int x, int y, int w, int h, Color c);
+typedef _R = void Function(int x, int y, int w, int h, Color? c);
 
 (PixelGrid, _R) _canvas() {
   final g = List.generate(gridH, (_) => List<Color?>.filled(gridW, null));
-  void r(int x, int y, int rw, int rh, Color c) {
+  void r(int x, int y, int rw, int rh, Color? c) {
     for (var j = y + _oy; j < y + _oy + rh; j++) {
       for (var i = x + _ox; i < x + _ox + rw; i++) {
         if (j >= 0 && j < gridH && i >= 0 && i < gridW) g[j][i] = c;
@@ -115,14 +115,223 @@ PixelGrid astronautGrid(Transformation f, {bool blink = false, int tick = 0}) {
   return outlined(g);
 }
 
+const _gray = Color(0xFF9A9AA6), _wood = Color(0xFFB0703A), _dark = Color(0xFF2A2A37);
+
+/// Os outros personagens: uma pessoa com a roupa e os acessórios da
+/// profissão. No nível 1 só a roupa; no 2 o primeiro acessório; no 5 o
+/// acessório completo. Cores e aura mudam a cada nível.
+PixelGrid humanGrid(Transformation f, {bool blink = false, int tick = 0}) {
+  final (g, r) = _canvas();
+  final aura = auraOf(f, tick);
+  final top = Color(f.suit), acc = f.cosmic ? aura : Color(f.trim);
+  final shade = Color.lerp(top, _ink, .22)!;
+  final low = f.outfit == Outfit.firefighter ? top : Color(f.visor);
+  final lowShade = Color.lerp(low, _ink, .25)!;
+  final pack = f.gear != Gear.none, full = f.gear == Gear.jet;
+  final eye = blink ? _skinDark : _ink;
+  var shoe = _dark;
+
+  // costas: cilindro de ar do bombeiro
+  if (f.outfit == Outfit.firefighter && pack) {
+    r(0, 10, 2, 6, _gray);
+    r(0, 10, 2, 1, Kanagawa.fujiWhite);
+  }
+  // cabeça
+  r(4, 1, 8, 2, _hair);
+  r(3, 2, 10, 2, _hair);
+  r(4, 3, 8, 6, _skin);
+  r(4, 3, 8, 1, _hair);
+  r(3, 4, 1, 3, _hair);
+  r(12, 4, 1, 3, _hair);
+  r(3, 5, 1, 2, _skin);
+  r(12, 5, 1, 2, _skin);
+  r(6, 5, 1, 1, eye);
+  r(9, 5, 1, 1, eye);
+  r(7, 7, 2, 1, _skinDark);
+  r(7, 9, 2, 1, _skinDark);
+  // corpo, braços e pernas
+  r(4, 10, 8, 6, top);
+  r(2, 10, 2, 5, top);
+  r(12, 10, 2, 5, top);
+  r(2, 14, 2, 1, shade);
+  r(12, 14, 2, 1, shade);
+  r(2, 15, 2, 1, _skin);
+  r(12, 15, 2, 1, _skin);
+  r(4, 16, 3, 5, low);
+  r(9, 16, 3, 5, low);
+  r(4, 16, 8, 1, lowShade);
+  r(7, 16, 2, 1, null);
+
+  switch (f.outfit) {
+    case Outfit.trainer:
+      // regata: braços de fora; short e tênis
+      r(2, 10, 2, 5, _skin);
+      r(12, 10, 2, 5, _skin);
+      r(2, 12, 2, 1, _skinDark);
+      r(12, 12, 2, 1, _skinDark);
+      r(4, 10, 1, 1, _skin);
+      r(11, 10, 1, 1, _skin);
+      r(4, 14, 8, 1, shade);
+      r(4, 18, 3, 3, _skin);
+      r(9, 18, 3, 3, _skin);
+      r(4, 20, 3, 1, Kanagawa.fujiWhite);
+      r(9, 20, 3, 1, Kanagawa.fujiWhite);
+      r(4, 3, 8, 1, acc);
+      shoe = acc;
+      if (pack) {
+        r(6, 10, 1, 2, _dark);
+        r(9, 10, 1, 2, _dark);
+        r(7, 12, 2, 1, Kanagawa.carpYellow);
+      }
+      if (full) {
+        r(12, 16, 3, 1, _dark);
+        r(12, 17, 4, 3, _gray);
+        r(12, 17, 1, 1, Kanagawa.fujiWhite);
+      }
+    case Outfit.doctor:
+      r(6, 10, 4, 3, acc);
+      r(7, 12, 2, 1, top);
+      r(4, 16, 8, 3, top);
+      r(7, 17, 2, 2, low);
+      r(9, 13, 2, 1, Kanagawa.springBlue);
+      if (pack) {
+        r(5, 10, 1, 4, _dark);
+        r(10, 10, 1, 4, _dark);
+        r(5, 14, 2, 1, _dark);
+        r(10, 14, 1, 1, _gray);
+      }
+      if (full) {
+        r(13, 12, 3, 4, _wood);
+        r(13, 13, 3, 3, Kanagawa.fujiWhite);
+        r(14, 12, 1, 1, _gray);
+        r(5, 2, 2, 2, _gray);
+        r(5, 2, 1, 1, Kanagawa.fujiWhite);
+      }
+    case Outfit.teacher:
+      r(6, 10, 4, 2, acc);
+      r(7, 11, 2, 1, top);
+      r(4, 15, 8, 1, shade);
+      if (pack) {
+        r(5, 5, 2, 1, Kanagawa.lightBlue);
+        r(9, 5, 2, 1, Kanagawa.lightBlue);
+        r(6, 5, 1, 1, eye);
+        r(9, 5, 1, 1, eye);
+        r(7, 5, 2, 1, _dark);
+        r(5, 4, 2, 1, _dark);
+        r(9, 4, 2, 1, _dark);
+        r(13, 12, 3, 4, acc == top ? Kanagawa.autumnRed : Color.lerp(acc, Kanagawa.autumnRed, .6)!);
+        r(13, 12, 1, 4, _dark);
+        r(14, 13, 2, 1, Kanagawa.fujiWhite);
+      }
+      if (full) {
+        r(2, 1, 12, 1, _dark);
+        r(4, 2, 8, 1, _dark);
+        r(6, 0, 4, 1, _dark);
+        r(13, 2, 1, 3, Kanagawa.carpYellow);
+      }
+    case Outfit.coder:
+      r(3, 9, 10, 1, top);
+      r(6, 11, 1, 2, Kanagawa.fujiWhite);
+      r(9, 11, 1, 2, Kanagawa.fujiWhite);
+      r(5, 14, 6, 1, shade);
+      r(4, 10, 8, 1, acc);
+      if (pack) {
+        r(4, 0, 8, 1, _dark);
+        r(3, 1, 1, 2, _dark);
+        r(12, 1, 1, 2, _dark);
+        r(2, 3, 2, 3, acc);
+        r(12, 3, 2, 3, acc);
+      }
+      if (full) {
+        r(13, 10, 4, 5, _gray);
+        r(14, 11, 2, 3, Kanagawa.sumiInk0);
+        r(14, 11, 1, 1, acc);
+        r(15, 12, 1, 1, Kanagawa.springGreen);
+        r(14, 13, 2, 1, acc);
+        r(12, 15, 5, 1, _gray);
+      }
+    case Outfit.chef:
+      r(6, 10, 4, 1, acc);
+      for (final y in [11, 13]) {
+        r(6, y, 1, 1, shade);
+        r(9, y, 1, 1, shade);
+      }
+      for (var y = 16; y < 21; y++) {
+        for (var x = 4; x < 12; x++) {
+          if (x != 7 && x != 8 && (x + y).isEven) r(x, y, 1, 1, lowShade);
+        }
+      }
+      if (!pack) {
+        r(4, 2, 8, 2, acc);
+        r(12, 3, 2, 1, acc);
+      } else {
+        r(4, 1, 8, 2, Kanagawa.fujiWhite);
+        r(3, -3, 10, 4, Kanagawa.fujiWhite);
+        r(4, -4, 3, 1, Kanagawa.fujiWhite);
+        r(9, -4, 3, 1, Kanagawa.fujiWhite);
+        r(4, 2, 8, 1, Kanagawa.oldWhite);
+        r(6, -2, 1, 3, Kanagawa.oldWhite);
+        r(9, -2, 1, 3, Kanagawa.oldWhite);
+      }
+      if (full) {
+        r(14, 15, 2, 1, _wood);
+        r(16, 13, 4, 3, _dark);
+        r(17, 13, 1, 1, _gray);
+      }
+    case Outfit.musician:
+      r(3, 4, 1, 5, _hair);
+      r(12, 4, 1, 5, _hair);
+      r(4, 10, 8, 1, shade);
+      r(6, 11, 4, 2, acc);
+      shoe = Kanagawa.fujiWhite;
+      if (pack) {
+        r(5, 10, 1, 3, _wood);
+        r(4, 13, 6, 3, _wood);
+        r(5, 12, 4, 1, _wood);
+        r(6, 14, 1, 1, _dark);
+        r(10, 13, 4, 1, _dark);
+        r(14, 12, 2, 1, _dark);
+        r(16, 11, 1, 1, _dark);
+      }
+      if (full) {
+        r(5, 5, 2, 1, _dark);
+        r(9, 5, 2, 1, _dark);
+        r(7, 5, 2, 1, _dark);
+        r(5, 5, 1, 1, acc);
+      }
+    case Outfit.firefighter:
+      final helmet = f.cosmic ? aura : Color.lerp(Kanagawa.autumnRed, acc, .15)!;
+      r(4, 0, 8, 3, helmet);
+      r(2, 3, 12, 1, helmet);
+      r(7, 0, 2, 2, Kanagawa.carpYellow);
+      r(4, 13, 8, 1, acc);
+      r(2, 13, 2, 1, acc);
+      r(12, 13, 2, 1, acc);
+      r(4, 19, 3, 1, acc);
+      r(9, 19, 3, 1, acc);
+      r(6, 10, 4, 1, shade);
+      if (full) {
+        r(14, 9, 1, 8, _wood);
+        r(13, 9, 3, 2, _gray);
+        r(13, 9, 1, 1, Kanagawa.autumnRed);
+      }
+    case Outfit.astronaut:
+      break;
+  }
+  r(3, 21, 4, 1, shoe);
+  r(9, 21, 4, 1, shoe);
+  return outlined(g);
+}
+
 final _grids = <String, PixelGrid>{};
 
-/// Grade do astronauta no nível [f].
+/// Grade do personagem no nível [f] (astronauta ou outra profissão).
 PixelGrid characterGrid(Transformation f, {bool blink = false, int tick = 0}) {
-  final t = f.cosmic ? tick ~/ 4 * 4 : (f.gear == Gear.jet ? tick ~/ 4 % 2 * 4 : 0);
-  final key = '${f.index}|$blink|$t';
+  final human = f.outfit != Outfit.astronaut;
+  final t = f.cosmic ? tick ~/ 4 * 4 : (!human && f.gear == Gear.jet ? tick ~/ 4 % 2 * 4 : 0);
+  final key = '${f.profession}|${f.index}|$blink|$t';
   if (_grids.length > 40) _grids.clear();
-  return _grids[key] ??= astronautGrid(f, blink: blink, tick: t);
+  return _grids[key] ??= human ? humanGrid(f, blink: blink, tick: t) : astronautGrid(f, blink: blink, tick: t);
 }
 
 /// Caixa da figura (do capacete aos pés, com folga para a aura) com a grade em

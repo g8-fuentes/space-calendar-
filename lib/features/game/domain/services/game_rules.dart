@@ -1,5 +1,6 @@
 import '../../../../core/text/text_utils.dart';
 import '../../../../core/time/week_utils.dart';
+import '../catalog/catalog.dart' show fixCategory;
 import '../catalog/places.dart';
 import '../entities/game_state.dart';
 import 'game_stats.dart';
@@ -32,7 +33,11 @@ abstract final class GameRules {
   }
 
   static DoneRecord _record(Mission m, int day, DateTime now) => DoneRecord(
-      day: day, title: m.title, at: now.millisecondsSinceEpoch, category: m.category, minutes: missionMinutes(m));
+      day: day,
+      title: m.title,
+      at: now.millisecondsSinceEpoch,
+      category: fixCategory(m.category, m.title),
+      minutes: missionMinutes(m));
 
   /// Marca todas as missões de hoje que já começaram. Devolve quantas.
   static int markPastToday(GameState s, DateTime now) {
@@ -121,7 +126,7 @@ abstract final class GameRules {
     s.lastExplored = t.weekKey;
     return [
       Notice('DESTINO EXPLORADO!',
-          '${t.place.name}: meta da semana cumprida. Na segunda-feira a nave parte para ${t.next.name}.',
+          '${t.place.name}: meta da semana cumprida. Na segunda-feira ${t.profession.travel} para ${t.next.name}.',
           place: t.place.index),
     ];
   }
@@ -135,16 +140,14 @@ abstract final class GameRules {
       if (t.placeIndex < s.lastPlace) s.lastPlace = t.placeIndex;
       return const [];
     }
-    final from = placeAt(s.lastPlace);
+    final from = placeAt(s.lastPlace, t.profession);
     s.lastPlace = t.placeIndex;
     final p = t.place;
-    final title = p.region != from.region
-        ? switch (p.region) {
-            Region.stars => 'ALÉM DO SISTEMA SOLAR!',
-            Region.galaxy => 'RUMO À GALÁXIA!',
-            Region.solar => 'NOVO DESTINO',
-          }
-        : 'NOVO DESTINO';
+    final title = p.stage == from.stage
+        ? 'NOVO DESTINO'
+        : t.profession.space
+            ? (p.stage == 1 ? 'ALÉM DO SISTEMA SOLAR!' : 'RUMO À GALÁXIA!')
+            : 'NOVA FASE: ${p.region.toUpperCase()}!';
     return [
       Notice(title, 'Semana ${p.week}: ${p.name}. ${p.fact}', place: p.index),
     ];

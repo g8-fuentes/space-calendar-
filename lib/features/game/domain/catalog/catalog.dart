@@ -40,11 +40,23 @@ const categories = <Category>[
 
 Category categoryOf(String key) => categories.firstWhere((c) => c.key == key, orElse: () => categories.first);
 
+/// Força é só para atividade física. Por isso a regra de Força vem
+/// primeiro só com esportes e exercícios de verdade; "treino" sozinho só
+/// conta como Força no fim, quando o nome não fala de outra coisa (um
+/// "treino de piano" é Criatividade).
 final _categoryRules = <(String, RegExp)>[
   (
     'treino',
-    RegExp(
-        r'academia|treino|gym|muscul|pilates|yoga|ioga|corrida|correr|run|futebol|futsal|futevolei|volei|basquete|natacao|nadar|bike|ciclismo|crossfit|luta|jiu|boxe|muay|danca|caminhada|alongamento|workout|esporte|tenis|beach')
+    RegExp(r'academia|\bgym|muscula|pilates|\byoga|\bioga|corrida|\bcorrer|\brun\b|running|futebol|futsal|futevolei|'
+        r'volei|basquete|handebol|natacao|\bnadar|\bbike|bicicleta|ciclismo|\bpedal|crossfit|\bluta\b|\bjiu|boxe|'
+        r'muay|\bdanca|caminhada|caminhar|alongamento|workout|esporte|\btenis\b|beach|\bsurf|\bskate|escalada|'
+        r'\bremo\b|spinning|funcional|\bhiit|zumba|calistenia|maratona|abdominais|cardio|treino de (perna|braco|'
+        r'costas|peito|ombro|gluteo|forca|corrida)|treino fisico|exercicio fisico|atividade fisica|personal')
+  ),
+  (
+    'arte',
+    RegExp(r'piano|teclado|violao|violino|guitarra|\bbaixo\b|ukulele|flauta|saxofone|musica|\bcanto\b|bateria|\bfoto|'
+        r'desenho|pintura|\barte|escrita|escrever|music|\bdraw|paint|teatro|croche|bordado|coral|instrumento')
   ),
   (
     'estudo',
@@ -55,13 +67,9 @@ final _categoryRules = <(String, RegExp)>[
     'trabalho',
     RegExp(r'trabalho|reuniao|work|meeting|call|expediente|escritorio|cliente|projeto|daily|standup|1:1|freela')
   ),
-  (
-    'arte',
-    RegExp(
-        r'piano|violao|guitarra|musica|canto|bateria|foto|desenho|pintura|arte|escrita|escrever|music|draw|paint|teatro|croche|bordado')
-  ),
   ('espirito', RegExp(r'missa|igreja|culto|oracao|orar|meditac|meditar|terco|biblia|retiro|devocional|gratidao')),
   ('lazer', RegExp(r'jogo|game|filme|serie|lazer|passeio|festa|amigos|cinema|descanso|hobby')),
+  ('treino', RegExp(r'\btreino|\btreinar|exercicio')),
 ];
 
 /// Adivinha a categoria pelo nome do evento.
@@ -71,6 +79,15 @@ String guessCategory(String title) {
     if (rx.hasMatch(n)) return k;
   }
   return 'cuidado';
+}
+
+/// Categoria de uma missão já salva. Missões antigas que caíram em Força
+/// sem ser atividade física (como "treino de piano") vão para a categoria
+/// certa, e os pontos delas também.
+String fixCategory(String? saved, String title) {
+  final guess = guessCategory(title);
+  if (saved == null) return guess;
+  return saved == 'treino' && guess != 'treino' ? guess : saved;
 }
 
 const dayNames = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];

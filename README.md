@@ -11,6 +11,17 @@ dá pontos ao atributo da categoria dela, e os pontos levam o astronauta a novos
 Cadete espacial a Astronauta cósmico, sem nível final), com traje, visor, mochila a jato e aura
 novos e uma frase de quem olhou para as estrelas.
 
+Dá para escolher a profissão do personagem (na tela inicial ou em Ajustes): Astronauta, Personal
+trainer, Médico(a), Professor(a), Programador(a), Chef de cozinha, Músico(a) ou Bombeiro(a). Cada uma
+tem personagem, 16 níveis com nomes e frases próprios e uma jornada diferente: o astronauta vai
+para o espaço; as outras rodam Bauru, o Brasil e o mundo, sem fim. Trocar de profissão mantém os
+pontos. Todos os níveis e destinos aparecem desde o começo, apagados até você chegar lá.
+
+Só atividade física conta como Força: "treino de piano" vai para Criatividade.
+
+O app tem quatro abas: Explorar (cena, missões, mapa da jornada e o resumo da semana no fim),
+Tarefas, Personagem e Ajustes.
+
 Na aba Tarefas dá para anotar o que fazer no dia (criar, editar, excluir e marcar como
 concluída). Cada tarefa concluída dá pontos de Disciplina, e uma chama em pixel art cresce
 com as tarefas dos últimos 7 dias e vai baixando quando elas param.

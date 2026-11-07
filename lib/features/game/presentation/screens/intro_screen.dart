@@ -8,10 +8,11 @@ import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
 import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
+import '../widgets/profession_picker.dart';
 import '../widgets/ui.dart';
 import 'settings_screen.dart' show exportHelp;
 
-/// Primeira tela: nome do astronauta e a agenda (.ics ou .ical).
+/// Primeira tela: nome, profissão e a agenda (.ics ou .ical).
 class IntroScreen extends ConsumerStatefulWidget {
   const IntroScreen({super.key});
 
@@ -63,10 +64,13 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                 Text('SPACE ROUTINE',
                     textAlign: TextAlign.center, style: PixelText.display(16, color: Kanagawa.carpYellow)),
                 const SizedBox(height: 4),
-                Text('Sua agenda vira uma missão espacial, e você é o astronauta.',
+                Text('Sua agenda vira uma jornada em pixel art, com você na profissão que escolher.',
                     textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),
                 const SizedBox(height: 14),
-                PixelPanel(padding: EdgeInsets.zero, child: ExploreScene(placeOverride: placeAt(0))),
+                PixelPanel(
+                    padding: EdgeInsets.zero,
+                    child:
+                        ExploreScene(placeOverride: placeAt(0, ref.watch(statsProvider.select((t) => t.profession))))),
                 const SizedBox(height: 16),
                 PixelPanel(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
@@ -74,10 +78,14 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       controller: _name,
                       maxLength: 24,
                       style: PixelText.body(17),
-                      decoration: pixelInput('Nome do astronauta', hint: 'Ex.: Gui'),
+                      decoration: pixelInput('Seu nome', hint: 'Ex.: Gui'),
                       onSubmitted: (_) => _start(),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 4),
+                    Text('PROFISSÃO', style: PixelText.display(8)),
+                    const SizedBox(height: 6),
+                    const ProfessionPicker(),
+                    const SizedBox(height: 10),
                     PixelButton(label: 'Importar agenda (.ics ou .ical)', onPressed: _busy ? null : _start),
                     ErrorText(_error),
                     const SizedBox(height: 14),
@@ -87,8 +95,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                       child: Text(
                         '$exportHelp\n\n'
                         'Cada evento com horário vira uma missão semanal.\n\n'
-                        'Cada semana o astronauta explora um destino: começa na Terra, passa pela Lua e pelos planetas e '
-                        'depois sai do Sistema Solar rumo às estrelas e às galáxias. Cumpra metade das missões da '
+                        'Cada semana você explora um destino da jornada da sua profissão: o astronauta vai para o '
+                        'espaço; as outras profissões rodam Bauru, o Brasil e o mundo. Cumpra metade das missões da '
                         'semana para explorar o destino e partir para o próximo na segunda-feira.',
                         style: PixelText.body(14, color: Kanagawa.springViolet1),
                       ),

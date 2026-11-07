@@ -45,7 +45,7 @@ class _NoticeListenerState extends ConsumerState<NoticeListener> {
         default:
           Sfx.level.play();
       }
-      await showNotice(context, n);
+      await showNotice(context, n, ref.read(statsProvider).profession);
     }
     _showing = false;
   }
@@ -59,7 +59,7 @@ class _NoticeListenerState extends ConsumerState<NoticeListener> {
   }
 }
 
-Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
+Future<void> showNotice(BuildContext context, Notice n, Profession pro) => showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Kanagawa.sumiInk4,
@@ -70,10 +70,10 @@ Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
             Text(n.title, textAlign: TextAlign.center, style: PixelText.display(12, color: Kanagawa.carpYellow)),
             if (n.form != null) ...[
               const SizedBox(height: 14),
-              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!))),
+              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!, pro))),
             ] else if (n.place != null) ...[
               const SizedBox(height: 14),
-              SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!))),
+              SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!, pro))),
             ],
             const SizedBox(height: 14),
             Text(n.text, textAlign: TextAlign.center, style: PixelText.body(16)),
@@ -92,7 +92,7 @@ class PlaceThumb extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Opacity(
-        opacity: locked ? .3 : 1,
+        opacity: locked ? .6 : 1,
         child: CustomPaint(painter: _ThumbPainter(place)),
       );
 }

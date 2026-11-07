@@ -61,6 +61,8 @@ void main() {
     await tester.tap(find.text('Academia'));
     await tester.pump(const Duration(milliseconds: 300));
     expect(repo.saved!.weeks.values.single.done, hasLength(1));
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
+    await tester.pump(const Duration(milliseconds: 100));
     expect(find.textContaining('1 missão concluída'), findsOneWidget);
     // 1 de 1 missão: a Terra já está explorada nesta semana
     await tester.pump(const Duration(milliseconds: 300));
@@ -68,7 +70,9 @@ void main() {
     await tester.tap(find.text('CONTINUAR').last);
     await tester.pump(const Duration(milliseconds: 300));
 
-    for (final tab in ['TAREFAS', 'PERSONAGEM', 'MAPA', 'SEMANA', 'AJUSTES', 'EXPLORAR']) {
+    expect(find.text('MAPA'), findsNothing);
+    expect(find.text('SEMANA'), findsNothing);
+    for (final tab in ['TAREFAS', 'PERSONAGEM', 'AJUSTES', 'EXPLORAR']) {
       await tester.tap(find.text(tab).last);
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull, reason: tab);
@@ -85,6 +89,41 @@ void main() {
       }
     }
     expect(find.text('TERRA'), findsNothing); // a placa é desenhada na cena
+    // a semana fica no fim da tela Explorar
+    await tester.scrollUntilVisible(find.text('HISTÓRICO'), 300, scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('ESTA SEMANA'), findsOneWidget);
+
+    // trocar de profissão em Ajustes muda o personagem e o mapa
+    await tester.tap(find.text('AJUSTES').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.scrollUntilVisible(find.text('🏋️ PERSONAL TRAINER'), 300, scrollable: find.byType(Scrollable).first);
+    await Scrollable.ensureVisible(tester.element(find.text('🏋️ PERSONAL TRAINER')), alignment: .5);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('🏋️ PERSONAL TRAINER'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repo.saved!.profession, 'personal');
+    await tester.tap(find.text('PERSONAGEM').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.scrollUntilVisible(find.text('NÍVEIS · PERSONAL TRAINER'), 300,
+        scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(find.text('NÍVEL 16 · TREINADOR CÓSMICO'), 400,
+        scrollable: find.byType(Scrollable).first);
+    expect(find.textContaining('libera com'), findsWidgets);
+    await tester.tap(find.text('EXPLORAR').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.scrollUntilVisible(find.text('VER MAPA DA JORNADA'), 200, scrollable: find.byType(Scrollable).first);
+    await Scrollable.ensureVisible(tester.element(find.text('VER MAPA DA JORNADA')), alignment: .5);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('VER MAPA DA JORNADA'));
+    for (var i = 0; i < 10; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+    expect(find.text('MAPA DA JORNADA'), findsOneWidget);
+    expect(find.text('ACADEMIA DO BAIRRO'), findsOneWidget);
+    expect(find.text('PARQUE VITÓRIA RÉGIA'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pageBack();
+    await tester.pump(const Duration(milliseconds: 500));
     await _end(tester);
   });
 }

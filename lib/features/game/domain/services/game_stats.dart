@@ -82,7 +82,11 @@ class GameStats {
     this.weekDone = 0,
     this.weekGoal = 1,
     this.flame = 0,
+    this.profession = astronaut,
   });
+
+  /// Profissão do personagem: dá os nomes dos níveis e a jornada.
+  final Profession profession;
 
   /// Missões concluídas desde o começo.
   final int missionsDone;
@@ -107,8 +111,8 @@ class GameStats {
 
   int get power => attributes.values.fold(0, (a, b) => a + b);
   int get formIndex => transformationIndexFor(power);
-  Transformation get form => transformationAt(formIndex);
-  Transformation get nextForm => transformationAt(formIndex + 1);
+  Transformation get form => transformationAt(formIndex, profession);
+  Transformation get nextForm => transformationAt(formIndex + 1, profession);
 
   /// Pontos que faltam para a próxima transformação.
   int get powerMissing => nextForm.power - power;
@@ -135,8 +139,8 @@ class GameStats {
   }
 
   /// Destino desta semana e o da próxima.
-  Place get place => placeAt(placeIndex);
-  Place get next => placeAt(placeIndex + 1);
+  Place get place => placeAt(placeIndex, profession);
+  Place get next => placeAt(placeIndex + 1, profession);
 
   /// Meta da semana cumprida: na segunda-feira o astronauta parte para [next].
   bool get explored => weekDone >= weekGoal;
@@ -157,7 +161,7 @@ GameStats computeStats(GameState s, DateTime now) {
     for (final e in w.done.entries) {
       final r = e.value;
       final m = byId[e.key.split('@').first];
-      final cat = r.category ?? m?.category ?? guessCategory(r.title);
+      final cat = fixCategory(r.category ?? m?.category, r.title);
       final pts = pointsFor(r.minutes ?? (m == null ? null : missionMinutes(m)));
       attrs[cat] = (attrs[cat] ?? 0) + pts;
     }
@@ -176,11 +180,12 @@ GameStats computeStats(GameState s, DateTime now) {
     weekDone: w.done.length,
     weekGoal: s.weeklyGoal,
     flame: disciplineFlame(s, now),
+    profession: professionOf(s.profession),
     doneToday: dayDone(s, w, today),
     totalToday: daySlots(s, today).length,
     attributes: attrs,
     active: {
-      for (final m in s.missions) m.category,
+      for (final m in s.missions) fixCategory(m.category, m.title),
       if (s.todos.isNotEmpty) 'disciplina',
       for (final e in attrs.entries)
         if (e.value > 0) e.key,

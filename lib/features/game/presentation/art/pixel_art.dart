@@ -141,7 +141,14 @@ void paintBelt(Canvas canvas, Place d, Offset center, double radius, int tick) {
   }
   paintBody(
       canvas,
-      Place(index: d.index, name: d.name, region: d.region, kind: PlaceKind.moon, colors: d.colors, fact: ''),
+      Place(
+          index: d.index,
+          name: d.name,
+          stage: d.stage,
+          region: d.region,
+          kind: PlaceKind.moon,
+          colors: d.colors,
+          fact: ''),
       center,
       radius,
       tick);
@@ -282,9 +289,108 @@ void paintLandmark(Canvas canvas, Landmark l, double cx, double baseY, double u,
   void tri(double x, double baseW, double h, Color c, [double y = 0]) =>
       _tri(canvas, p, cx + x * u, baseY + y * u, baseW * u, h * u, c);
   const stone = Color(0xFFC8C093), dark = Kanagawa.sumiInk3;
+  final glass = Kanagawa.lightBlue.withAlpha(170);
+  void windows(double x0, double y0, double cols, double rows, Color c) {
+    for (var j = 0; j < rows; j++) {
+      for (var i = 0; i < cols; i++) {
+        rect(x0 + i * 5, y0 + j * 6, 3, 3, c);
+      }
+    }
+  }
+
   switch (l) {
     case Landmark.none:
       break;
+    case Landmark.gym:
+      rect(-20, -24, 40, 24, const Color(0xFF54546D));
+      rect(-16, -18, 32, 10, glass);
+      rect(-3, -8, 6, 8, dark);
+      rect(-15, -34, 30, 9, accent);
+      rect(-8, -30, 16, 2, Kanagawa.fujiWhite);
+      rect(-11, -32, 3, 6, Kanagawa.fujiWhite);
+      rect(8, -32, 3, 6, Kanagawa.fujiWhite);
+    case Landmark.hospital:
+      rect(-18, -42, 36, 42, const Color(0xFFE4DFC6));
+      windows(-15, -30, 7, 4, glass);
+      rect(-4, -8, 8, 8, Kanagawa.lightBlue);
+      rect(-2, -40, 4, 10, Kanagawa.autumnRed);
+      rect(-5, -37, 10, 4, Kanagawa.autumnRed);
+    case Landmark.school:
+      rect(-22, -22, 44, 22, const Color(0xFFC88A6E));
+      tri(0, 50, 12, const Color(0xFF8C3A3A), -22);
+      windows(-19, -18, 3, 2, glass);
+      windows(7, -18, 3, 2, glass);
+      rect(-3, -10, 6, 10, dark);
+      rect(16, -48, 1, 18, Kanagawa.fujiGray);
+      rect(17, -48, 8, 5, Kanagawa.springGreen);
+      rect(20, -47, 2, 2, Kanagawa.carpYellow);
+    case Landmark.techTower:
+      rect(-10, -58, 20, 58, const Color(0xFF7FB4CA));
+      for (var y = -56; y < -2; y += 5) {
+        rect(-10, y.toDouble(), 20, 1, const Color(0xFF2D4F67));
+      }
+      rect(-1, -58, 2, 8, Kanagawa.fujiWhite);
+      rect(-6, -48, 12, 6, accent);
+      rect(16, -26, 14, 26, const Color(0xFF8FA3BF));
+      windows(18, -22, 2, 3, glass);
+    case Landmark.restaurant:
+      rect(-20, -20, 40, 20, const Color(0xFFE4DFC6));
+      for (var i = 0; i < 11; i++) {
+        rect(-22.0 + i * 4, -24, 4, 4, i.isEven ? Kanagawa.autumnRed : Kanagawa.fujiWhite);
+      }
+      rect(-16, -16, 12, 9, glass);
+      rect(4, -16, 12, 9, glass);
+      rect(-3, -10, 6, 10, dark);
+      rect(-9, -32, 18, 7, accent);
+      rect(12, -36, 4, 12, Kanagawa.fujiGray);
+      rect(13, -40, 2, 2, Kanagawa.fujiWhite.withAlpha(150));
+    case Landmark.stage:
+      rect(-28, -8, 56, 8, dark);
+      rect(-28, -46, 2, 38, Kanagawa.fujiGray);
+      rect(26, -46, 2, 38, Kanagawa.fujiGray);
+      rect(-28, -48, 56, 3, Kanagawa.fujiGray);
+      for (var i = 0; i < 6; i++) {
+        rect(-22.0 + i * 9, -45, 4, 3, [Kanagawa.carpYellow, Kanagawa.sakuraPink, Kanagawa.springBlue][i % 3]);
+      }
+      rect(-25, -22, 7, 14, Kanagawa.sumiInk0);
+      rect(18, -22, 7, 14, Kanagawa.sumiInk0);
+      rect(-23, -18, 3, 3, Kanagawa.sumiInk6);
+      rect(20, -18, 3, 3, Kanagawa.sumiInk6);
+      rect(-1, -20, 1, 12, Kanagawa.fujiGray);
+    case Landmark.fireStation:
+      rect(-22, -28, 44, 28, Kanagawa.autumnRed);
+      rect(-22, -30, 44, 2, Kanagawa.fujiWhite);
+      for (final x in [-18.0, 2.0]) {
+        rect(x, -18, 16, 18, Kanagawa.fujiWhite);
+        for (var y = -16; y < 0; y += 4) {
+          rect(x, y.toDouble(), 16, 1, Kanagawa.oldWhite);
+        }
+      }
+      rect(12, -48, 10, 18, Kanagawa.autumnRed);
+      rect(14, -44, 6, 4, glass);
+      rect(-3, -27, 6, 6, Kanagawa.carpYellow);
+    case Landmark.stadium:
+      rect(-30, -16, 60, 16, const Color(0xFF7E8BA3));
+      rect(-32, -18, 64, 2, Kanagawa.fujiWhite);
+      for (var i = 0; i < 10; i++) {
+        rect(-28.0 + i * 6, -13, 3, 9, const Color(0xFF54546D));
+      }
+      for (final x in [-30.0, 28.0]) {
+        rect(x, -44, 2, 26, Kanagawa.fujiGray);
+        rect(x - 3, -47, 8, 4, Kanagawa.carpYellow);
+      }
+    case Landmark.trees:
+      for (final (x, h, w) in [(-24.0, 18.0, 16.0), (-6.0, 26.0, 20.0), (14.0, 20.0, 18.0), (28.0, 14.0, 12.0)]) {
+        rect(x - 1, -h * .5, 3, h * .5, const Color(0xFF6A4A2E));
+        p.color = const Color(0xFF4F6F3E);
+        canvas.drawCircle(Offset(cx + x * u, baseY - h * .75 * u), w * .5 * u, p);
+        p.color = const Color(0xFF6A9A4E);
+        canvas.drawCircle(Offset(cx + (x - w * .15) * u, baseY - h * .85 * u), w * .28 * u, p);
+      }
+    case Landmark.mountain:
+      tri(0, 96, 54, const Color(0xFF6E7380));
+      tri(22, 60, 32, const Color(0xFF5A5E6B));
+      tri(0, 24, 14, Kanagawa.fujiWhite, -40);
     case Landmark.obelisk:
       rect(-2, -38, 4, 38, stone);
       tri(0, 4, 4, stone, -38);
@@ -411,13 +517,13 @@ void paintLaunch(Canvas canvas, double progress, int tick) {
 
 /// Miniatura de um lugar num quadro [size] (mapa e avisos).
 void paintPlaceThumb(Canvas canvas, Place d, Size size, int tick) {
-  final p = Paint()..color = d.kind == PlaceKind.home ? const Color(0xFF2D4F67) : _ink;
+  final p = Paint()..color = d.onEarth ? const Color(0xFF2D4F67) : _ink;
   canvas.drawRect(Offset.zero & size, p);
   canvas.save();
   canvas.clipRect(Offset.zero & size);
   final c = size.center(Offset.zero), u = size.shortestSide;
   switch (d.kind) {
-    case PlaceKind.home:
+    case PlaceKind.home || PlaceKind.city:
       final h = size.height / 70;
       paintSkyline(canvas, d, size.height - 4 * h, size.width, night: 0, unit: h);
       p.color = const Color(0xFF3A3A44);

@@ -13,6 +13,8 @@ import '../controllers/game_providers.dart';
 import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
 import '../widgets/ui.dart';
+import 'map_screen.dart';
+import 'week_screen.dart';
 
 /// Tela principal: a cena da exploração e as missões da agenda, que só
 /// podem ser marcadas como concluídas (ou desmarcadas).
@@ -31,6 +33,8 @@ class ExploreScreen extends ConsumerWidget {
         _NextStop(),
         SizedBox(height: 12),
         _Board(),
+        SizedBox(height: 14),
+        WeekSummary(),
       ],
     );
   }
@@ -60,7 +64,7 @@ class _Header extends ConsumerWidget {
     return Row(children: [
       Expanded(
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text((s.name.isEmpty ? 'Astronauta' : s.name).toUpperCase(),
+          Text((s.name.isEmpty ? t.form.name : s.name).toUpperCase(),
               style: PixelText.display(10), maxLines: 1, overflow: TextOverflow.ellipsis),
           Text(
               '${t.missionsDone} ${t.missionsDone == 1 ? 'missão concluída' : 'missões concluídas'} · hoje ${t.doneToday}/${t.totalToday}',
@@ -101,10 +105,20 @@ class _NextStop extends ConsumerWidget {
         const SizedBox(height: 6),
         Text(
           t.explored
-              ? 'Explorado! Na segunda-feira a nave parte para ${t.next.name}.'
+              ? 'Explorado! Na segunda-feira ${t.profession.travel} para ${t.next.name}.'
               : 'Faltam ${t.missing} ${t.missing == 1 ? 'missão' : 'missões'} nesta semana para explorar '
                   '${t.place.name}. Depois: ${t.next.name}.',
           style: PixelText.body(14, color: Kanagawa.springViolet1),
+        ),
+        const SizedBox(height: 10),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: PixelButton(
+            label: 'Ver mapa da jornada',
+            color: Kanagawa.sumiInk5,
+            textColor: Kanagawa.fujiWhite,
+            onPressed: () => openMap(context),
+          ),
         ),
       ]),
     );
@@ -238,7 +252,7 @@ class _MissionTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final cat = categoryOf(mission.category);
+    final cat = categoryOf(fixCategory(mission.category, mission.title));
     final color = Color(cat.color);
     return Semantics(
       checked: done,
