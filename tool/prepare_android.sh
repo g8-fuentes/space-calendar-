@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 if [ ! -d android ]; then
   flutter create --platforms=android --org com.guilhermefuentes --project-name rotina_quest .
   rm -f test/widget_test.dart
-  sed -i 's#android:label="rotina_quest"#android:label="Space Routine"#' android/app/src/main/AndroidManifest.xml
+  sed -i 's#android:label="rotina_quest"#android:label="Dev Routine"#' android/app/src/main/AndroidManifest.xml
 fi
 
 echo "android/ pronto"

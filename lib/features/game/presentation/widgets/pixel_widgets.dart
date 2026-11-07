@@ -9,16 +9,18 @@ class PixelPanel extends StatelessWidget {
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(14),
-    this.color = Kanagawa.sumiInk4,
-    this.borderColor = Kanagawa.sumiInk0,
+    Color? color,
+    Color? borderColor,
     this.accent,
-  });
+  })  : _color = color,
+        _border = borderColor;
 
   final Widget child;
   final EdgeInsets padding;
-  final Color color;
-  final Color borderColor;
+  final Color? _color, _border;
   final Color? accent;
+  Color get color => _color ?? Kanagawa.sumiInk4;
+  Color get borderColor => _border ?? Kanagawa.sumiInk0;
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +45,13 @@ class PixelBar extends StatelessWidget {
   const PixelBar({
     super.key,
     required this.value,
-    this.color = Kanagawa.springBlue,
+    Color? color,
     this.height = 12,
-  });
+  }) : _color = color;
 
   final double value;
-  final Color color;
+  final Color? _color;
+  Color get color => _color ?? Kanagawa.springBlue;
   final double height;
 
   @override
@@ -75,16 +78,18 @@ class PixelButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.onPressed,
-    this.color = Kanagawa.carpYellow,
-    this.textColor = Kanagawa.sumiInk0,
+    Color? color,
+    Color? textColor,
     this.dense = false,
     this.sound = true,
-  });
+  })  : _color = color,
+        _text = textColor;
 
   final String label;
   final VoidCallback? onPressed;
-  final Color color;
-  final Color textColor;
+  final Color? _color, _text;
+  Color get color => _color ?? Kanagawa.carpYellow;
+  Color get textColor => _text ?? Kanagawa.sumiInk0;
   final bool dense;
 
   /// Toca o clique. Desligue quando a própria ação já tem som.
@@ -98,7 +103,7 @@ class PixelButton extends StatelessWidget {
       enabled: enabled,
       child: Material(
         color: enabled ? color : Kanagawa.sumiInk5,
-        shape: const RoundedRectangleBorder(
+        shape: RoundedRectangleBorder(
           side: BorderSide(color: Kanagawa.sumiInk0, width: 3),
         ),
         child: InkWell(
@@ -122,9 +127,10 @@ class PixelButton extends StatelessWidget {
 }
 
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.text, {super.key, this.color = Kanagawa.springViolet1});
+  const SectionTitle(this.text, {super.key, Color? color}) : _color = color;
   final String text;
-  final Color color;
+  final Color? _color;
+  Color get color => _color ?? Kanagawa.springViolet1;
 
   @override
   Widget build(BuildContext context) => Text(text.toUpperCase(), style: PixelText.display(9, color: color));

@@ -45,7 +45,7 @@ class _NoticeListenerState extends ConsumerState<NoticeListener> {
         default:
           Sfx.level.play();
       }
-      await showNotice(context, n, ref.read(statsProvider).profession);
+      await showNotice(context, n);
     }
     _showing = false;
   }
@@ -59,21 +59,21 @@ class _NoticeListenerState extends ConsumerState<NoticeListener> {
   }
 }
 
-Future<void> showNotice(BuildContext context, Notice n, Profession pro) => showDialog<void>(
+Future<void> showNotice(BuildContext context, Notice n) => showDialog<void>(
       context: context,
       builder: (ctx) => Dialog(
         backgroundColor: Kanagawa.sumiInk4,
-        shape: const RoundedRectangleBorder(side: BorderSide(color: Kanagawa.sumiInk0, width: 4)),
+        shape: RoundedRectangleBorder(side: BorderSide(color: Kanagawa.sumiInk0, width: 4)),
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(mainAxisSize: MainAxisSize.min, children: [
             Text(n.title, textAlign: TextAlign.center, style: PixelText.display(12, color: Kanagawa.carpYellow)),
             if (n.form != null) ...[
               const SizedBox(height: 14),
-              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!, pro))),
+              SizedBox(width: 160, child: CharacterView(form: transformationAt(n.form!))),
             ] else if (n.place != null) ...[
               const SizedBox(height: 14),
-              SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!, pro))),
+              SizedBox(width: 220, height: 130, child: PlaceThumb(placeAt(n.place!))),
             ],
             const SizedBox(height: 14),
             Text(n.text, textAlign: TextAlign.center, style: PixelText.body(16)),

@@ -8,20 +8,21 @@ import '../../domain/entities/game_state.dart';
 import '../../domain/services/game_rules.dart';
 import '../../domain/services/game_stats.dart';
 import '../controllers/game_providers.dart';
-import '../widgets/discipline_flame.dart';
-import '../widgets/pixel_widgets.dart';
-import '../widgets/ui.dart';
+import 'discipline_flame.dart';
+import 'pixel_widgets.dart';
+import 'ui.dart';
 
-/// Tarefas do dia: anotar, editar, excluir e marcar como concluída. Cada
-/// tarefa concluída dá pontos de Disciplina e alimenta a chama.
-class TodoScreen extends ConsumerStatefulWidget {
-  const TodoScreen({super.key});
+/// Disciplina na tela do personagem: a chama e as tarefas do dia (anotar,
+/// editar, excluir e marcar como concluída). Cada tarefa concluída dá pontos
+/// de Disciplina e alimenta a chama.
+class DisciplineSection extends ConsumerStatefulWidget {
+  const DisciplineSection({super.key});
 
   @override
-  ConsumerState<TodoScreen> createState() => _TodoScreenState();
+  ConsumerState<DisciplineSection> createState() => _DisciplineSectionState();
 }
 
-class _TodoScreenState extends ConsumerState<TodoScreen> {
+class _DisciplineSectionState extends ConsumerState<DisciplineSection> {
   final _text = TextEditingController();
   final _focus = FocusNode();
 
@@ -53,7 +54,7 @@ class _TodoScreenState extends ConsumerState<TodoScreen> {
         .toList()
       ..sort((a, b) => b.doneAt!.compareTo(a.doneAt!));
     final points = t.attributes['disciplina'] ?? 0;
-    return ListView(padding: const EdgeInsets.fromLTRB(12, 16, 12, 32), children: [
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       PixelPanel(
         child: Row(children: [
           SizedBox(width: 92, height: 120, child: DisciplineFlame(level: t.flame)),
@@ -121,7 +122,7 @@ class _TodoRow extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Kanagawa.sumiInk4,
-        shape: const RoundedRectangleBorder(side: BorderSide(color: Kanagawa.sumiInk0, width: 4)),
+        shape: RoundedRectangleBorder(side: BorderSide(color: Kanagawa.sumiInk0, width: 4)),
         title: Text('EDITAR TAREFA', style: PixelText.display(10)),
         content: TextField(
           controller: c,
@@ -170,7 +171,7 @@ class _TodoRow extends ConsumerWidget {
               }
             },
             child: Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 border: Border(left: BorderSide(color: Kanagawa.surimiOrange, width: 4)),
               ),
               padding: const EdgeInsets.fromLTRB(10, 4, 0, 4),
@@ -183,7 +184,7 @@ class _TodoRow extends ConsumerWidget {
                     color: done ? Kanagawa.springGreen : Kanagawa.sumiInk0,
                     border: Border.all(color: done ? Kanagawa.sumiInk0 : Kanagawa.springViolet1, width: 2),
                   ),
-                  child: done ? const Icon(Icons.check, size: 14, color: Kanagawa.sumiInk0) : null,
+                  child: done ? Icon(Icons.check, size: 14, color: Kanagawa.sumiInk0) : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -196,12 +197,12 @@ class _TodoRow extends ConsumerWidget {
                 ),
                 IconButton(
                   tooltip: 'Editar',
-                  icon: const Icon(Icons.edit_outlined, size: 20, color: Kanagawa.springViolet1),
+                  icon: Icon(Icons.edit_outlined, size: 20, color: Kanagawa.springViolet1),
                   onPressed: () => _edit(context, ref),
                 ),
                 IconButton(
                   tooltip: 'Excluir',
-                  icon: const Icon(Icons.delete_outline, size: 20, color: Kanagawa.sakuraPink),
+                  icon: Icon(Icons.delete_outline, size: 20, color: Kanagawa.sakuraPink),
                   onPressed: () {
                     ctrl.apply((s) => GameRules.deleteTodo(s, todo.id));
                     Sfx.delete.play();

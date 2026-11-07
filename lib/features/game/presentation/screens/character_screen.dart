@@ -8,10 +8,11 @@ import '../../domain/catalog/catalog.dart';
 import '../../domain/catalog/transformations.dart';
 import '../controllers/game_providers.dart';
 import '../widgets/character_view.dart';
+import '../widgets/discipline_section.dart';
 import '../widgets/pixel_widgets.dart';
 
-/// Personagem: a transformação atual, os pontos de cada atributo e quanto
-/// falta para a próxima forma.
+/// Personagem: o nível atual, os pontos de cada atributo, a Disciplina
+/// (chama e tarefas do dia) e todos os níveis.
 class CharacterScreen extends ConsumerWidget {
   const CharacterScreen({super.key});
 
@@ -51,11 +52,8 @@ class CharacterScreen extends ConsumerWidget {
                   style: PixelText.body(14, color: Kanagawa.carpYellow)),
               const SizedBox(height: 8),
               Text(
-                t.profession.space
-                    ? 'A cada nível o astronauta ganha traje, visor e aura novos e uma frase de quem olhou para as '
-                        'estrelas. Os níveis não têm fim.'
-                    : 'A cada nível o personagem ganha roupa, acessórios e aura novos e uma frase de inspiração. '
-                        'Os níveis não têm fim. A profissão muda em Ajustes, sem perder os pontos.',
+                'A cada nível o dev sobe dentro da Matrix: roupa, acessórios e aura novos e uma frase de quem '
+                'vive de código. Os níveis não têm fim.',
                 style: PixelText.body(13, color: Kanagawa.springViolet1),
               ),
             ]),
@@ -83,16 +81,18 @@ class CharacterScreen extends ConsumerWidget {
         ]),
       ),
       const SizedBox(height: 14),
+      const DisciplineSection(),
+      const SizedBox(height: 14),
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text('NÍVEIS · ${t.profession.name.toUpperCase()}', style: PixelText.display(10)),
+          Text('NÍVEIS DO DEV', style: PixelText.display(10)),
           const SizedBox(height: 4),
           Text('Todos os níveis aparecem; os que faltam ficam apagados até você chegar lá.',
               style: PixelText.body(13, color: Kanagawa.springViolet1)),
           const SizedBox(height: 10),
           for (var i = 0; i <= last; i++) ...[
             _FormTile(
-              form: transformationAt(i, t.profession),
+              form: transformationAt(i),
               reached: i <= t.formIndex,
               current: i == t.formIndex,
               next: i == t.formIndex + 1,
@@ -113,7 +113,7 @@ class _AttributeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Color(category.color);
+    final color = Kanagawa.ink(Color(category.color));
     return Semantics(
       label: '${category.name}: $points pontos',
       excludeSemantics: true,

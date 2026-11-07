@@ -3,13 +3,11 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
-import '../../../../app/theme/kanagawa.dart';
 import '../../domain/catalog/transformations.dart';
 import '../art/character_art.dart';
 import '../art/pixel_art.dart';
 
-/// O astronauta grande, animado e com a aura da transformação, num fundo
-/// escuro.
+/// O dev grande, animado e com a aura do nível, num fundo de terminal.
 class CharacterView extends StatefulWidget {
   const CharacterView({super.key, required this.form, this.locked = false});
   final Transformation form;
@@ -97,16 +95,13 @@ class _CharacterPainter extends CustomPainter {
     canvas.save();
     canvas.scale(size.width / w, size.height / h);
     canvas.clipRect(const Rect.fromLTWH(0, 0, w, h));
-    final p = Paint()..color = Kanagawa.sumiInk0;
+    final p = Paint()..color = matrixDark;
     canvas.drawRect(const Rect.fromLTWH(0, 0, w, h), p);
-    for (var i = 0; i < 26; i++) {
-      final tw = .5 + .5 * math.sin(tick * .07 + i * 1.3);
-      p.color = Kanagawa.fujiWhite.withAlpha((90 * tw).round());
-      canvas.drawRect(
-          Rect.fromLTWH(((i * 47 + 5) % w).floorToDouble(), ((i * 31 + i * i) % (h - 12)).floorToDouble(), 1, 1), p);
-    }
-    p.color = Kanagawa.sumiInk5;
+    paintRain(canvas, const Rect.fromLTWH(0, 0, w, h - 4), tick, density: .35, cell: 4, alpha: 110);
+    p.color = const Color(0xFF07140A);
     canvas.drawRect(const Rect.fromLTWH(0, h - 4, w, 4), p);
+    p.color = matrixGreen.withAlpha(160);
+    canvas.drawRect(const Rect.fromLTWH(0, h - 4, w, 1), p);
     final bob = (tick ~/ 20) % 2 == 0 ? 0.0 : -1.0;
     final o = _CharacterViewState.origin.translate(0, bob);
     final box = figureBox(o, sc);

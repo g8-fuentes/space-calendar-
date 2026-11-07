@@ -90,16 +90,16 @@ class _FlamePainter extends CustomPainter {
       // fumaça subindo da lenha apagada
       for (var i = 0; i < 4; i++) {
         final y = base - ((tick ~/ 2 + i * 4) % 14);
-        cell(9 + (i.isEven ? 0 : 1) + ((y ~/ 3) % 2), y, Kanagawa.fujiGray.withAlpha(120 - (base - y) * 7));
+        cell(9 + (i.isEven ? 0 : 1) + ((y ~/ 3) % 2), y, Px.fujiGray.withAlpha(120 - (base - y) * 7));
       }
       return;
     }
     final height = 3 + level * (_h - 7);
     final half = 2.5 + level * 6.5;
     final layers = [
-      (1.0, Kanagawa.autumnRed),
-      (.8, Kanagawa.surimiOrange),
-      (.55, Kanagawa.carpYellow),
+      (1.0, Px.autumnRed),
+      (.8, Px.surimiOrange),
+      (.55, Px.carpYellow),
       if (level > .6) (.3, const Color(0xFFFFF4D6)),
     ];
     for (final (k, color) in layers) {
@@ -118,8 +118,7 @@ class _FlamePainter extends CustomPainter {
     for (var i = 0; i < sparks; i++) {
       final life = (tick + i * 7) % 18;
       final x = 10 + ((i * 5) % 9) - 4 + (life ~/ 6) * (i.isEven ? 1 : -1);
-      cell(x, base - height - life * .6,
-          (i.isEven ? Kanagawa.carpYellow : Kanagawa.surimiOrange).withAlpha(255 - life * 12));
+      cell(x, base - height - life * .6, (i.isEven ? Px.carpYellow : Px.surimiOrange).withAlpha(255 - life * 12));
     }
   }
 

@@ -7,7 +7,10 @@ import '../../domain/catalog/places.dart';
 /// Grade de pixels: null = transparente.
 typedef PixelGrid = List<List<Color?>>;
 
-const _ink = Kanagawa.sumiInk0;
+const _ink = Px.sumiInk0;
+
+/// Verde do terminal e o preto do fundo.
+const matrixGreen = Color(0xFF3CFF6B), matrixDark = Color(0xFF050805);
 
 PixelGrid outlined(PixelGrid g) {
   final h = g.length, w = g.first.length;
@@ -42,502 +45,189 @@ void _rect(Canvas canvas, Paint p, double x, double y, double w, double h, Color
   canvas.drawRect(Rect.fromLTWH(x.roundToDouble(), y.roundToDouble(), w.roundToDouble(), h.roundToDouble()), p);
 }
 
-/// Triângulo em degraus de pixel, com base em [baseY].
-void _tri(Canvas canvas, Paint p, double cx, double baseY, double baseW, double h, Color c) {
-  for (var i = 0; i < h; i++) {
-    final w = math.max(1.0, baseW * (1 - i / h));
-    _rect(canvas, p, cx - w / 2, baseY - i - 1, w, 1, c);
-  }
+int _hash(int n) {
+  var h = n * 2654435761 & 0xFFFFFFFF;
+  h ^= h >> 15;
+  h = h * 2246822519 & 0xFFFFFFFF;
+  return h ^ (h >> 13);
 }
 
-/// Planeta, lua ou estrela desenhado em linhas de pixel.
-void paintBody(Canvas canvas, Place d, Offset center, double radius, int tick) {
-  final paint = Paint();
-  final colors = d.colors.map(Color.new).toList();
-  final c2 = colors.length > 1 ? colors[1] : colors[0];
-  final seed = placeHash(d.index + 7);
-  final cx = center.dx, cy = center.dy;
-  final r = radius.roundToDouble();
-
-  void rect(double x, double y, double w, double h, Color c) => _rect(canvas, paint, x, y, w, h, c);
-
-  final ringH = math.max(1.0, (r * 0.24).roundToDouble());
-  if (d.kind == PlaceKind.ring) rect(cx - r * 1.7, cy - ringH / 2, r * 3.4, ringH, c2);
-  if (d.kind == PlaceKind.star) {
-    paint.color = c2.withAlpha(50);
-    canvas.drawCircle(center, r * 1.8, paint);
-    paint.color = colors[0].withAlpha(70);
-    canvas.drawCircle(center, r * 1.35, paint);
-    for (var i = 0; i < 8; i++) {
-      final a = i * math.pi / 4 + tick * .004;
-      final len = r * (i.isEven ? .9 : .55) * (1 + .08 * math.sin(tick * .1 + i));
-      for (var k = 0.0; k < len; k += 1) {
-        rect(cx + math.cos(a) * (r + 2 + k), cy + math.sin(a) * (r + 2 + k), 1, 1,
-            colors[0].withAlpha((200 * (1 - k / len)).round()));
+/// Chuva de código da Matrix em [area]: colunas de caracteres verdes caindo,
+/// com a cabeça mais clara. [density] vai de 0 a 1.
+void paintRain(Canvas canvas, Rect area, int tick, {double density = .6, double cell = 5, int alpha = 255}) {
+  final p = Paint();
+  final cols = (area.width / cell).floor();
+  final rows = (area.height / (cell + 1)).ceil() + 1;
+  for (var c = 0; c < cols; c++) {
+    final h = _hash(c + 17);
+    if ((h % 100) / 100 > density) continue;
+    final speed = .12 + (h >> 8) % 7 * .04;
+    final len = 6 + (h >> 4) % 10;
+    final head = ((tick * speed + (h >> 12) % 60) % (rows + len)).floor();
+    for (var k = 0; k < len; k++) {
+      final row = head - k;
+      if (row < 0 || row >= rows) continue;
+      final fade = 1 - k / len;
+      final color = k == 0 ? const Color(0xFFD8FFE0) : matrixGreen;
+      final a = (alpha * (k == 0 ? 1 : fade * .75)).round().clamp(0, 255);
+      // um "caractere" de 3x4 pixels, trocando de vez em quando
+      final glyph = _hash(c * 131 + row * 7 + (tick ~/ (12 + k)) * (k == 0 ? 1 : 0));
+      final x0 = area.left + c * cell, y0 = area.top + row * (cell + 1);
+      for (var b = 0; b < 12; b++) {
+        if ((glyph >> b) & 1 == 0) continue;
+        _rect(canvas, p, x0 + b % 3 * (cell / 4), y0 + b ~/ 3 * (cell / 4), math.max(1, cell / 4),
+            math.max(1, cell / 4), color.withAlpha(a));
       }
     }
   }
-  for (var yy = -r; yy <= r; yy++) {
-    final hw = math.sqrt(math.max(0, r * r - yy * yy)).floorToDouble();
-    if (hw <= 0) continue;
-    var c = colors[0];
-    final yi = yy.toInt();
-    if (d.kind == PlaceKind.gas) {
-      c = colors[((yy + r) ~/ math.max(2, r / 5)) % colors.length];
-    } else if (d.kind == PlaceKind.earth && (yi * 7 + seed) % 9 < 3) {
-      c = c2;
-    } else if (d.kind == PlaceKind.rocky && (yi + seed) % 6 == 0) {
-      c = c2;
-    } else if (d.kind == PlaceKind.star && yy.abs() < r * .5 && (yi + tick ~/ 6) % 5 == 0) {
-      c = c2;
-    }
-    rect(cx - hw, cy + yy, hw * 2, 1, c);
-  }
-  if (d.kind == PlaceKind.earth) {
-    // nuvens
-    for (var n = 0; n < 5; n++) {
-      final y = cy - r * .7 + n * r * .33;
-      final w = r * (.3 + ((seed >> n) % 40) / 100);
-      final x = cx - r + ((seed >> (n * 3)) % 100) / 100 * r * 1.4 + tick * .02 % r;
-      final hw = math.sqrt(math.max(0, r * r - (y - cy) * (y - cy)));
-      final x0 = math.max(cx - hw, x), x1 = math.min(cx + hw, x + w);
-      if (x1 > x0) rect(x0, y, x1 - x0, math.max(1, r / 14), Kanagawa.fujiWhite.withAlpha(200));
-    }
-  }
-  if (d.kind == PlaceKind.moon || d.kind == PlaceKind.rocky) {
-    final s = math.max(1.0, (r / 6).roundToDouble());
-    for (var n = 0; n < 7; n++) {
-      final a = ((seed >> (n * 3)) % 628) / 100;
-      final rr = r * (((seed >> (n * 2)) % 70) / 100);
-      rect(cx + math.cos(a) * rr, cy + math.sin(a) * rr, s, s, c2);
-    }
-  }
-  if (d.kind == PlaceKind.ring) {
-    rect(cx - r * 1.7, cy - ringH / 2, r * 0.9, ringH, c2);
-    rect(cx + r * 0.8, cy - ringH / 2, r * 0.9, ringH, c2);
-  }
-  if (d.kind != PlaceKind.star) {
-    paint.color = const Color(0x5916161D);
-    for (var yy = -r; yy <= r; yy++) {
-      final hw = math.sqrt(math.max(0, r * r - yy * yy)).floorToDouble();
-      if (hw > 0) canvas.drawRect(Rect.fromLTWH((cx + hw * 0.35).roundToDouble(), cy + yy, hw * 0.65, 1), paint);
-    }
-  }
 }
 
-/// Cinturão: um asteroide grande (como Ceres) e pedras girando em volta.
-void paintBelt(Canvas canvas, Place d, Offset center, double radius, int tick) {
+/// Chão em grade verde, em perspectiva, de [top] até o fim de [area].
+void paintGridFloor(Canvas canvas, Rect area, double top, int tick) {
   final p = Paint();
-  final colors = d.colors.map(Color.new).toList();
-  final seed = placeHash(d.index + 3);
-  final r = math.Random(seed);
-  for (var i = 0; i < 46; i++) {
-    final a = r.nextDouble() * math.pi * 2 + tick * (.002 + (i % 3) * .001);
-    final dist = radius * (1.3 + r.nextDouble() * 1.9);
-    final x = center.dx + math.cos(a) * dist * 1.6, y = center.dy + math.sin(a) * dist * .45;
-    final s = (1 + r.nextInt(3) + (i % 7 == 0 ? 2 : 0)).toDouble();
-    _rect(canvas, p, x, y, s, s, colors[i % colors.length]);
-    if (s > 2) _rect(canvas, p, x + s * .5, y + s * .5, s * .5, s * .5, const Color(0x5916161D));
+  _rect(canvas, p, area.left, top, area.width, area.bottom - top, const Color(0xFF07140A));
+  final lines = Paint()
+    ..color = matrixGreen.withAlpha(90)
+    ..strokeWidth = 1;
+  final cx = area.center.dx;
+  for (var i = -8; i <= 8; i++) {
+    canvas.drawLine(Offset(cx + i * 6, top), Offset(cx + i * 30, area.bottom), lines);
   }
-  paintBody(
-      canvas,
-      Place(
-          index: d.index,
-          name: d.name,
-          stage: d.stage,
-          region: d.region,
-          kind: PlaceKind.moon,
-          colors: d.colors,
-          fact: ''),
-      center,
-      radius,
-      tick);
+  for (var k = 0; k < 4; k++) {
+    final y = top + (area.bottom - top) * math.pow((k + (tick % 30) / 30) / 4, 1.6);
+    canvas.drawLine(Offset(area.left, y), Offset(area.right, y), lines);
+  }
+  _rect(canvas, p, area.left, top, area.width, 1, matrixGreen.withAlpha(180));
 }
 
-/// Nebulosa: nuvens de gás coloridas com estrelas nascendo dentro.
-void paintNebula(Canvas canvas, Place d, Rect area, int tick, {double alpha = 1}) {
+/// O que fica atrás do dev em cada destino, centralizado em [cx] e apoiado
+/// em [baseY], com tamanho [u].
+void paintPlaceObject(Canvas canvas, Place place, double cx, double baseY, double u, int tick) {
   final p = Paint();
-  final colors = d.colors.map(Color.new).toList();
-  final r = math.Random(placeHash(d.index + 11));
-  final u = area.shortestSide;
-  for (var i = 0; i < 16; i++) {
-    final o = Offset(area.left + r.nextDouble() * area.width, area.top + (.15 + r.nextDouble() * .75) * area.height);
-    final rad = u * (.12 + r.nextDouble() * .22) * (1 + .04 * math.sin(tick * .02 + i));
-    p.color = colors[i % colors.length].withAlpha((34 * alpha).round());
-    canvas.drawCircle(o, rad, p);
-  }
-  // Pilares da Criação: três colunas de gás
-  for (var i = 0; i < (d.name.startsWith('Pilares') ? 3 : 0); i++) {
-    final x = area.left + area.width * (.25 + i * .25), top = area.top + area.height * (.25 + (i % 2) * .15);
-    p.color = colors[(i + 1) % colors.length].withAlpha((40 * alpha).round());
-    canvas.drawRect(Rect.fromLTWH(x - u * .05, top, u * .1, area.bottom - top), p);
-  }
-  for (var i = 0; i < 12; i++) {
-    final o = Offset(area.left + r.nextDouble() * area.width, area.top + r.nextDouble() * area.height);
-    final tw = .6 + .4 * math.sin(tick * .09 + i * 2.1);
-    final s = math.max(1.0, u / 70) * (i % 4 == 0 ? 2 : 1);
-    p.color = Kanagawa.fujiWhite.withAlpha((255 * tw * alpha).round());
-    canvas.drawRect(Rect.fromCenter(center: o, width: s, height: s), p);
-    if (i % 4 == 0) {
-      p.color = colors[i % colors.length].withAlpha((120 * tw * alpha).round());
-      canvas.drawRect(Rect.fromCenter(center: o, width: s * 3, height: s / 2), p);
-      canvas.drawRect(Rect.fromCenter(center: o, width: s / 2, height: s * 3), p);
-    }
-  }
-}
-
-/// Buraco negro com o disco de gás girando em volta.
-void paintBlackHole(Canvas canvas, Place d, Offset c, double radius, int tick) {
-  final p = Paint();
-  final hot = Color(d.colors.first), warm = Color(d.colors.last);
-  p.color = hot.withAlpha(30);
-  canvas.drawCircle(c, radius * 2.2, p);
-  // metade de trás do disco
-  for (var k = 0; k < 2; k++) {
-    for (var i = 0; i < 64; i++) {
-      final a = i / 64 * math.pi * 2 + tick * .03;
-      final back = math.sin(a) < 0;
-      if (back != (k == 0)) continue;
-      final rr = radius * (1.5 + (i % 4) * .25);
-      final x = c.dx + math.cos(a) * rr * 1.5, y = c.dy + math.sin(a) * rr * .32;
-      _rect(canvas, p, x, y, 2, 1,
-          (i % 3 == 0 ? Kanagawa.fujiWhite : (i.isEven ? hot : warm)).withAlpha(back ? 150 : 255));
-    }
-    if (k == 0) {
-      p.color = warm;
-      canvas.drawCircle(c, radius + 1.5, p);
-      p.color = const Color(0xFF050508);
-      canvas.drawCircle(c, radius, p);
-    }
-  }
-}
-
-/// Galáxia espiral, com dois braços girando devagar.
-void paintGalaxy(Canvas canvas, Place d, Offset c, double radius, int tick) {
-  final p = Paint();
-  final arm = Color(d.colors.first), dust = Color(d.colors.last);
-  p.color = arm.withAlpha(26);
-  canvas.drawOval(Rect.fromCenter(center: c, width: radius * 2.4, height: radius * 1.1), p);
-  final spin = tick * .004;
-  for (var armI = 0; armI < 2; armI++) {
-    for (var i = 0; i < 70; i++) {
-      final t = i / 70;
-      final a = spin + armI * math.pi + t * math.pi * 2.6;
-      final rr = radius * (.12 + t);
-      final jitter = ((i * 37 + armI * 11) % 7 - 3) * .6;
-      final x = c.dx + math.cos(a) * rr + jitter, y = c.dy + math.sin(a) * rr * .45 + jitter * .4;
-      final col = i % 5 == 0 ? Kanagawa.fujiWhite : (i.isEven ? arm : dust);
-      _rect(canvas, p, x, y, t < .4 ? 2 : 1, 1, col.withAlpha((255 * (1 - t * .6)).round()));
-    }
-  }
-  p.color = Kanagawa.fujiWhite.withAlpha(90);
-  canvas.drawOval(Rect.fromCenter(center: c, width: radius * .7, height: radius * .32), p);
-  p.color = const Color(0xFFFFF1C4);
-  canvas.drawOval(Rect.fromCenter(center: c, width: radius * .32, height: radius * .16), p);
-}
-
-/// Prédios da cidade (fundo e frente) e o monumento, apoiados em [groundY].
-/// [night] acende as janelas.
-void paintSkyline(Canvas canvas, Place city, double groundY, double width,
-    {required double night, double unit = 1, double? landmarkUnit}) {
-  final p = Paint();
-  final seed = placeHash(city.index + 101);
-  final r = math.Random(seed);
-  final accent = Color(city.colors.first);
-  final back = Color.lerp(const Color(0xFF3B4A63), Kanagawa.sumiInk5, night)!;
-  final front = Color.lerp(const Color(0xFF2A3346), Kanagawa.sumiInk4, night)!;
-  // fundo
-  var x = 0.0;
-  while (x < width) {
-    final w = (8 + r.nextInt(14)) * unit, h = (14 + r.nextInt(26)) * unit;
-    _rect(canvas, p, x, groundY - h, w, h, back);
-    x += w + r.nextInt(3) * unit;
-  }
-  paintLandmark(canvas, city.landmark, width * .72, groundY, landmarkUnit ?? unit, accent);
-  // frente, deixando o centro livre para o astronauta e o monumento
-  x = 0;
-  while (x < width) {
-    final w = (10 + r.nextInt(12)) * unit, h = (8 + r.nextInt(16)) * unit;
-    final skip = (x > width * .58 && x < width * .86);
-    if (!skip) {
-      _rect(canvas, p, x, groundY - h, w, h, front);
-      for (var wy = groundY - h + 3 * unit; wy < groundY - 3 * unit; wy += 4 * unit) {
-        for (var wx = x + 2 * unit; wx < x + w - 2 * unit; wx += 4 * unit) {
-          final lit = night > .5 && r.nextInt(3) > 0;
-          _rect(
-              canvas,
-              p,
-              wx,
-              wy,
-              2 * unit,
-              2 * unit,
-              lit
-                  ? Kanagawa.carpYellow.withAlpha(220)
-                  : Color.lerp(const Color(0xFF7FB4CA), Kanagawa.sumiInk6, night)!.withAlpha(140));
-        }
-      }
-    }
-    x += w + (1 + r.nextInt(3)) * unit;
-  }
-}
-
-/// Monumento de cada cidade, centralizado em [cx] e apoiado em [baseY].
-void paintLandmark(Canvas canvas, Landmark l, double cx, double baseY, double u, Color accent) {
-  final p = Paint();
+  final accent = Color(place.color);
   void rect(double x, double y, double w, double h, Color c) =>
-      _rect(canvas, p, cx + x * u, baseY + y * u, w * u, h * u, c);
-  void tri(double x, double baseW, double h, Color c, [double y = 0]) =>
-      _tri(canvas, p, cx + x * u, baseY + y * u, baseW * u, h * u, c);
-  const stone = Color(0xFFC8C093), dark = Kanagawa.sumiInk3;
-  final glass = Kanagawa.lightBlue.withAlpha(170);
-  void windows(double x0, double y0, double cols, double rows, Color c) {
-    for (var j = 0; j < rows; j++) {
-      for (var i = 0; i < cols; i++) {
-        rect(x0 + i * 5, y0 + j * 6, 3, 3, c);
+      _rect(canvas, p, cx + x * u, baseY + y * u, math.max(1, w * u), math.max(1, h * u), c);
+  final blink = (tick ~/ 8).isEven;
+  switch (place.kind) {
+    case PlaceKind.laptop:
+      rect(-26, -4, 52, 4, const Color(0xFF3A3F4A));
+      rect(-16, -28, 32, 22, const Color(0xFF9A9AA6));
+      rect(-14, -26, 28, 18, matrixDark);
+      for (var i = 0; i < 5; i++) {
+        final w = 6.0 + _hash(i + (tick ~/ 20)) % 16;
+        rect(-12, -24 + i * 3.4, w, 1.5, i == 4 && blink ? matrixDark : accent);
       }
-    }
-  }
-
-  switch (l) {
-    case Landmark.none:
-      break;
-    case Landmark.gym:
-      rect(-20, -24, 40, 24, const Color(0xFF54546D));
-      rect(-16, -18, 32, 10, glass);
-      rect(-3, -8, 6, 8, dark);
-      rect(-15, -34, 30, 9, accent);
-      rect(-8, -30, 16, 2, Kanagawa.fujiWhite);
-      rect(-11, -32, 3, 6, Kanagawa.fujiWhite);
-      rect(8, -32, 3, 6, Kanagawa.fujiWhite);
-    case Landmark.hospital:
-      rect(-18, -42, 36, 42, const Color(0xFFE4DFC6));
-      windows(-15, -30, 7, 4, glass);
-      rect(-4, -8, 8, 8, Kanagawa.lightBlue);
-      rect(-2, -40, 4, 10, Kanagawa.autumnRed);
-      rect(-5, -37, 10, 4, Kanagawa.autumnRed);
-    case Landmark.school:
-      rect(-22, -22, 44, 22, const Color(0xFFC88A6E));
-      tri(0, 50, 12, const Color(0xFF8C3A3A), -22);
-      windows(-19, -18, 3, 2, glass);
-      windows(7, -18, 3, 2, glass);
-      rect(-3, -10, 6, 10, dark);
-      rect(16, -48, 1, 18, Kanagawa.fujiGray);
-      rect(17, -48, 8, 5, Kanagawa.springGreen);
-      rect(20, -47, 2, 2, Kanagawa.carpYellow);
-    case Landmark.techTower:
-      rect(-10, -58, 20, 58, const Color(0xFF7FB4CA));
-      for (var y = -56; y < -2; y += 5) {
-        rect(-10, y.toDouble(), 20, 1, const Color(0xFF2D4F67));
+      rect(-20, -6, 40, 2, const Color(0xFFB8B8C4));
+    case PlaceKind.server:
+      for (final x in [-24.0, 4.0]) {
+        rect(x, -54, 20, 54, const Color(0xFF2A2F38));
+        for (var y = -50; y < -2; y += 6) {
+          rect(x + 2, y.toDouble(), 16, 4, const Color(0xFF3A3F4A));
+          final on = _hash(x.toInt() * 31 + y + tick ~/ 6) % 3;
+          rect(x + 3, y + 1.0, 2, 2, on == 0 ? Px.surimiOrange : accent);
+          rect(x + 7, y + 1.0, 2, 2, on == 1 ? matrixDark : accent);
+        }
       }
-      rect(-1, -58, 2, 8, Kanagawa.fujiWhite);
-      rect(-6, -48, 12, 6, accent);
-      rect(16, -26, 14, 26, const Color(0xFF8FA3BF));
-      windows(18, -22, 2, 3, glass);
-    case Landmark.restaurant:
-      rect(-20, -20, 40, 20, const Color(0xFFE4DFC6));
-      for (var i = 0; i < 11; i++) {
-        rect(-22.0 + i * 4, -24, 4, 4, i.isEven ? Kanagawa.autumnRed : Kanagawa.fujiWhite);
+    case PlaceKind.cloud:
+      p.color = accent.withAlpha(60);
+      for (final (x, y, r) in [(-14.0, -40.0, 12.0), (0.0, -46.0, 15.0), (14.0, -40.0, 11.0), (0.0, -34.0, 16.0)]) {
+        canvas.drawCircle(Offset(cx + x * u, baseY + y * u), r * u, p);
       }
-      rect(-16, -16, 12, 9, glass);
-      rect(4, -16, 12, 9, glass);
-      rect(-3, -10, 6, 10, dark);
-      rect(-9, -32, 18, 7, accent);
-      rect(12, -36, 4, 12, Kanagawa.fujiGray);
-      rect(13, -40, 2, 2, Kanagawa.fujiWhite.withAlpha(150));
-    case Landmark.stage:
-      rect(-28, -8, 56, 8, dark);
-      rect(-28, -46, 2, 38, Kanagawa.fujiGray);
-      rect(26, -46, 2, 38, Kanagawa.fujiGray);
-      rect(-28, -48, 56, 3, Kanagawa.fujiGray);
+      for (var i = 0; i < 5; i++) {
+        final x = -16.0 + i * 8;
+        final y = -24.0 + ((tick * .6 + i * 7) % 20);
+        rect(x, y, 1.5, 3, i.isEven ? accent : Px.fujiWhite);
+      }
+    case PlaceKind.network:
+      final c = Offset(cx, baseY - 32 * u), r = 22 * u;
+      final stroke = Paint()
+        ..color = accent
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = math.max(1, u);
+      canvas.drawCircle(c, r, stroke);
+      for (var k = 1; k < 4; k++) {
+        final w = r * 2 * math.cos(k * math.pi / 8 + tick * .02).abs();
+        canvas.drawOval(Rect.fromCenter(center: c, width: w, height: r * 2), stroke);
+      }
+      canvas.drawLine(c.translate(-r, 0), c.translate(r, 0), stroke);
       for (var i = 0; i < 6; i++) {
-        rect(-22.0 + i * 9, -45, 4, 3, [Kanagawa.carpYellow, Kanagawa.sakuraPink, Kanagawa.springBlue][i % 3]);
+        final a = i * math.pi / 3 + tick * .03;
+        p.color = i == tick ~/ 10 % 6 ? Px.fujiWhite : accent;
+        canvas.drawRect(
+            Rect.fromCenter(center: c + Offset(math.cos(a) * r, math.sin(a) * r * .5), width: 3 * u, height: 3 * u), p);
       }
-      rect(-25, -22, 7, 14, Kanagawa.sumiInk0);
-      rect(18, -22, 7, 14, Kanagawa.sumiInk0);
-      rect(-23, -18, 3, 3, Kanagawa.sumiInk6);
-      rect(20, -18, 3, 3, Kanagawa.sumiInk6);
-      rect(-1, -20, 1, 12, Kanagawa.fujiGray);
-    case Landmark.fireStation:
-      rect(-22, -28, 44, 28, Kanagawa.autumnRed);
-      rect(-22, -30, 44, 2, Kanagawa.fujiWhite);
-      for (final x in [-18.0, 2.0]) {
-        rect(x, -18, 16, 18, Kanagawa.fujiWhite);
-        for (var y = -16; y < 0; y += 4) {
-          rect(x, y.toDouble(), 16, 1, Kanagawa.oldWhite);
-        }
+    case PlaceKind.mainframe:
+      rect(-30, -44, 60, 44, const Color(0xFFB8B4A0));
+      rect(-28, -42, 56, 4, const Color(0xFF3A3F4A));
+      for (final x in [-16.0, 6.0]) {
+        p.color = const Color(0xFF2A2F38);
+        canvas.drawCircle(Offset(cx + x * u + 5 * u, baseY - 26 * u), 8 * u, p);
+        p.color = const Color(0xFF9A9AA6);
+        canvas.drawCircle(Offset(cx + x * u + 5 * u, baseY - 26 * u), 3 * u, p);
+        final a = tick * .15;
+        rect(x + 5 + math.cos(a) * 6, -26 + math.sin(a) * 6, 1.5, 1.5, Px.fujiWhite);
       }
-      rect(12, -48, 10, 18, Kanagawa.autumnRed);
-      rect(14, -44, 6, 4, glass);
-      rect(-3, -27, 6, 6, Kanagawa.carpYellow);
-    case Landmark.stadium:
-      rect(-30, -16, 60, 16, const Color(0xFF7E8BA3));
-      rect(-32, -18, 64, 2, Kanagawa.fujiWhite);
       for (var i = 0; i < 10; i++) {
-        rect(-28.0 + i * 6, -13, 3, 9, const Color(0xFF54546D));
+        rect(-26.0 + i * 5, -10, 3, 3, _hash(i + tick ~/ 5) % 2 == 0 ? accent : Px.autumnRed);
       }
-      for (final x in [-30.0, 28.0]) {
-        rect(x, -44, 2, 26, Kanagawa.fujiGray);
-        rect(x - 3, -47, 8, 4, Kanagawa.carpYellow);
+    case PlaceKind.core:
+      final pulse = 1 + .12 * math.sin(tick * .12);
+      final c = Offset(cx, baseY - 32 * u);
+      for (var k = 3; k > 0; k--) {
+        p.color = accent.withAlpha(40 * k);
+        canvas.drawCircle(c, (8 + k * 6) * u * pulse, p);
       }
-    case Landmark.trees:
-      for (final (x, h, w) in [(-24.0, 18.0, 16.0), (-6.0, 26.0, 20.0), (14.0, 20.0, 18.0), (28.0, 14.0, 12.0)]) {
-        rect(x - 1, -h * .5, 3, h * .5, const Color(0xFF6A4A2E));
-        p.color = const Color(0xFF4F6F3E);
-        canvas.drawCircle(Offset(cx + x * u, baseY - h * .75 * u), w * .5 * u, p);
-        p.color = const Color(0xFF6A9A4E);
-        canvas.drawCircle(Offset(cx + (x - w * .15) * u, baseY - h * .85 * u), w * .28 * u, p);
-      }
-    case Landmark.mountain:
-      tri(0, 96, 54, const Color(0xFF6E7380));
-      tri(22, 60, 32, const Color(0xFF5A5E6B));
-      tri(0, 24, 14, Kanagawa.fujiWhite, -40);
-    case Landmark.obelisk:
-      rect(-2, -38, 4, 38, stone);
-      tri(0, 4, 4, stone, -38);
-      rect(-4, -2, 8, 2, Kanagawa.fujiGray);
-    case Landmark.cityTower:
-      rect(-6, -40, 12, 40, const Color(0xFF7E8BA3));
-      rect(-4, -46, 8, 6, const Color(0xFF7E8BA3));
-      rect(-1, -58, 2, 12, Kanagawa.fujiGray);
-      rect(-1, -59, 2, 1, Kanagawa.autumnRed);
-      for (var y = -38; y < -2; y += 4) {
-        rect(-4, y.toDouble(), 8, 1, dark);
-      }
-    case Landmark.christ:
-      tri(0, 70, 26, const Color(0xFF4F6F3E));
-      tri(0, 40, 18, const Color(0xFF5E8049));
-      rect(-1, -36, 2, 10, stone);
-      rect(-7, -33, 14, 2, stone);
-      rect(-1, -38, 2, 2, stone);
-    case Landmark.needle:
-      rect(-7, -24, 14, 24, const Color(0xFF8FA3BF));
-      rect(-5, -40, 10, 16, const Color(0xFF8FA3BF));
-      rect(-3, -54, 6, 14, const Color(0xFFA3B6CF));
-      rect(-1, -66, 2, 12, Kanagawa.fujiWhite);
-      for (var y = -52; y < 0; y += 5) {
-        rect(-1, y.toDouble(), 2, 1, Kanagawa.lightBlue);
-      }
-    case Landmark.ironTower:
-      for (var i = 0; i < 52; i++) {
-        final w = 24 * math.pow(1 - i / 52, 1.6).toDouble() + 2;
-        final y = -i - 1.0;
-        rect(-w / 2, y, 2, 1, accent);
-        rect(w / 2 - 2, y, 2, 1, accent);
-        if (i == 14 || i == 30) rect(-w / 2, y, w, 2, accent);
-      }
-      rect(-.5, -58, 1, 6, accent);
-    case Landmark.clockTower:
-      rect(-5, -44, 10, 44, stone);
-      rect(-6, -36, 12, 10, const Color(0xFFB9A774));
-      p.color = Kanagawa.fujiWhite;
-      canvas.drawCircle(Offset(cx, baseY - 31 * u), 3.5 * u, p);
-      rect(-.5, -34, 1, 3, dark);
-      rect(-.5, -31.5, 2.5, 1, dark);
-      tri(0, 10, 12, const Color(0xFF54546D), -44);
-    case Landmark.coliseum:
-      rect(-24, -20, 48, 20, stone);
-      rect(-24, -22, 30, 2, stone);
-      for (var row = 0; row < 3; row++) {
-        for (var i = 0; i < 8; i++) {
-          rect(-22.0 + i * 6, -18.0 + row * 6, 3, 4, const Color(0xFF8C7A53));
-        }
-      }
-    case Landmark.pyramids:
-      tri(-12, 46, 30, const Color(0xFFE6C384));
-      tri(-12, 46, 30, const Color(0x33C0A36E));
-      tri(18, 30, 19, const Color(0xFFD4B472));
-      rect(-12, -30, 1, 1, Kanagawa.fujiWhite);
-    case Landmark.onionDome:
-      for (final (x, h, c) in [
-        (-12.0, 28.0, Kanagawa.autumnRed),
-        (0.0, 38.0, Kanagawa.springGreen),
-        (12.0, 26.0, Kanagawa.crystalBlue)
-      ]) {
-        rect(x - 4, -h, 8, h, const Color(0xFFC88A6E));
-        p.color = c;
-        canvas.drawCircle(Offset(cx + x * u, baseY - (h + 4) * u), 5.5 * u, p);
-        rect(x - .5, -h - 14, 1, 5, Kanagawa.carpYellow);
-      }
-    case Landmark.pagoda:
+      final d = 10 * u * pulse;
+      p.color = accent;
+      canvas.drawPath(
+          Path()
+            ..moveTo(c.dx, c.dy - d)
+            ..lineTo(c.dx + d, c.dy)
+            ..lineTo(c.dx, c.dy + d)
+            ..lineTo(c.dx - d, c.dy)
+            ..close(),
+          p);
+      p.color = Px.fujiWhite;
+      canvas.drawRect(Rect.fromCenter(center: c, width: 3 * u, height: 3 * u), p);
+    case PlaceKind.matrix:
+      // falhas na simulação: faixas que piscam
       for (var i = 0; i < 4; i++) {
-        final w = 34.0 - i * 7, y = -8.0 - i * 10;
-        rect(-w / 2 + 3, y, w - 6, 8, Kanagawa.autumnRed);
-        rect(-w / 2, y - 2, w, 2, const Color(0xFF3F5F4A));
-        rect(-w / 2 - 1, y - 3, 2, 1, const Color(0xFF3F5F4A));
-        rect(w / 2 - 1, y - 3, 2, 1, const Color(0xFF3F5F4A));
-      }
-      rect(-.5, -54, 1, 6, Kanagawa.carpYellow);
-    case Landmark.dome:
-      rect(-16, -14, 32, 14, Kanagawa.fujiWhite);
-      p.color = Kanagawa.fujiWhite;
-      canvas.drawCircle(Offset(cx, baseY - 20 * u), 9 * u, p);
-      rect(-.5, -34, 1, 5, Kanagawa.carpYellow);
-      for (final x in [-20.0, 19.0]) {
-        rect(x, -30, 2, 30, Kanagawa.fujiWhite);
-      }
-      rect(-3, -10, 6, 10, const Color(0xFF8C7A53));
-    case Landmark.opera:
-      rect(-26, -4, 52, 4, stone);
-      for (final (x, w, h) in [(-16.0, 16.0, 18.0), (-4.0, 18.0, 24.0), (9.0, 16.0, 20.0), (19.0, 12.0, 14.0)]) {
-        for (var i = 0; i < h; i++) {
-          final wi = w * (1 - i / h);
-          rect(x - wi / 2 + (i / h) * w * .35, -4 - i - 1.0, wi, 1,
-              i.isEven ? Kanagawa.fujiWhite : const Color(0xFFE4DFC6));
-        }
+        final h = _hash(i + tick ~/ 6);
+        if (h % 3 != 0) continue;
+        rect(-40.0 + h % 50, -60.0 + (h >> 6) % 56, 20.0 + (h >> 3) % 30, 2, accent.withAlpha(140));
       }
   }
-}
-
-/// Foguete decolando (tela de carregamento), num quadro 160x90.
-void paintLaunch(Canvas canvas, double progress, int tick) {
-  final p = Paint()..color = _ink;
-  canvas.drawRect(const Rect.fromLTWH(0, 0, 160, 90), p);
-  for (var i = 0; i < 40; i++) {
-    p.color = i % 4 == 0 ? Kanagawa.carpYellow : Kanagawa.fujiWhite;
-    final y = ((i * 23) + progress * 400 * (1 + i % 3)) % 90;
-    canvas.drawRect(Rect.fromLTWH(((i * 37) % 160).toDouble(), y, 1, i % 5 == 0 ? 3 : 1), p);
-  }
-  final ry = 70 - progress * 30 + math.sin(progress * 40);
-  void r(double a, double b, double w, double h, Color c) {
-    p.color = c;
-    canvas.drawRect(Rect.fromLTWH(74 + a, ry + b, w, h), p);
-  }
-
-  r(2, -16, 8, 22, _ink);
-  r(3, -15, 6, 20, Kanagawa.fujiWhite);
-  r(4, -19, 4, 4, Kanagawa.autumnRed);
-  r(4, -8, 4, 4, Kanagawa.waveBlue1);
-  r(5, -7, 2, 2, Kanagawa.springBlue);
-  r(-1, 0, 4, 7, Kanagawa.autumnRed);
-  r(9, 0, 4, 7, Kanagawa.autumnRed);
-  final fl = 6.0 + (tick % 5);
-  r(4, 6, 4, fl, Kanagawa.surimiOrange);
-  r(5, 6, 2, fl - 2, Kanagawa.carpYellow);
 }
 
 /// Miniatura de um lugar num quadro [size] (mapa e avisos).
 void paintPlaceThumb(Canvas canvas, Place d, Size size, int tick) {
-  final p = Paint()..color = d.onEarth ? const Color(0xFF2D4F67) : _ink;
-  canvas.drawRect(Offset.zero & size, p);
+  final p = Paint()..color = matrixDark;
+  final area = Offset.zero & size;
+  canvas.drawRect(area, p);
   canvas.save();
-  canvas.clipRect(Offset.zero & size);
-  final c = size.center(Offset.zero), u = size.shortestSide;
-  switch (d.kind) {
-    case PlaceKind.home || PlaceKind.city:
-      final h = size.height / 70;
-      paintSkyline(canvas, d, size.height - 4 * h, size.width, night: 0, unit: h);
-      p.color = const Color(0xFF3A3A44);
-      canvas.drawRect(Rect.fromLTWH(0, size.height - 4 * h, size.width, 4 * h), p);
-    case PlaceKind.nebula:
-      paintNebula(canvas, d, (Offset.zero & size).deflate(u * .05), tick);
-    case PlaceKind.belt:
-      paintBelt(canvas, d, c, u * .14, tick);
-    case PlaceKind.blackHole:
-      paintBlackHole(canvas, d, c, u * .16, tick);
-    case PlaceKind.galaxy:
-      paintGalaxy(canvas, d, c, u * .55, tick);
-    default:
-      paintBody(canvas, d, c, u * (d.kind == PlaceKind.ring ? .22 : .3), tick);
-  }
+  canvas.clipRect(area);
+  paintRain(canvas, area, 40 + d.index * 13, density: d.kind == PlaceKind.matrix ? .9 : .45, cell: 4, alpha: 150);
+  final ground = size.height * .86;
+  _rect(canvas, p, 0, ground, size.width, 1, matrixGreen.withAlpha(160));
+  paintPlaceObject(canvas, d, size.width / 2, ground, size.height / 70, tick);
   canvas.restore();
+}
+
+/// Terminal compilando (tela de carregamento), num quadro 160x90.
+void paintLoading(Canvas canvas, double progress, int tick) {
+  final p = Paint()..color = matrixDark;
+  canvas.drawRect(const Rect.fromLTWH(0, 0, 160, 90), p);
+  paintRain(canvas, const Rect.fromLTWH(0, 0, 160, 90), tick, density: .5, cell: 4, alpha: 140);
+  _rect(canvas, p, 30, 22, 100, 46, const Color(0xFF9A9AA6));
+  _rect(canvas, p, 31, 23, 98, 6, const Color(0xFF3A3F4A));
+  for (final (i, c) in [(0, Px.autumnRed), (1, Px.carpYellow), (2, Px.springGreen)]) {
+    _rect(canvas, p, 33.0 + i * 4, 25, 2, 2, c);
+  }
+  _rect(canvas, p, 31, 29, 98, 38, matrixDark);
+  final lines = (progress * 8).floor() + 1;
+  for (var i = 0; i < math.min(lines, 6); i++) {
+    final w = 20.0 + _hash(i + 3) % 60;
+    _rect(canvas, p, 34, 32.0 + i * 5, i == lines - 1 ? w * ((progress * 8) % 1) : w, 2, matrixGreen);
+  }
+  if ((tick ~/ 8).isEven) _rect(canvas, p, 34, 32.0 + math.min(lines, 6) * 5, 3, 3, matrixGreen);
 }

@@ -1,37 +1,34 @@
-# Space Routine
+# Dev Routine
 
-A rotina semanal do Guilherme Fuentes como uma missão espacial em pixel art, com
-o Guilherme como astronauta.
+A rotina semanal do Guilherme Fuentes como a jornada de um dev em pixel art, subindo de nível
+dentro de um terminal na Matrix.
+
 Importe a agenda num arquivo .ics ou .ical (no Google Agenda: Configurações > Importar e
-exportar > Exportar): cada evento com horário vira uma missão semanal. Cada semana o astronauta explora
-um destino: começa na Terra (Bauru), passa pela Lua e pelos planetas e depois sai do Sistema
-Solar rumo às estrelas vizinhas, nebulosas e galáxias, sem fim. Cumprir metade das missões da
-semana explora o destino, e na segunda-feira a nave parte para o próximo. Cada missão também
-dá pontos ao atributo da categoria dela, e os pontos levam o astronauta a novos níveis (de
-Cadete espacial a Astronauta cósmico, sem nível final), com traje, visor, mochila a jato e aura
-novos e uma frase de quem olhou para as estrelas.
+exportar > Exportar): cada evento com horário vira uma missão semanal. Cada semana o dev entra num
+destino novo: começa na pasta `~` da sua máquina, passa pela rede e pela nuvem e termina dentro da
+Matrix, sem fim. Cumprir metade das missões da semana explora o destino, e na segunda-feira o dev
+entra no próximo. Cada missão também dá pontos ao atributo da categoria dela (só atividade física
+conta como Força), e os pontos levam o dev a novos níveis, de Visitante (guest) a O Escolhido, sem
+nível final, com moletom, fones, notebook, óculos escuros e aura novos e uma frase de programador.
 
-Dá para escolher a profissão do personagem (na tela inicial ou em Ajustes): Astronauta, Personal
-trainer, Médico(a), Professor(a), Programador(a), Chef de cozinha, Músico(a) ou Bombeiro(a). Cada uma
-tem personagem, 16 níveis com nomes e frases próprios e uma jornada diferente: o astronauta vai
-para o espaço; as outras rodam Bauru, o Brasil e o mundo, sem fim. Trocar de profissão mantém os
-pontos. Todos os níveis e destinos aparecem desde o começo, apagados até você chegar lá.
+O app tem três abas:
 
-Só atividade física conta como Força: "treino de piano" vai para Criatividade.
+- **Explorar**: a cena com a chuva de código, as missões, o mapa da jornada (pelo botão) e o resumo
+  da semana no fim.
+- **Personagem**: o nível atual, os atributos, a Disciplina (a chama e as tarefas do dia) e todos
+  os níveis, os que faltam apagados.
+- **Ajustes**: agenda, tema claro, música eletrônica, sons, notificações e nome.
 
-O app tem quatro abas: Explorar (cena, missões, mapa da jornada e o resumo da semana no fim),
-Tarefas, Personagem e Ajustes.
-
-Na aba Tarefas dá para anotar o que fazer no dia (criar, editar, excluir e marcar como
-concluída). Cada tarefa concluída dá pontos de Disciplina, e uma chama em pixel art cresce
-com as tarefas dos últimos 7 dias e vai baixando quando elas param.
+Cada tarefa do dia concluída dá pontos de Disciplina, e a chama cresce com as tarefas dos últimos
+7 dias e vai baixando quando elas param. A música é eletrônica e instrumental (house, techno,
+synthwave e breaks), gerada no próprio app.
 
 ## Gerar o APK
 
 ### Opção 1: GitHub (sem instalar nada)
 
 1. A ação **Android APK** roda a cada envio para `main` (ou em *Actions → Android APK → Run workflow*).
-2. Ao terminar, baixe o artefato **space-routine** e instale o `space-routine.apk` no celular
+2. Ao terminar, baixe o artefato **dev-routine** e instale o `dev-routine.apk` no celular
    (permita "instalar apps de fontes desconhecidas").
 
 ### Opção 2: no seu computador

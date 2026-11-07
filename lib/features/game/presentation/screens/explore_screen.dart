@@ -105,7 +105,7 @@ class _NextStop extends ConsumerWidget {
         const SizedBox(height: 6),
         Text(
           t.explored
-              ? 'Explorado! Na segunda-feira ${t.profession.travel} para ${t.next.name}.'
+              ? 'Explorado! Na segunda-feira você entra em ${t.next.name}.'
               : 'Faltam ${t.missing} ${t.missing == 1 ? 'missão' : 'missões'} nesta semana para explorar '
                   '${t.place.name}. Depois: ${t.next.name}.',
           style: PixelText.body(14, color: Kanagawa.springViolet1),
@@ -253,7 +253,7 @@ class _MissionTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cat = categoryOf(fixCategory(mission.category, mission.title));
-    final color = Color(cat.color);
+    final color = Kanagawa.ink(Color(cat.color));
     return Semantics(
       checked: done,
       label: mission.title,
@@ -276,7 +276,7 @@ class _MissionTile extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: Kanagawa.sumiInk5,
                 border: Border(left: BorderSide(color: color, width: 4)),
-                boxShadow: live ? const [BoxShadow(color: Kanagawa.carpYellow, spreadRadius: 3)] : null,
+                boxShadow: live ? [BoxShadow(color: Kanagawa.carpYellow, spreadRadius: 3)] : null,
               ),
               padding: const EdgeInsets.all(10),
               child: Row(children: [
@@ -293,7 +293,7 @@ class _MissionTile extends ConsumerWidget {
                     color: done ? Kanagawa.springGreen : Kanagawa.sumiInk0,
                     border: Border.all(color: done ? Kanagawa.sumiInk0 : Kanagawa.springViolet1, width: 2),
                   ),
-                  child: done ? const Icon(Icons.check, size: 14, color: Kanagawa.sumiInk0) : null,
+                  child: done ? Icon(Icons.check, size: 14, color: Kanagawa.sumiInk0) : null,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

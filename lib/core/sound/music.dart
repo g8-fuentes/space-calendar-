@@ -8,223 +8,221 @@ import 'package:path_provider/path_provider.dart';
 
 import 'sfx.dart';
 
-/// Música de fundo em estilo 8/16 bits, composta e sintetizada no próprio
-/// app: pulso para a melodia, triângulo no baixo, arpejo e bateria de ruído.
+/// Música de fundo eletrônica e instrumental, composta e sintetizada no
+/// próprio app: bumbo quatro por quatro, chimbal, palmas, baixo de serra
+/// filtrado, pad e arpejo. Sem voz e sem melodia cantada: só ritmo.
 class Song {
-  const Song(this.title, this.root, this.bpm, this.scale, this.chords, this.seed, {this.echo = false, this.duty = .25});
+  const Song(this.title, this.root, this.bpm, this.chords, this.seed,
+      {this.style = Groove.house, this.arp = true, this.pad = true});
   final String title;
 
   /// Nota MIDI da tônica.
   final int root;
   final int bpm;
-  final List<int> scale;
 
   /// Um acorde por compasso, em semitons a partir da tônica.
   final List<List<int>> chords;
   final int seed;
-
-  /// Eco na melodia (som mais "16 bits").
-  final bool echo;
-  final double duty;
+  final Groove style;
+  final bool arp, pad;
 }
 
-const _major = [0, 2, 4, 5, 7, 9, 11];
-const _minor = [0, 2, 3, 5, 7, 8, 10];
+/// Jeito da batida.
+enum Groove {
+  /// Bumbo em todo tempo e chimbal aberto no contratempo.
+  house,
+
+  /// Bumbo seco, baixo rolando em semicolcheias.
+  techno,
+
+  /// Mais lento, caixa no 2 e no 4, baixo longo.
+  synthwave,
+
+  /// Quebrado: bumbo e caixa fora do lugar, chimbal rápido.
+  breaks,
+}
 
 const songs = [
   Song(
-      'Órbita',
-      60,
-      128,
-      _major,
+      'Compilando',
+      45,
+      124,
       [
-        [0, 4, 7],
-        [7, 11, 14],
-        [9, 12, 16],
-        [5, 9, 12]
+        [0, 3, 7, 10],
+        [0, 3, 7, 10],
+        [8, 12, 15, 19],
+        [5, 8, 12, 15]
       ],
       11),
   Song(
-      'Nebulosa',
-      57,
-      96,
-      _minor,
+      'Chuva de código',
+      43,
+      132,
       [
         [0, 3, 7],
-        [8, 12, 15],
-        [3, 7, 10],
-        [10, 14, 17]
+        [0, 3, 7],
+        [10, 14, 17],
+        [8, 12, 15]
       ],
       23,
-      echo: true,
-      duty: .5),
+      style: Groove.techno,
+      pad: false),
   Song(
-      'Hiperespaço',
-      62,
-      150,
-      _minor,
+      'Neon',
+      48,
+      100,
       [
-        [0, 3, 7],
-        [5, 9, 12],
-        [0, 3, 7],
-        [10, 14, 17]
+        [0, 3, 7, 10],
+        [8, 12, 15, 19],
+        [3, 7, 10, 14],
+        [10, 14, 17, 21]
       ],
       37,
-      duty: .125),
+      style: Groove.synthwave),
   Song(
-      'Base lunar',
-      65,
-      112,
-      _major,
+      'Root',
+      41,
+      140,
       [
-        [0, 4, 7],
-        [9, 12, 16],
-        [2, 5, 9],
-        [7, 11, 14]
+        [0, 3, 7],
+        [5, 8, 12],
+        [0, 3, 7],
+        [3, 7, 10]
       ],
       41,
-      echo: true),
+      style: Groove.breaks,
+      arp: false),
 ];
 
 const _rate = 22050;
 
 double _freq(num midi) => 440 * math.pow(2, (midi - 69) / 12).toDouble();
 
-/// Ritmos de um compasso: (início, duração) em semicolcheias.
-const _rhythms = [
-  [(0, 2), (2, 2), (4, 4), (8, 2), (10, 2), (12, 4)],
-  [(0, 3), (3, 1), (4, 2), (6, 2), (8, 6), (14, 2)],
-  [(0, 2), (4, 2), (6, 2), (8, 4), (12, 2), (14, 2)],
-  [(0, 6), (6, 2), (8, 2), (10, 2), (12, 4)],
-  [(0, 2), (2, 1), (3, 1), (4, 4), (8, 4), (12, 2), (14, 2)],
-];
-
-typedef _Note = (int step, int len, int midi);
-
-/// Gera a melodia de 4 compassos: tempos fortes em notas do acorde,
-/// o resto anda pela escala.
-List<_Note> _phrase(Song s, int seed, int octave, {int? endOn}) {
-  final r = math.Random(seed);
-  final pool = <int>[
-    for (var o = -1; o <= 2; o++)
-      for (final d in s.scale) s.root + octave + o * 12 + d,
-  ]..sort();
-  var cur = pool.indexWhere((m) => m >= s.root + octave);
-  final out = <_Note>[];
-  for (var bar = 0; bar < 4; bar++) {
-    final chord = s.chords[bar % s.chords.length].map((c) => (s.root + c) % 12).toSet();
-    final rhythm = _rhythms[r.nextInt(_rhythms.length)];
-    for (final (st, len) in rhythm) {
-      if (st == 0 || st == 8 || len >= 4) {
-        // nota do acorde mais próxima
-        var best = cur, bestD = 99;
-        for (var i = 0; i < pool.length; i++) {
-          if (!chord.contains(pool[i] % 12)) continue;
-          final d = (i - cur).abs() + (r.nextInt(3) == 0 ? 1 : 0);
-          if (d < bestD) {
-            bestD = d;
-            best = i;
-          }
-        }
-        cur = best;
-      } else {
-        cur += const [-2, -1, -1, 1, 1, 2][r.nextInt(6)];
-      }
-      final lo = pool.indexWhere((m) => m >= s.root + octave - 3);
-      final hi = pool.lastIndexWhere((m) => m <= s.root + octave + 16);
-      cur = cur.clamp(lo, hi);
-      out.add((bar * 16 + st, len, pool[cur]));
-    }
-  }
-  if (endOn != null && out.isNotEmpty) {
-    final last = out.removeLast();
-    out.add((last.$1, 16 - last.$1 % 16 + 0, s.root + octave + endOn));
-  }
-  return out;
-}
-
 Float64List renderSong(Song s) {
   final stepSec = 60 / s.bpm / 4;
   const bars = 16;
   final n = (bars * 16 * stepSec * _rate).round();
   final out = Float64List(n);
+  final duck = Float64List(n)..fillRange(0, n, 1);
   final noise = math.Random(s.seed);
 
-  void tone(double startSec, double dur, double freq, double vol, double duty,
-      {bool tri = false, bool vibrato = false}) {
+  /// Serra (ou quadrada) passando por um filtro passa-baixa simples.
+  void synth(double startSec, double dur, double freq, double vol,
+      {double cutoff = 1200, double attack = .005, bool square = false, double detune = 0, bool ducked = true}) {
     final a = (startSec * _rate).round(), len = (dur * _rate).round();
-    var phase = 0.0;
+    final k = 1 - math.exp(-2 * math.pi * cutoff / _rate);
+    var ph1 = 0.0, ph2 = .3, lp = 0.0;
     for (var i = 0; i < len && a + i < n; i++) {
-      final t = i / _rate;
-      final f = vibrato && t > .15 ? freq * (1 + .006 * math.sin(t * 2 * math.pi * 5.5)) : freq;
-      phase += f / _rate;
-      final p = phase - phase.floorToDouble();
-      final v = tri ? 4 * (p - .5).abs() - 1 : (p < duty ? 1.0 : -1.0);
+      ph1 += freq / _rate;
+      ph2 += freq * (1 + detune) / _rate;
+      final p1 = ph1 - ph1.floorToDouble(), p2 = ph2 - ph2.floorToDouble();
+      final raw = square
+          ? (p1 < .5 ? 1.0 : -1.0)
+          : detune == 0
+              ? 2 * p1 - 1
+              : (2 * p1 - 1 + 2 * p2 - 1) * .5;
+      lp += k * (raw - lp);
       final x = i / len;
-      final env = math.min(1.0, i / (_rate * .004)) * (x > .85 ? (1 - x) / .15 : 1) * (1 - .35 * x);
-      out[a + i] += v * vol * env;
+      final env = math.min(1.0, i / (_rate * attack)) * (x > .8 ? (1 - x) / .2 : 1);
+      out[a + i] += lp * vol * env * (ducked ? duck[a + i] : 1);
     }
   }
 
-  void drum(double startSec, String kind) {
+  void drum(double startSec, String kind, {double vol = 1}) {
     final a = (startSec * _rate).round();
-    final len = ((kind == 'kick'
-                ? .14
-                : kind == 'snare'
-                    ? .12
-                    : .035) *
-            _rate)
-        .round();
+    final dur = switch (kind) { 'kick' => .22, 'clap' => .16, 'open' => .12, _ => .03 };
+    final len = (dur * _rate).round();
     var phase = 0.0, last = 0.0;
     for (var i = 0; i < len && a + i < n; i++) {
       final x = i / len;
       double v;
-      if (kind == 'kick') {
-        phase += (110 * math.pow(.3, x)) / _rate;
-        v = math.sin(phase * 2 * math.pi) * .5;
-      } else {
-        final w = noise.nextDouble() * 2 - 1;
-        v = kind == 'hat' ? (w - last) * .5 : w * .22 + math.sin(i / _rate * 2 * math.pi * 190) * .12;
-        last = w;
+      switch (kind) {
+        case 'kick':
+          phase += (45 + 120 * math.pow(.02, x)) / _rate;
+          v = math.sin(phase * 2 * math.pi) * .9 * math.pow(1 - x, 1.5);
+          // o bumbo abaixa o resto por um instante (efeito "sidechain")
+          duck[a + i] = math.min(duck[a + i], .35 + .65 * x);
+        case 'clap':
+          final w = noise.nextDouble() * 2 - 1;
+          final burst = x < .12 ? (((x * 40).floor()).isEven ? 1.0 : .3) : 1.0;
+          v = (w - last * .6) * .35 * burst * math.pow(1 - x, 2.5);
+          last = w;
+        default:
+          final w = noise.nextDouble() * 2 - 1;
+          v = (w - last) * .3 * math.pow(1 - x, kind == 'open' ? 1.2 : 3);
+          last = w;
       }
-      out[a + i] += v * math.pow(1 - x, 2) * (kind == 'hat' ? .25 : 1);
+      out[a + i] += v * vol;
     }
   }
 
-  final a1 = _phrase(s, s.seed, 12);
-  final a2 = [...a1.where((x) => x.$1 < 48), ..._phrase(s, s.seed + 5, 12, endOn: 0).where((x) => x.$1 >= 48)];
-  final b = _phrase(s, s.seed + 9, 19);
-  final sections = [a1, a2, b, a2];
+  final r = math.Random(s.seed);
+  // padrão de arpejo fixo para a música inteira, como um loop
+  final arpSteps = [for (var k = 0; k < 16; k++) r.nextInt(5) == 0 ? -1 : r.nextInt(4)];
+  final arpOct = [for (var k = 0; k < 16; k++) r.nextInt(3) == 0 ? 12 : 0];
 
   for (var bar = 0; bar < bars; bar++) {
     final chord = s.chords[bar % s.chords.length];
     final t0 = bar * 16 * stepSec;
-    final section = bar ~/ 4;
-    // baixo: tônica e oitava em colcheias
-    for (var k = 0; k < 8; k++) {
-      final midi = s.root - 24 + chord[0] + (k.isOdd ? 12 : 0);
-      tone(t0 + k * 2 * stepSec, stepSec * 1.8, _freq(midi), .2, .5, tri: true);
-    }
-    // arpejo baixinho em semicolcheias
+    final section = bar ~/ 4; // 0 = entrada, 1 e 2 = cheio, 3 = sem bumbo no fim
+    final full = section == 1 || section == 2;
+    final kickOn = section < 3 || bar % 4 < 2;
+    // bateria
     for (var k = 0; k < 16; k++) {
-      final c = chord[const [0, 1, 2, 1][k % 4]];
-      tone(t0 + k * stepSec, stepSec * .9, _freq(s.root + c), .045, .125);
-    }
-    // bateria a partir da segunda parte
-    if (section > 0) {
-      for (var k = 0; k < 16; k++) {
-        final at = t0 + k * stepSec;
-        if (k == 0 || k == 8 || (s.bpm > 120 && k == 10)) drum(at, 'kick');
-        if (k == 4 || k == 12) drum(at, 'snare');
-        if (k.isEven) drum(at, 'hat');
+      final at = t0 + k * stepSec;
+      switch (s.style) {
+        case Groove.house || Groove.techno:
+          if (k % 4 == 0 && kickOn) drum(at, 'kick');
+          if (section > 0 && (k == 4 || k == 12)) drum(at, 'clap', vol: s.style == Groove.techno ? .6 : 1);
+          if (k % 4 == 2) drum(at, 'open', vol: .7);
+          if (full && s.style == Groove.techno) drum(at, 'hat', vol: .6);
+        case Groove.synthwave:
+          if ((k == 0 || k == 8 || k == 10) && kickOn) drum(at, 'kick');
+          if (k == 4 || k == 12) drum(at, 'clap');
+          if (k.isEven) drum(at, 'hat', vol: .7);
+        case Groove.breaks:
+          if ((k == 0 || k == 6 || k == 10) && kickOn) drum(at, 'kick');
+          if (k == 4 || k == 12 || (full && k == 15)) drum(at, 'clap');
+          drum(at, 'hat', vol: k.isEven ? .8 : .45);
       }
     }
-  }
-  for (var sec = 0; sec < 4; sec++) {
-    for (final (st, len, midi) in sections[sec]) {
-      final at = (sec * 64 + st) * stepSec, dur = len * stepSec * .92;
-      tone(at, dur, _freq(midi), .16, s.duty, vibrato: len >= 4);
-      if (s.echo) tone(at + 3 * stepSec, dur, _freq(midi), .06, s.duty);
+    // baixo
+    final bassMidi = s.root - 12 + chord[0];
+    switch (s.style) {
+      case Groove.house:
+        for (var k = 2; k < 16; k += 4) {
+          synth(t0 + k * stepSec, stepSec * 1.6, _freq(bassMidi), .32, cutoff: 500);
+        }
+      case Groove.techno:
+        for (var k = 0; k < 16; k++) {
+          if (k % 4 == 0) continue;
+          synth(t0 + k * stepSec, stepSec * .8, _freq(bassMidi + (k % 8 == 7 ? 12 : 0)), .26,
+              cutoff: 300 + 500 * (bar % 4) / 3);
+        }
+      case Groove.synthwave:
+        for (var k = 0; k < 16; k += 2) {
+          synth(t0 + k * stepSec, stepSec * 1.7, _freq(bassMidi + (k % 4 == 2 ? 12 : 0)), .26, cutoff: 700);
+        }
+      case Groove.breaks:
+        for (final k in const [0, 3, 6, 10, 11]) {
+          synth(t0 + k * stepSec, stepSec * 1.4, _freq(bassMidi), .3, cutoff: 600, square: true);
+        }
+    }
+    // pad: acorde longo e suave, abrindo o filtro na parte cheia
+    if (s.pad && section > 0) {
+      for (final c in chord) {
+        synth(t0, 16 * stepSec, _freq(s.root + 12 + c), .045, cutoff: full ? 1600 : 800, attack: .25, detune: .006);
+      }
+    }
+    // arpejo
+    if (s.arp && section > 0) {
+      for (var k = 0; k < 16; k++) {
+        final step = arpSteps[k];
+        if (step < 0) continue;
+        final c = chord[step % chord.length];
+        synth(t0 + k * stepSec, stepSec * .7, _freq(s.root + 24 + c + arpOct[k]), .06,
+            cutoff: full ? 2600 : 1400, square: true);
+      }
     }
   }
   var peak = 0.0;

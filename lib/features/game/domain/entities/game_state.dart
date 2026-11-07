@@ -94,7 +94,7 @@ class Todo {
       Todo(id: j['id']! as String, text: j['t'] as String? ?? '', doneAt: (j['at'] as num?)?.toInt());
 }
 
-/// Tudo o que é salvo. Cada semana o astronauta explora um destino; as semanas
+/// Tudo o que é salvo. Cada semana o dev entra num destino; as semanas
 /// em que ele cumpriu a meta ficam em [explored] (ver game_rules.dart).
 class GameState {
   GameState({
@@ -109,7 +109,7 @@ class GameState {
     this.lastPlace = -1,
     this.lastForm = -1,
     this.lastExplored = '',
-    this.profession = 'astronauta',
+    this.light = false,
     Set<String>? explored,
     List<Todo>? todos,
   })  : todos = todos ?? [],
@@ -139,7 +139,7 @@ class GameState {
   int lastForm;
 
   /// Semanas (chave da segunda-feira) em que a meta foi cumprida: cada uma
-  /// leva o astronauta a um destino novo na semana seguinte.
+  /// leva o dev a um destino novo na semana seguinte.
   final Set<String> explored;
 
   /// Última semana em que o aviso de destino explorado já apareceu.
@@ -148,9 +148,8 @@ class GameState {
   /// Tarefas do dia (pendentes e concluídas).
   final List<Todo> todos;
 
-  /// Profissão do personagem (ver professions.dart): muda o personagem, os
-  /// nomes dos níveis e a jornada. Os pontos são os mesmos.
-  String profession;
+  /// Tema claro em vez do escuro (terminal).
+  bool light;
 
   /// Missões por semana que exploram o destino: metade das missões da
   /// agenda (pelo menos 1).
@@ -176,7 +175,7 @@ class GameState {
         'explored': explored.toList()..sort(),
         'lastExplored': lastExplored,
         'todos': [for (final t in todos) t.toJson()],
-        'profession': profession,
+        'light': light,
       };
 
   factory GameState.fromJson(Map<String, Object?> j, {required String today}) {
@@ -197,7 +196,7 @@ class GameState {
       lastPlace: (j['lastPlace'] as num?)?.toInt() ?? -1,
       lastForm: (j['lastForm'] as num?)?.toInt() ?? -1,
       lastExplored: j['lastExplored'] as String? ?? '',
-      profession: j['profession'] as String? ?? 'astronauta',
+      light: j['light'] as bool? ?? false,
       todos: [for (final t in (j['todos'] as List? ?? const [])) Todo.fromJson((t as Map).cast<String, Object?>())],
       explored: {for (final k in (j['explored'] as List? ?? const [])) k as String},
     );

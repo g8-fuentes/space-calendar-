@@ -37,9 +37,9 @@ jobs:
       - name: Gerar APK
         run: |
           flutter build apk --release
-          cp build/app/outputs/flutter-apk/app-release.apk build/space-routine.apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/dev-routine.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: space-routine
-          path: build/space-routine.apk
+          name: dev-routine
+          path: build/dev-routine.apk

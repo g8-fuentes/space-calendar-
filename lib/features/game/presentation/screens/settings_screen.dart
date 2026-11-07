@@ -6,7 +6,6 @@ import '../../../../core/sound/sfx.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
 import '../widgets/pixel_widgets.dart';
-import '../widgets/profession_picker.dart';
 import '../widgets/ui.dart';
 
 /// Passo a passo para tirar o arquivo .ics do Google Agenda.
@@ -69,8 +68,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       PixelPanel(
         child: Column(children: [
           _SwitchRow(
-            title: 'MÚSICA 8-BIT',
-            subtitle: 'Toca enquanto o app está aberto.',
+            title: 'TEMA CLARO',
+            subtitle: 'Fundo claro em vez do terminal escuro.',
+            value: s.light,
+            onChanged: (v) {
+              Sfx.click.play();
+              ctrl.apply((g) => g.light = v);
+            },
+          ),
+          _SwitchRow(
+            title: 'MÚSICA ELETRÔNICA',
+            subtitle: 'Batidas instrumentais enquanto o app está aberto.',
             value: s.music,
             onChanged: (v) {
               Sfx.click.play();
@@ -101,11 +109,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('PERSONAGEM', style: PixelText.display(10)),
-          const SizedBox(height: 6),
-          Text('Profissão: muda o personagem, os níveis e o mapa. Os pontos continuam.',
-              style: PixelText.body(14, color: Kanagawa.springViolet1)),
-          const SizedBox(height: 8),
-          const ProfessionPicker(),
           const SizedBox(height: 12),
           TextField(controller: _name, maxLength: 24, style: PixelText.body(16), decoration: pixelInput('Nome')),
           Align(

@@ -126,7 +126,7 @@ abstract final class GameRules {
     s.lastExplored = t.weekKey;
     return [
       Notice('DESTINO EXPLORADO!',
-          '${t.place.name}: meta da semana cumprida. Na segunda-feira ${t.profession.travel} para ${t.next.name}.',
+          '${t.place.name}: meta da semana cumprida. Na segunda-feira você entra em ${t.next.name}.',
           place: t.place.index),
     ];
   }
@@ -140,14 +140,10 @@ abstract final class GameRules {
       if (t.placeIndex < s.lastPlace) s.lastPlace = t.placeIndex;
       return const [];
     }
-    final from = placeAt(s.lastPlace, t.profession);
+    final from = placeAt(s.lastPlace);
     s.lastPlace = t.placeIndex;
     final p = t.place;
-    final title = p.stage == from.stage
-        ? 'NOVO DESTINO'
-        : t.profession.space
-            ? (p.stage == 1 ? 'ALÉM DO SISTEMA SOLAR!' : 'RUMO À GALÁXIA!')
-            : 'NOVA FASE: ${p.region.toUpperCase()}!';
+    final title = p.stage == from.stage ? 'NOVO DESTINO' : 'NOVA FASE: ${p.region.toUpperCase()}!';
     return [
       Notice(title, 'Semana ${p.week}: ${p.name}. ${p.fact}', place: p.index),
     ];

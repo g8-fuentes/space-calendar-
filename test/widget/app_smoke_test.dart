@@ -72,12 +72,16 @@ void main() {
 
     expect(find.text('MAPA'), findsNothing);
     expect(find.text('SEMANA'), findsNothing);
-    for (final tab in ['TAREFAS', 'PERSONAGEM', 'AJUSTES', 'EXPLORAR']) {
+    expect(find.text('TAREFAS'), findsNothing);
+    for (final tab in ['PERSONAGEM', 'AJUSTES', 'EXPLORAR']) {
       await tester.tap(find.text(tab).last);
       await tester.pump(const Duration(milliseconds: 300));
       expect(tester.takeException(), isNull, reason: tab);
-      if (tab == 'PERSONAGEM') expect(find.text('ATRIBUTOS'), findsOneWidget);
-      if (tab == 'TAREFAS') {
+      if (tab == 'PERSONAGEM') {
+        expect(find.text('ATRIBUTOS'), findsOneWidget);
+        // a Disciplina (chama e tarefas) fica na mesma tela
+        await tester.scrollUntilVisible(find.text('ADICIONAR'), 300, scrollable: find.byType(Scrollable).first);
+        expect(find.text('DISCIPLINA'), findsOneWidget);
         await tester.enterText(find.byType(TextField), 'Pagar a luz');
         await tester.tap(find.text('ADICIONAR'));
         await tester.pump(const Duration(milliseconds: 300));
@@ -93,24 +97,7 @@ void main() {
     await tester.scrollUntilVisible(find.text('HISTÓRICO'), 300, scrollable: find.byType(Scrollable).first);
     expect(find.textContaining('ESTA SEMANA'), findsOneWidget);
 
-    // trocar de profissão em Ajustes muda o personagem e o mapa
-    await tester.tap(find.text('AJUSTES').last);
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.scrollUntilVisible(find.text('🏋️ PERSONAL TRAINER'), 300, scrollable: find.byType(Scrollable).first);
-    await Scrollable.ensureVisible(tester.element(find.text('🏋️ PERSONAL TRAINER')), alignment: .5);
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(find.text('🏋️ PERSONAL TRAINER'));
-    await tester.pump(const Duration(milliseconds: 300));
-    expect(repo.saved!.profession, 'personal');
-    await tester.tap(find.text('PERSONAGEM').last);
-    await tester.pump(const Duration(milliseconds: 300));
-    await tester.scrollUntilVisible(find.text('NÍVEIS · PERSONAL TRAINER'), 300,
-        scrollable: find.byType(Scrollable).first);
-    await tester.scrollUntilVisible(find.text('NÍVEL 16 · TREINADOR CÓSMICO'), 400,
-        scrollable: find.byType(Scrollable).first);
-    expect(find.textContaining('libera com'), findsWidgets);
-    await tester.tap(find.text('EXPLORAR').last);
-    await tester.pump(const Duration(milliseconds: 300));
+    // o mapa abre pelo botão em Explorar
     await tester.scrollUntilVisible(find.text('VER MAPA DA JORNADA'), 200, scrollable: find.byType(Scrollable).first);
     await Scrollable.ensureVisible(tester.element(find.text('VER MAPA DA JORNADA')), alignment: .5);
     await tester.pump(const Duration(milliseconds: 100));
@@ -119,11 +106,21 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
     }
     expect(find.text('MAPA DA JORNADA'), findsOneWidget);
-    expect(find.text('ACADEMIA DO BAIRRO'), findsOneWidget);
-    expect(find.text('PARQUE VITÓRIA RÉGIA'), findsOneWidget);
+    expect(find.text('/USR/BIN'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pageBack();
     await tester.pump(const Duration(milliseconds: 500));
+
+    // tema claro em Ajustes
+    await tester.tap(find.text('AJUSTES').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.tap(find.byType(Switch).first);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repo.saved!.light, isTrue);
+    expect(tester.takeException(), isNull);
+    await tester.tap(find.text('EXPLORAR').last);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
     await _end(tester);
   });
 }

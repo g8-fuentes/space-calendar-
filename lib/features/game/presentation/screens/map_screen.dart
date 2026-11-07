@@ -21,7 +21,7 @@ void openMap(BuildContext context) => Navigator.of(context).push(MaterialPageRou
       ),
     ));
 
-/// Mapa da jornada da profissão, uma semana por destino, sem fim. Todos os
+/// Mapa da jornada pelo terminal, uma semana por destino, sem fim. Todos os
 /// destinos aparecem com nome e curiosidade; os que ainda não chegaram
 /// ficam apagados.
 class MapScreen extends ConsumerWidget {
@@ -30,12 +30,11 @@ class MapScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = ref.watch(statsProvider);
-    final pro = t.profession;
-    final last = math.max(namedPlacesOf(pro) - 1, t.placeIndex + 3);
+    final last = math.max(namedPlaces - 1, t.placeIndex + 3);
     final children = <Widget>[];
     int? stage;
     for (var i = 0; i <= last; i++) {
-      final p = placeAt(i, pro);
+      final p = placeAt(i);
       if (p.stage != stage) {
         stage = p.stage;
         children.add(Padding(
@@ -49,8 +48,7 @@ class MapScreen extends ConsumerWidget {
             reached: i <= t.placeIndex,
             current: i == t.placeIndex,
             next: i == t.placeIndex + 1,
-            missing: t.missing,
-            travel: pro.travel))
+            missing: t.missing))
         ..add(const SizedBox(height: 8));
     }
     return ListView(
@@ -60,14 +58,9 @@ class MapScreen extends ConsumerWidget {
           padding: const EdgeInsets.only(top: 12),
           child: PixelPanel(
             child: Text(
-              pro.space
-                  ? 'Cada semana o astronauta explora um destino. Cumpra metade das missões da semana para explorar e, '
-                      'na segunda-feira, a nave parte para o próximo: primeiro a Lua e os planetas, depois as estrelas '
-                      'vizinhas e, por fim, nebulosas e galáxias, sem fim.'
-                  : 'Jornada de ${pro.name}: cada semana você visita um destino. Cumpra metade das missões da semana '
-                      'e, na segunda-feira, você parte para o próximo: ${[
-                      for (final s in pro.stages) s.$1.toLowerCase()
-                    ].join(', ')} e depois o mundo todo, sem fim.',
+              'Cada semana o dev entra num destino. Cumpra metade das missões da semana para explorar e, na '
+              'segunda-feira, você entra no próximo: primeiro a sua máquina, depois a rede e a nuvem e, por fim, '
+              'o fundo da Matrix, sem fim.',
               style: PixelText.body(14, color: Kanagawa.springViolet1),
             ),
           ),
@@ -85,12 +78,10 @@ class _PlaceTile extends StatelessWidget {
     required this.current,
     required this.next,
     required this.missing,
-    required this.travel,
   });
   final Place place;
   final bool reached, current, next;
   final int missing;
-  final String travel;
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +106,7 @@ class _PlaceTile extends StatelessWidget {
             if (next)
               Text(
                   missing == 0
-                      ? 'Explorado! Na segunda-feira $travel para cá.'
+                      ? 'Explorado! Na segunda-feira você entra aqui.'
                       : 'Próximo destino: faltam $missing ${missing == 1 ? 'missão' : 'missões'} nesta semana.',
                   style: PixelText.body(13, color: Kanagawa.carpYellow)),
             if (!reached && !next)

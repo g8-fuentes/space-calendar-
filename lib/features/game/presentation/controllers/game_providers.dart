@@ -9,7 +9,6 @@ import '../../../../core/text/text_utils.dart';
 import '../../../../core/time/clock.dart';
 import '../../../../core/time/week_utils.dart';
 import '../../../../core/weather/weather.dart';
-import '../../domain/catalog/professions.dart' show professionOf;
 import '../../domain/entities/game_state.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/services/game_rules.dart';
@@ -83,7 +82,7 @@ List<Alert> alertsFor(GameState s) => [
                 key: '${m.id}@$d',
                 day: d,
                 minutes: minutesOf(m.start)!,
-                title: '${professionOf(s.profession).emoji} ${m.title}',
+                title: '💻 ${m.title}',
                 body: 'Sua missão começou${m.end.isEmpty ? '' : ' (${m.start} às ${m.end})'}. '
                     'Marque no app quando concluir para seguir explorando.',
               ),

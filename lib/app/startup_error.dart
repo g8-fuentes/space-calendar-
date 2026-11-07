@@ -39,7 +39,7 @@ class StartupErrorBox extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Text(
         'Ops, algo deu errado no Space Routine:\n\n$message',
-        style: const TextStyle(color: Kanagawa.fujiWhite, fontSize: 12, fontFamily: 'monospace'),
+        style: TextStyle(color: Kanagawa.fujiWhite, fontSize: 12, fontFamily: 'monospace'),
         textDirection: TextDirection.ltr,
       ),
     );

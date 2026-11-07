@@ -54,15 +54,17 @@ void main() {
   });
 
   group('exploração', () {
-    test('um destino por semana: Terra, planetas, estrelas e galáxia, sem fim', () {
-      expect(placeAt(0).name, 'Terra');
-      expect(placeAt(0).kind, PlaceKind.home);
-      expect(placeAt(1).name, 'Lua');
-      expect(placeAt(4).name, 'Marte');
-      final firstStar = List.generate(80, placeAt).firstWhere((p) => p.stage == 1);
-      expect(firstStar.name, 'Proxima Centauri b');
-      expect(placeAt(firstStar.index - 1).name, 'Nuvem de Oort');
-      expect(placeAt(namedPlaces - 1).name, 'Andrômeda');
+    test('um destino por semana: máquina local, rede e Matrix, sem fim', () {
+      expect(placeAt(0).name, '~');
+      expect(placeAt(0).kind, PlaceKind.laptop);
+      expect(placeAt(0).path, '~');
+      expect(placeAt(1).name, '/usr/bin');
+      final firstNet = List.generate(80, placeAt).firstWhere((p) => p.stage == 1);
+      expect(firstNet.name, 'Porta 22');
+      expect(firstNet.path, '/porta-22');
+      expect(placeAt(firstNet.index - 1).name, '/dev/null');
+      expect(placeAt(namedPlaces - 1).name, 'Além da simulação');
+      expect(placeAt(namedPlaces - 1).region, 'Dentro da Matrix');
       // depois dos nomeados, continua gerando
       final extra = placeAt(namedPlaces + 5);
       expect(extra.stage, 2);
@@ -79,28 +81,28 @@ void main() {
         GameRules.toggle(s, m, d, now);
       }
       var t = computeStats(s, now);
-      expect((t.place.name, t.weekDone, t.missing, t.explored), ('Terra', 3, 1, false));
+      expect((t.place.name, t.weekDone, t.missing, t.explored), ('~', 3, 1, false));
       expect(GameRules.progressNotices(s, t), isEmpty);
       GameRules.toggle(s, m, 3, now);
       t = computeStats(s, now);
       expect(t.explored, isTrue);
-      expect(t.place.name, 'Terra');
+      expect(t.place.name, '~');
       final notices = GameRules.progressNotices(s, t);
       expect(notices.single.title, 'DESTINO EXPLORADO!');
-      expect(notices.single.text, contains('Lua'));
+      expect(notices.single.text, contains('/usr/bin'));
       expect(s.explored, {weekKeyOf(now)});
-      // na semana seguinte, a nave chega à Lua
+      // na semana seguinte, o dev entra em /usr/bin
       final monday = DateTime(2026, 10, 26, 9);
       t = computeStats(s, monday);
-      expect((t.place.name, t.weekDone), ('Lua', 0));
-      expect(GameRules.progressNotices(s, t).single.text, contains('Semana 2: Lua.'));
+      expect((t.place.name, t.weekDone), ('/usr/bin', 0));
+      expect(GameRules.progressNotices(s, t).single.text, contains('Semana 2: /usr/bin.'));
       // desmarcar na mesma semana tira a exploração
       GameRules.toggle(s, m, 0, now);
       GameRules.progressNotices(s, computeStats(s, now));
       expect(s.explored, isEmpty);
     });
 
-    test('sair do Sistema Solar avisa', () {
+    test('sair da máquina local avisa a fase nova', () {
       final s = GameState.initial(ymd(now));
       final solar = List.generate(80, placeAt).where((p) => p.stage == 0).length;
       for (var w = 0; w < solar - 1; w++) {
@@ -109,8 +111,8 @@ void main() {
       s.lastPlace = computeStats(s, now).placeIndex;
       s.explored.add(ymd(DateTime(2026, 10, 12)));
       final t = computeStats(s, now);
-      expect(t.place.region, 'Estrelas vizinhas');
-      expect(GameRules.progressNotices(s, t).map((n) => n.title), ['ALÉM DO SISTEMA SOLAR!']);
+      expect(t.place.region, 'A rede');
+      expect(GameRules.progressNotices(s, t).map((n) => n.title), ['NOVA FASE: A REDE!']);
     });
 
     test('saves antigos contam as semanas que já cumpriam a meta', () {
@@ -121,7 +123,7 @@ void main() {
       final json = s.toJson()..remove('explored');
       final back = GameState.fromJson(json, today: ymd(now));
       expect(back.explored, {'2026-10-12'});
-      expect(computeStats(back, now).place.name, 'Lua');
+      expect(computeStats(back, now).place.name, '/usr/bin');
     });
 
     test('estado sobrevive a JSON', () {
@@ -151,8 +153,8 @@ void main() {
       expect(t.attributes['treino'], 27);
       expect(t.power, 27);
       expect(t.best!.name, 'Força');
-      expect(t.form.title, 'Nível 1 · Cadete espacial');
-      expect(t.form.quote.author, 'Yuri Gagarin');
+      expect(t.form.title, 'Nível 1 · Visitante (guest)');
+      expect(t.form.quote.author, 'Linus Torvalds');
       expect(t.powerMissing, 13);
       // só aparecem os atributos das missões
       expect(t.shown.map((c) => c.name), ['Força']);
@@ -164,9 +166,10 @@ void main() {
       expect(transformationIndexFor(0), 0);
       expect(transformationIndexFor(39), 0);
       expect(transformationIndexFor(40), 1);
-      expect(transformationAt(transformationIndexFor(550)).name, 'Comandante');
+      expect(transformationAt(transformationIndexFor(550)).name, 'Tech lead');
+      expect(transformationAt(namedTransformations - 1).name, 'O Escolhido');
       expect(transformationIndexFor(7200), namedTransformations - 1);
-      expect(transformationAt(namedTransformations).name, 'Astronauta cósmico 2');
+      expect(transformationAt(namedTransformations).name, 'O Escolhido 2');
       expect(transformationIndexFor(8700), namedTransformations);
       expect(
           Gear.values
@@ -189,7 +192,7 @@ void main() {
       }
       final notices = GameRules.progressNotices(s, computeStats(s, now));
       expect(notices.map((n) => n.title), ['NOVO NÍVEL!']);
-      expect(notices.single.text, startsWith('Nível 2 · Astronauta em treino'));
+      expect(notices.single.text, startsWith('Nível 2 · Estagiário no terminal'));
       expect(notices.single.form, 1);
     });
   });
@@ -259,51 +262,10 @@ void main() {
     }
   });
 
-  group('profissões', () {
-    test('cada profissão tem personagem, 16 níveis e mapa próprios', () {
-      expect(professions.length, greaterThanOrEqualTo(8));
-      expect(professions.map((p) => p.name), contains('Personal trainer'));
-      for (final p in professions) {
-        expect(professionOf(p.key), same(p));
-        if (p.space) continue;
-        expect(p.levelNames.length, namedTransformations, reason: p.key);
-        expect(p.quotes, isNotEmpty);
-        expect(placeAt(0, p).kind, PlaceKind.home);
-        expect(placeAt(1, p).kind, PlaceKind.city);
-        final named = namedPlacesOf(p);
-        expect(named, greaterThanOrEqualTo(10));
-        final extra = placeAt(named + 3, p);
-        expect(extra.name, startsWith(p.event));
-        expect(extra.week, named + 4);
-        // mesmos pontos em qualquer profissão
-        for (var i = 0; i < namedTransformations + 2; i++) {
-          expect(transformationAt(i, p).power, transformationAt(i).power);
-        }
-        expect(transformationAt(0, p).name, p.levelNames.first);
-        expect(transformationAt(namedTransformations, p).name, '${p.levelNames.last} 2');
-      }
-      final pt = professionOf('personal');
-      expect(transformationAt(2, pt).name, 'Personal trainer');
-      expect(placeAt(0, pt).name, 'Academia do bairro');
-      expect(professionOf('nao-existe'), same(astronaut));
-    });
-
-    test('a profissão é salva e muda nível e destino, sem mudar os pontos', () {
-      final s = GameState.initial(ymd(now))
-        ..missions.add(Mission(id: 'a', title: 'Ler', days: [0, 1], start: '20:00', end: '22:00'));
-      GameRules.toggle(s, s.missions.first, 0, now);
-      final a = computeStats(s, now);
-      expect(a.place.name, 'Terra');
-      s.profession = 'chef';
-      final back = GameState.fromJson(s.toJson(), today: ymd(now));
-      expect(back.profession, 'chef');
-      final b = computeStats(back, now);
-      expect(b.power, a.power);
-      expect(b.formIndex, a.formIndex);
-      expect(b.form.name, 'Ajudante de cozinha');
-      expect(b.place.name, 'Cozinha em Bauru');
-      expect(GameState.fromJson({}, today: ymd(now)).profession, 'astronauta');
-    });
+  test('o tema claro é salvo', () {
+    final s = GameState.initial(ymd(now))..light = true;
+    expect(GameState.fromJson(s.toJson(), today: ymd(now)).light, isTrue);
+    expect(GameState.fromJson({'profession': 'chef'}, today: ymd(now)).light, isFalse);
   });
 
   test('só atividade física conta como Força', () {

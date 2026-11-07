@@ -8,7 +8,6 @@ import '../features/game/presentation/screens/character_screen.dart';
 import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
 import '../features/game/presentation/screens/settings_screen.dart';
-import '../features/game/presentation/screens/todo_screen.dart';
 import '../features/game/presentation/widgets/ui.dart';
 import 'theme/kanagawa.dart';
 
@@ -39,12 +38,17 @@ class _RotinaQuestAppState extends State<RotinaQuestApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Space Routine',
-      debugShowCheckedModeBanner: false,
-      theme: buildKanagawaTheme(),
-      home: const _Root(),
-    );
+    return Consumer(builder: (context, ref, _) {
+      // O tema vem do estado salvo; trocar reconstrói todas as telas.
+      final light = ref.watch(gameControllerProvider.select((s) => s.light));
+      Kanagawa.light = light;
+      return MaterialApp(
+        title: 'Dev Routine',
+        debugShowCheckedModeBanner: false,
+        theme: buildKanagawaTheme(),
+        home: KeyedSubtree(key: ValueKey(light), child: const _Root()),
+      );
+    });
   }
 }
 
@@ -70,8 +74,7 @@ class GameShell extends ConsumerStatefulWidget {
 
 class _GameShellState extends ConsumerState<GameShell> {
   static const _tabs = [
-    (Icons.rocket_launch_outlined, 'EXPLORAR'),
-    (Icons.checklist, 'TAREFAS'),
+    (Icons.terminal, 'EXPLORAR'),
     (Icons.bolt, 'PERSONAGEM'),
     (Icons.tune, 'AJUSTES'),
   ];
@@ -108,8 +111,7 @@ class _GameShellState extends ConsumerState<GameShell> {
         bottom: false,
         child: switch (i) {
           0 => const ExploreScreen(),
-          1 => const TodoScreen(),
-          2 => const CharacterScreen(),
+          1 => const CharacterScreen(),
           _ => const SettingsScreen(),
         },
       ),
