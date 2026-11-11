@@ -9,8 +9,8 @@ typedef PixelGrid = List<List<Color?>>;
 
 const _ink = Px.sumiInk0;
 
-/// Verde do terminal e o preto do fundo.
-const matrixGreen = Color(0xFF3CFF6B), matrixDark = Color(0xFF050805);
+/// Teal do Tokyo Night Moon (a "chuva" do terminal) e o preto do fundo.
+const matrixGreen = Color(0xFF4FD6BE), matrixDark = Color(0xFF1B1D2B);
 
 PixelGrid outlined(PixelGrid g) {
   final h = g.length, w = g.first.length;
@@ -68,7 +68,7 @@ void paintRain(Canvas canvas, Rect area, int tick, {double density = .6, double 
       final row = head - k;
       if (row < 0 || row >= rows) continue;
       final fade = 1 - k / len;
-      final color = k == 0 ? const Color(0xFFD8FFE0) : matrixGreen;
+      final color = k == 0 ? const Color(0xFFC8D3F5) : matrixGreen;
       final a = (alpha * (k == 0 ? 1 : fade * .75)).round().clamp(0, 255);
       // um "caractere" de 3x4 pixels, trocando de vez em quando
       final glyph = _hash(c * 131 + row * 7 + (tick ~/ (12 + k)) * (k == 0 ? 1 : 0));
@@ -85,7 +85,7 @@ void paintRain(Canvas canvas, Rect area, int tick, {double density = .6, double 
 /// Chão em grade verde, em perspectiva, de [top] até o fim de [area].
 void paintGridFloor(Canvas canvas, Rect area, double top, int tick) {
   final p = Paint();
-  _rect(canvas, p, area.left, top, area.width, area.bottom - top, const Color(0xFF07140A));
+  _rect(canvas, p, area.left, top, area.width, area.bottom - top, const Color(0xFF1E2030));
   final lines = Paint()
     ..color = matrixGreen.withAlpha(90)
     ..strokeWidth = 1;
@@ -110,19 +110,19 @@ void paintPlaceObject(Canvas canvas, Place place, double cx, double baseY, doubl
   final blink = (tick ~/ 8).isEven;
   switch (place.kind) {
     case PlaceKind.laptop:
-      rect(-26, -4, 52, 4, const Color(0xFF3A3F4A));
-      rect(-16, -28, 32, 22, const Color(0xFF9A9AA6));
+      rect(-26, -4, 52, 4, const Color(0xFF3B4261));
+      rect(-16, -28, 32, 22, const Color(0xFF737AA2));
       rect(-14, -26, 28, 18, matrixDark);
       for (var i = 0; i < 5; i++) {
         final w = 6.0 + _hash(i + (tick ~/ 20)) % 16;
         rect(-12, -24 + i * 3.4, w, 1.5, i == 4 && blink ? matrixDark : accent);
       }
-      rect(-20, -6, 40, 2, const Color(0xFFB8B8C4));
+      rect(-20, -6, 40, 2, const Color(0xFFA9B1D6));
     case PlaceKind.server:
       for (final x in [-24.0, 4.0]) {
-        rect(x, -54, 20, 54, const Color(0xFF2A2F38));
+        rect(x, -54, 20, 54, const Color(0xFF2F334D));
         for (var y = -50; y < -2; y += 6) {
-          rect(x + 2, y.toDouble(), 16, 4, const Color(0xFF3A3F4A));
+          rect(x + 2, y.toDouble(), 16, 4, const Color(0xFF3B4261));
           final on = _hash(x.toInt() * 31 + y + tick ~/ 6) % 3;
           rect(x + 3, y + 1.0, 2, 2, on == 0 ? Px.surimiOrange : accent);
           rect(x + 7, y + 1.0, 2, 2, on == 1 ? matrixDark : accent);
@@ -157,12 +157,12 @@ void paintPlaceObject(Canvas canvas, Place place, double cx, double baseY, doubl
             Rect.fromCenter(center: c + Offset(math.cos(a) * r, math.sin(a) * r * .5), width: 3 * u, height: 3 * u), p);
       }
     case PlaceKind.mainframe:
-      rect(-30, -44, 60, 44, const Color(0xFFB8B4A0));
-      rect(-28, -42, 56, 4, const Color(0xFF3A3F4A));
+      rect(-30, -44, 60, 44, const Color(0xFFC8D3F5));
+      rect(-28, -42, 56, 4, const Color(0xFF3B4261));
       for (final x in [-16.0, 6.0]) {
-        p.color = const Color(0xFF2A2F38);
+        p.color = const Color(0xFF2F334D);
         canvas.drawCircle(Offset(cx + x * u + 5 * u, baseY - 26 * u), 8 * u, p);
-        p.color = const Color(0xFF9A9AA6);
+        p.color = const Color(0xFF737AA2);
         canvas.drawCircle(Offset(cx + x * u + 5 * u, baseY - 26 * u), 3 * u, p);
         final a = tick * .15;
         rect(x + 5 + math.cos(a) * 6, -26 + math.sin(a) * 6, 1.5, 1.5, Px.fujiWhite);
@@ -218,9 +218,9 @@ void paintLoading(Canvas canvas, double progress, int tick) {
   final p = Paint()..color = matrixDark;
   canvas.drawRect(const Rect.fromLTWH(0, 0, 160, 90), p);
   paintRain(canvas, const Rect.fromLTWH(0, 0, 160, 90), tick, density: .5, cell: 4, alpha: 140);
-  _rect(canvas, p, 30, 22, 100, 46, const Color(0xFF9A9AA6));
-  _rect(canvas, p, 31, 23, 98, 6, const Color(0xFF3A3F4A));
-  for (final (i, c) in [(0, Px.autumnRed), (1, Px.carpYellow), (2, Px.springGreen)]) {
+  _rect(canvas, p, 30, 22, 100, 46, const Color(0xFF737AA2));
+  _rect(canvas, p, 31, 23, 98, 6, const Color(0xFF3B4261));
+  for (final (i, c) in [(0, Px.autumnRed), (1, Px.boatYellow2), (2, Px.springGreen)]) {
     _rect(canvas, p, 33.0 + i * 4, 25, 2, 2, c);
   }
   _rect(canvas, p, 31, 29, 98, 38, matrixDark);
