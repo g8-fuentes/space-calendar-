@@ -82,6 +82,7 @@ class GameStats {
     this.weekDone = 0,
     this.weekGoal = 1,
     this.flame = 0,
+    this.skippedToday = false,
   });
 
   /// Missões concluídas desde o começo.
@@ -89,6 +90,9 @@ class GameStats {
   final int placeIndex;
   final int doneToday;
   final int totalToday;
+
+  /// Hoje foi pulado ("hoje não dá").
+  final bool skippedToday;
 
   /// Pontos por categoria (Vitalidade, Força...).
   final Map<String, int> attributes;
@@ -174,8 +178,9 @@ GameStats computeStats(GameState s, DateTime now) {
     placeIndex: s.explored.where((k) => k.compareTo(key) < 0).length,
     weekKey: key,
     weekDone: w.done.length,
-    weekGoal: s.weeklyGoal,
+    weekGoal: s.goalFor(key),
     flame: disciplineFlame(s, now),
+    skippedToday: w.skipped.contains(today),
     doneToday: dayDone(s, w, today),
     totalToday: daySlots(s, today).length,
     attributes: attrs,

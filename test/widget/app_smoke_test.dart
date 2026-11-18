@@ -56,9 +56,11 @@ void main() {
       ..missions.add(Mission(id: 'a', title: 'Academia', days: [2], start: '07:00', end: '08:00', category: 'treino'));
     final repo = await _pump(tester, s);
     expect(find.text('GUI'), findsOneWidget);
-    await Scrollable.ensureVisible(tester.element(find.text('Academia')), alignment: .5);
+    // o cartão de agora mostra a missão que ficou para trás (07:00, são 10:00)
+    expect(find.text('FICOU PARA TRÁS'), findsOneWidget);
+    await Scrollable.ensureVisible(tester.element(find.text('Academia').last), alignment: .5);
     await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(find.text('Academia'));
+    await tester.tap(find.text('Academia').last);
     await tester.pump(const Duration(milliseconds: 300));
     expect(repo.saved!.weeks.values.single.done, hasLength(1));
     await tester.drag(find.byType(Scrollable).first, const Offset(0, 3000));
@@ -120,6 +122,42 @@ void main() {
     expect(tester.takeException(), isNull);
     await tester.tap(find.text('EXPLORAR').last);
     await tester.pump(const Duration(milliseconds: 300));
+    expect(tester.takeException(), isNull);
+    await _end(tester);
+  });
+
+  testWidgets('concluir pelo cartão de agora, desfazer e pular o dia', (tester) async {
+    final s = GameState.initial(ymd(DateTime(2026, 10, 21)))
+      ..name = 'Gui'
+      ..onboarded = true
+      ..missions.addAll([
+        Mission(id: 'a', title: 'Estudar', days: [2], start: '09:30', end: '11:00', category: 'estudo'),
+        Mission(id: 'b', title: 'Correr', days: [2], start: '18:00', end: '19:00', category: 'treino'),
+        Mission(id: 'c', title: 'Ler', days: [3, 4], start: '21:00', end: '22:00', category: 'estudo'),
+      ]);
+    final repo = await _pump(tester, s);
+    expect(find.text('AGORA'), findsOneWidget);
+    await tester.tap(find.text('CONCLUIR'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repo.saved!.weeks.values.single.done.keys, ['a@2']);
+    expect(find.text('Concluída: Estudar'), findsOneWidget);
+    // o cartão passa para a próxima missão
+    expect(find.text('PRÓXIMA ÀS 18:00'), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 700)); // o aviso termina de entrar
+    await tester.tap(find.text('DESFAZER'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repo.saved!.weeks.values.single.done, isEmpty);
+    await tester.pump(const Duration(seconds: 5));
+
+    await tester.scrollUntilVisible(find.text('HOJE NÃO DÁ'), 200, scrollable: find.byType(Scrollable).first);
+    await Scrollable.ensureVisible(tester.element(find.text('HOJE NÃO DÁ')), alignment: .5);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(find.text('HOJE NÃO DÁ'));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repo.saved!.weeks.values.single.skipped, {2});
+    expect(find.text('VOLTAR A CONTAR HOJE'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Hoje está pulado.'), -300, scrollable: find.byType(Scrollable).first);
+    expect(find.text('Hoje está pulado.'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await _end(tester);
   });

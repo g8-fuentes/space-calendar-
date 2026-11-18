@@ -28,6 +28,8 @@ class ExploreScreen extends ConsumerWidget {
       children: const [
         _Header(),
         SizedBox(height: 10),
+        NowCard(),
+        SizedBox(height: 12),
         PixelPanel(padding: EdgeInsets.zero, child: ExploreScene()),
         SizedBox(height: 12),
         _NextStop(),
@@ -36,6 +38,106 @@ class ExploreScreen extends ConsumerWidget {
         SizedBox(height: 14),
         WeekSummary(),
       ],
+    );
+  }
+}
+
+/// Marca ou desmarca a missão e mostra o aviso com DESFAZER.
+void toggleMission(BuildContext context, WidgetRef ref, Mission m, int day) {
+  final ctrl = ref.read(gameControllerProvider.notifier);
+  final marked = ctrl.apply((g) => GameRules.toggle(g, m, day, ctrl.now));
+  if (marked) {
+    ctrl.celebrate();
+    Sfx.done.play();
+  } else {
+    Sfx.undo.play();
+  }
+  showToast(context, marked ? 'Concluída: ${m.title}' : 'Desmarcada: ${m.title}', onUndo: () {
+    ctrl.apply((g) => GameRules.toggle(g, m, day, ctrl.now));
+    Sfx.undo.play();
+  });
+}
+
+/// O que fazer agora: a missão em andamento, a que ficou para trás ou a
+/// próxima de hoje, com um botão grande para concluir.
+class NowCard extends ConsumerWidget {
+  const NowCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(gameControllerProvider);
+    final now = ref.watch(nowProvider).valueOrNull ?? ref.read(clockProvider).now();
+    final today = dayIndexOf(now), mm = minutesOfDay(now);
+    final w = s.weeks[weekKeyOf(now)] ?? WeekRecord();
+    final qs = daySlots(s, today);
+    final open = [
+      for (final m in qs)
+        if (!w.done.containsKey(slotKey(m, today))) m
+    ];
+    final skipped = w.skipped.contains(today);
+
+    Mission? pick;
+    var tag = '';
+    for (final m in open) {
+      final a = minutesOf(m.start), b = minutesOf(m.end);
+      if (a != null && b != null && mm >= a && mm < b) {
+        pick = m;
+        tag = 'AGORA';
+        break;
+      }
+    }
+    if (pick == null) {
+      for (final m in open) {
+        final a = minutesOf(m.start);
+        if (a == null || a <= mm) {
+          pick = m;
+          tag = a == null ? 'HOJE' : 'FICOU PARA TRÁS';
+          break;
+        }
+      }
+    }
+    if (pick == null) {
+      for (final m in open) {
+        pick = m;
+        tag = 'PRÓXIMA ÀS ${m.start}';
+        break;
+      }
+    }
+
+    final String title, sub;
+    if (s.missions.isEmpty) {
+      return const SizedBox.shrink();
+    } else if (skipped) {
+      title = 'Hoje está pulado.';
+      sub = 'As missões de hoje não contam na meta da semana. Descanse.';
+    } else if (qs.isEmpty) {
+      title = 'Dia livre.';
+      sub = 'Nenhuma missão na agenda hoje.';
+    } else if (pick == null) {
+      title = 'Dia completo!';
+      sub = 'Todas as ${qs.length} missões de hoje estão feitas.';
+    } else {
+      title = pick.title;
+      sub = '${pick.start.isEmpty ? 'sem horário' : pick.start}${pick.end.isEmpty ? '' : ' às ${pick.end}'}'
+          ' · faltam ${open.length} de ${qs.length} hoje';
+    }
+    final mission = pick;
+    return PixelPanel(
+      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        Text(mission == null || skipped ? 'HOJE' : tag, style: PixelText.display(8, color: Kanagawa.carpYellow)),
+        const SizedBox(height: 6),
+        Text(title, style: PixelText.display(11), maxLines: 2, overflow: TextOverflow.ellipsis),
+        const SizedBox(height: 4),
+        Text(sub, style: PixelText.body(14, color: Kanagawa.springViolet1)),
+        if (mission != null && !skipped) ...[
+          const SizedBox(height: 10),
+          PixelButton(
+            label: 'Concluir',
+            sound: false,
+            onPressed: () => toggleMission(context, ref, mission, today),
+          ),
+        ],
+      ]),
     );
   }
 }
@@ -156,6 +258,7 @@ class _Board extends ConsumerWidget {
                 today: i == today,
                 done: dayDone(s, w, i),
                 total: daySlots(s, i).length,
+                skipped: w.skipped.contains(i),
               ),
             ),
           ],
@@ -163,6 +266,11 @@ class _Board extends ConsumerWidget {
         const SizedBox(height: 10),
         Text('${dayNames[sel]}, ${two(date.day)}/${two(date.month)}${sel == today ? ' · hoje' : ''}',
             style: PixelText.body(15, color: Kanagawa.springViolet1)),
+        if (w.skipped.contains(sel)) ...[
+          const SizedBox(height: 4),
+          Text('Dia pulado: as missões dele não contam na meta da semana.',
+              style: PixelText.body(14, color: Kanagawa.carpYellow)),
+        ],
         const SizedBox(height: 8),
         if (s.missions.isEmpty)
           const EmptyBox('Nenhuma agenda importada.', 'Vá em Ajustes e importe o arquivo .ics ou .cal da sua agenda.')
@@ -178,29 +286,53 @@ class _Board extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
           ],
-        if (sel == today && qs.isNotEmpty) ...[
+        if (qs.isNotEmpty) ...[
           const SizedBox(height: 6),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: PixelButton(
-              label: 'Marcar tudo até agora',
+          Wrap(spacing: 8, runSpacing: 8, children: [
+            if (sel == today)
+              PixelButton(
+                label: 'Marcar tudo até agora',
+                color: Kanagawa.sumiInk5,
+                textColor: Kanagawa.fujiWhite,
+                sound: false,
+                onPressed: () {
+                  final ctrl = ref.read(gameControllerProvider.notifier);
+                  final key = weekKeyOf(ctrl.now);
+                  final before = {...?ref.read(gameControllerProvider).weeks[key]?.done.keys};
+                  final n = ctrl.apply((g) => GameRules.markPastToday(g, ctrl.now));
+                  if (n > 0) {
+                    ctrl.celebrate();
+                    Sfx.done.play();
+                    showToast(context, '$n ${n == 1 ? 'missão marcada' : 'missões marcadas'}', onUndo: () {
+                      ctrl.apply((g) => g.weeks[key]?.done.removeWhere((k, _) => !before.contains(k)));
+                      Sfx.undo.play();
+                    });
+                  } else {
+                    Sfx.click.play();
+                    showToast(context, 'Nada para marcar até agora');
+                  }
+                },
+              ),
+            PixelButton(
+              label: w.skipped.contains(sel)
+                  ? 'Voltar a contar ${sel == today ? 'hoje' : 'este dia'}'
+                  : (sel == today ? 'Hoje não dá' : 'Pular este dia'),
               color: Kanagawa.sumiInk5,
               textColor: Kanagawa.fujiWhite,
               sound: false,
               onPressed: () {
                 final ctrl = ref.read(gameControllerProvider.notifier);
-                final n = ctrl.apply((g) => GameRules.markPastToday(g, ctrl.now));
-                if (n > 0) {
-                  ctrl.celebrate();
-                  Sfx.done.play();
-                  showToast(context, '$n missões marcadas');
-                } else {
-                  Sfx.click.play();
-                  showToast(context, 'Nada para marcar até agora');
-                }
+                final skipped = ctrl.apply((g) => GameRules.toggleSkip(g, sel, ctrl.now));
+                Sfx.click.play();
+                showToast(
+                    context,
+                    skipped
+                        ? '${dayNames[sel]} pulado. A meta da semana diminuiu.'
+                        : '${dayNames[sel]} volta a contar.',
+                    onUndo: () => ctrl.apply((g) => GameRules.toggleSkip(g, sel, ctrl.now)));
               },
             ),
-          ),
+          ]),
         ],
       ]),
     );
@@ -209,9 +341,14 @@ class _Board extends ConsumerWidget {
 
 class _DayChip extends ConsumerWidget {
   const _DayChip(
-      {required this.day, required this.selected, required this.today, required this.done, required this.total});
+      {required this.day,
+      required this.selected,
+      required this.today,
+      required this.done,
+      required this.total,
+      this.skipped = false});
   final int day, done, total;
-  final bool selected, today;
+  final bool selected, today, skipped;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -234,7 +371,7 @@ class _DayChip extends ConsumerWidget {
           child: Column(children: [
             Text(dayAbbr[day], style: PixelText.display(6, color: selected ? Kanagawa.sumiInk0 : Kanagawa.fujiWhite)),
             const SizedBox(height: 2),
-            Text(total == 0 ? '–' : '$done/$total',
+            Text(total == 0 ? '–' : (skipped ? 'pulo' : '$done/$total'),
                 style: PixelText.body(12,
                     color: selected ? Kanagawa.sumiInk0 : (full ? Kanagawa.springGreen : Kanagawa.springViolet1))),
           ]),
@@ -262,16 +399,7 @@ class _MissionTile extends ConsumerWidget {
         child: Material(
           color: Kanagawa.sumiInk5,
           child: InkWell(
-            onTap: () {
-              final ctrl = ref.read(gameControllerProvider.notifier);
-              final marked = ctrl.apply((g) => GameRules.toggle(g, mission, day, ctrl.now));
-              if (marked) {
-                ctrl.celebrate();
-                Sfx.done.play();
-              } else {
-                Sfx.undo.play();
-              }
-            },
+            onTap: () => toggleMission(context, ref, mission, day),
             child: Container(
               decoration: BoxDecoration(
                 color: Kanagawa.sumiInk5,

@@ -60,18 +60,27 @@ class DoneRecord {
       );
 }
 
-/// Uma semana: missões concluídas, por "idMissão@dia".
+/// Uma semana: missões concluídas, por "idMissão@dia", e os dias pulados
+/// ("hoje não dá"), que saem da meta da semana.
 class WeekRecord {
-  WeekRecord([Map<String, DoneRecord>? done]) : done = done ?? {};
+  WeekRecord([Map<String, DoneRecord>? done, Set<int>? skipped])
+      : done = done ?? {},
+        skipped = skipped ?? {};
   final Map<String, DoneRecord> done;
 
+  /// Dias da semana (0 = segunda) pulados: as missões deles não contam na meta.
+  final Set<int> skipped;
+
   Map<String, Object?> toJson() => {
-        'done': {for (final e in done.entries) e.key: e.value.toJson()}
+        'done': {for (final e in done.entries) e.key: e.value.toJson()},
+        if (skipped.isNotEmpty) 'skip': skipped.toList()..sort(),
       };
 
   factory WeekRecord.fromJson(Map<String, Object?> j) => WeekRecord({
         for (final e in (j['done'] as Map? ?? {}).entries)
           e.key as String: DoneRecord.fromJson((e.value as Map).cast<String, Object?>()),
+      }, {
+        for (final d in (j['skip'] as List? ?? const [])) (d as num).toInt(),
       });
 }
 
@@ -153,8 +162,13 @@ class GameState {
 
   /// Missões por semana que exploram o destino: metade das missões da
   /// agenda (pelo menos 1).
-  int get weeklyGoal {
-    final slots = missions.fold(0, (a, m) => a + m.days.length);
+  int get weeklyGoal => goalFor(null);
+
+  /// Meta da semana [weekKey]: metade das missões dos dias que não foram
+  /// pulados (pelo menos 1).
+  int goalFor(String? weekKey) {
+    final skipped = weeks[weekKey]?.skipped ?? const <int>{};
+    final slots = missions.fold(0, (a, m) => a + m.days.where((d) => !skipped.contains(d)).length);
     return slots <= 1 ? 1 : (slots / 2).ceil();
   }
 
@@ -203,7 +217,7 @@ class GameState {
     // Saves antigos: as semanas que já cumpriam a meta contam como exploradas.
     if (j['explored'] == null) {
       for (final e in s.weeks.entries) {
-        if (e.value.done.length >= s.weeklyGoal) s.explored.add(e.key);
+        if (e.value.done.length >= s.goalFor(e.key)) s.explored.add(e.key);
       }
     }
     return s;
