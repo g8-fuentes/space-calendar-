@@ -55,6 +55,16 @@ abstract final class GameRules {
     return n;
   }
 
+  /// Pula (ou volta a contar) o dia [day] da semana atual: as missões
+  /// dele saem da meta da semana, então um dia ruim não impede de explorar
+  /// o destino. Devolve true quando pulou.
+  static bool toggleSkip(GameState s, int day, DateTime now) {
+    final w = s.week(weekKeyOf(now));
+    if (w.skipped.remove(day)) return false;
+    w.skipped.add(day);
+    return true;
+  }
+
   /// Anota uma tarefa do dia. Devolve false se o texto estiver vazio.
   static bool addTodo(GameState s, String text) {
     final t = text.trim();

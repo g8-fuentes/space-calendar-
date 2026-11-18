@@ -72,6 +72,27 @@ void main() {
       expect(placeAt(namedPlaces + 5).week, namedPlaces + 6);
     });
 
+    test('pular um dia tira as missões dele da meta da semana', () {
+      final s = GameState.initial(ymd(now));
+      final m = Mission(id: 'a', title: 'Estudar', days: [0, 1, 2, 3], start: '08:00', end: '09:00');
+      s.missions.add(m);
+      expect(computeStats(s, now).weekGoal, 2);
+      GameRules.toggle(s, m, 0, now);
+      expect(GameRules.toggleSkip(s, 1, now), isTrue);
+      expect(GameRules.toggleSkip(s, 2, now), isTrue);
+      var t = computeStats(s, now);
+      expect((t.weekGoal, t.explored), (1, true));
+      // o pulo é salvo e volta ao carregar
+      final back = GameState.fromJson(s.toJson(), today: ymd(now));
+      expect(back.weeks[weekKeyOf(now)]!.skipped, {1, 2});
+      // voltar a contar devolve a meta
+      expect(GameRules.toggleSkip(s, 1, now), isFalse);
+      t = computeStats(s, now);
+      expect((t.weekGoal, t.explored), (2, false));
+      // a semana seguinte começa sem pulos
+      expect(computeStats(s, DateTime(2026, 10, 26, 9)).weekGoal, 2);
+    });
+
     test('metade das missões da semana explora o destino; o próximo vem na segunda', () {
       final s = GameState.initial(ymd(now))..lastPlace = 0;
       final m = Mission(id: 'a', title: 'Estudar', days: [0, 1, 2, 3, 4, 5, 6], start: '08:00', end: '09:00');

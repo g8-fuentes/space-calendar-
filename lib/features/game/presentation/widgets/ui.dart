@@ -11,10 +11,17 @@ import '../controllers/game_providers.dart';
 import 'character_view.dart';
 import 'pixel_widgets.dart';
 
-void showToast(BuildContext context, String text) {
+/// Aviso rápido no rodapé. Com [onUndo], ganha o botão DESFAZER e fica
+/// um pouco mais na tela.
+void showToast(BuildContext context, String text, {VoidCallback? onUndo}) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
-    ..showSnackBar(SnackBar(content: Text(text), duration: const Duration(milliseconds: 2600)));
+    ..showSnackBar(SnackBar(
+      content: Text(text),
+      duration: Duration(milliseconds: onUndo == null ? 2600 : 4500),
+      action:
+          onUndo == null ? null : SnackBarAction(label: 'DESFAZER', textColor: Kanagawa.sumiInk0, onPressed: onUndo),
+    ));
 }
 
 /// Mostra, um de cada vez, os avisos grandes que chegam na fila.
