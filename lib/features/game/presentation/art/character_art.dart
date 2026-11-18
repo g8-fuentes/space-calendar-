@@ -37,7 +37,7 @@ typedef _R = void Function(int x, int y, int w, int h, Color? c);
   return (g, r);
 }
 
-const _gray = Color(0xFF9A9AA6), _dark = Color(0xFF2A2A37);
+const _gray = Color(0xFF737AA2), _dark = Color(0xFF2F334D);
 
 /// O dev de moletom: os fones chegam no nível 2, o notebook no 5 e os
 /// óculos escuros de quem enxerga a Matrix no 7. Cores e aura mudam a cada
@@ -95,7 +95,7 @@ PixelGrid devGrid(Transformation f, {bool blink = false, int tick = 0}) {
     r(13, 10, 4, 5, _gray);
     r(14, 11, 2, 3, Px.sumiInk0);
     r(14, 11, 1, 1, acc);
-    r(15, 12, 1, 1, const Color(0xFF3CFF6B));
+    r(15, 12, 1, 1, const Color(0xFF4FD6BE));
     r(14, 13, 2, 1, acc);
     r(12, 15, 5, 1, _gray);
   }
@@ -103,7 +103,7 @@ PixelGrid devGrid(Transformation f, {bool blink = false, int tick = 0}) {
     r(5, 5, 2, 1, _ink);
     r(9, 5, 2, 1, _ink);
     r(7, 5, 2, 1, _ink);
-    r(5, 5, 1, 1, const Color(0xFF3CFF6B));
+    r(5, 5, 1, 1, const Color(0xFF4FD6BE));
   }
   return outlined(g);
 }

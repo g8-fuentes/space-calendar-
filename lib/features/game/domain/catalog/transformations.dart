@@ -48,9 +48,9 @@ class Transformation {
     required this.name,
     required this.power,
     required this.description,
-    this.suit = 0xFF3A3F4A,
-    this.trim = 0xFF3CFF6B,
-    this.pants = 0xFF223249,
+    this.suit = 0xFF3B4261,
+    this.trim = 0xFF4FD6BE,
+    this.pants = 0xFF2D3F76,
     this.gear = Gear.none,
     this.aura = 0,
     this.auraColor = 0xFFFFFFFF,
@@ -89,7 +89,7 @@ class Transformation {
   Quote get quote => quotes[index % quotes.length];
 }
 
-const _gold = 0xFFFFD84A, _matrix = 0xFF3CFF6B;
+const _gold = 0xFFFFD84A, _matrix = 0xFF4FD6BE;
 
 /// (nome, pontos, descrição, moletom, detalhe, aura, cor da aura, raios)
 typedef _L = (String, int, String, int?, int?, int, int, bool);
@@ -98,35 +98,35 @@ const _levels = <_L>[
   ('Visitante (guest)', 0, 'Moletom com capuz e um terminal piscando.', null, null, 0, 0xFFFFFFFF, false),
   ('Estagiário no terminal', 40, 'Fones de ouvido para o foco total.', null, null, 0, 0xFFFFFFFF, false),
   ('Dev júnior', 120, 'O primeiro brilho verde em volta do corpo.', null, null, 1, _matrix, false),
-  ('Dev pleno', 250, 'Detalhes azuis e brilho azul-claro.', null, 0xFF7E9CD8, 1, 0xFFA3D4D5, false),
+  ('Dev pleno', 250, 'Detalhes azuis e brilho azul-claro.', null, 0xFF82AAFF, 1, 0xFF89DDFF, false),
   (
     'Dev sênior',
     380,
     'Notebook aberto com código brilhando e as primeiras chamas.',
     null,
-    0xFF7E9CD8,
+    0xFF82AAFF,
     2,
     _matrix,
     false
   ),
-  ('Tech lead', 550, 'Detalhes vermelhos e aura dourada.', null, 0xFFC34043, 2, _gold, false),
-  ('Hacker do terminal', 800, 'Óculos escuros e raios de energia em volta.', 0xFF16161D, _matrix, 2, _matrix, true),
-  ('Root', 1100, 'Moletom dourado e chamas fortes: acesso total.', 0xFFE6C384, 0xFFC34043, 3, _gold, true),
-  ('Arquiteto de sistemas', 1500, 'Moletom azul-noite e aura azul.', 0xFF2D4F67, 0xFF7FB4CA, 3, 0xFF7FB4CA, false),
-  ('Mestre do kernel', 2000, 'Moletom vermelho e raios.', 0xFFC34043, 0xFFE6C384, 3, 0xFFFF5D62, true),
-  ('Operador da Matrix', 2600, 'Roupa prateada e uma calma total.', 0xFFE4E6EE, 0xFF938AA9, 3, 0xFFDCD7BA, false),
+  ('Tech lead', 550, 'Detalhes vermelhos e aura dourada.', null, 0xFFC53B53, 2, _gold, false),
+  ('Hacker do terminal', 800, 'Óculos escuros e raios de energia em volta.', 0xFF1B1D2B, _matrix, 2, _matrix, true),
+  ('Root', 1100, 'Moletom dourado e chamas fortes: acesso total.', 0xFFFFC777, 0xFFC53B53, 3, _gold, true),
+  ('Arquiteto de sistemas', 1500, 'Moletom azul-noite e aura azul.', 0xFF394B70, 0xFF86E1FC, 3, 0xFF86E1FC, false),
+  ('Mestre do kernel', 2000, 'Moletom vermelho e raios.', 0xFFC53B53, 0xFFFFC777, 3, 0xFFFF757F, true),
+  ('Operador da Matrix', 2600, 'Roupa prateada e uma calma total.', 0xFFE4E6EE, 0xFF737AA2, 3, 0xFFC8D3F5, false),
   ('Desperto', 3300, 'Roupa verde-código e um anel de faíscas.', 0xFF1E5A2E, _matrix, 4, _matrix, false),
   (
     'Quebrador de código',
     4100,
     'Roupa violeta no meio de uma tempestade de raios.',
-    0xFF957FB8,
-    0xFFD27E99,
+    0xFFC099FF,
+    0xFFFCA7EA,
     4,
-    0xFF957FB8,
+    0xFFC099FF,
     true
   ),
-  ('Senhor dos bits', 5000, 'Roupa negra e aura escura com brasas.', 0xFF0A0E0A, 0xFFFF5D62, 4, 0xFFC34043, false),
+  ('Senhor dos bits', 5000, 'Roupa negra e aura escura com brasas.', 0xFF0A0E0A, 0xFFFF757F, 4, 0xFFC53B53, false),
   (
     'Arquiteto da Matrix',
     6000,
@@ -161,7 +161,7 @@ Transformation transformationAt(int i) => _cache.putIfAbsent(i, () {
           name: name,
           power: power,
           description: desc,
-          suit: suit ?? 0xFF3A3F4A,
+          suit: suit ?? 0xFF3B4261,
           trim: trim ?? _matrix,
           gear: i == 0
               ? Gear.none

@@ -55,7 +55,7 @@ class LocalMissionAlerts implements MissionAlerts {
       importance: Importance.high,
       priority: Priority.high,
       icon: 'ic_stat_rocket',
-      color: Color(0xFFE6C384),
+      color: Color(0xFF82AAFF),
       category: AndroidNotificationCategory.reminder,
     ),
   );

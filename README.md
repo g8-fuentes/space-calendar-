@@ -17,7 +17,7 @@ O app tem três abas:
   da semana no fim.
 - **Personagem**: o nível atual, os atributos, a Disciplina (a chama e as tarefas do dia) e todos
   os níveis, os que faltam apagados.
-- **Ajustes**: agenda, tema claro, música eletrônica, sons, notificações e nome.
+- **Ajustes**: agenda, tema claro (Tokyo Night Day; o escuro é o Tokyo Night Moon), música eletrônica, sons, notificações e nome.
 
 Cada tarefa do dia concluída dá pontos de Disciplina, e a chama cresce com as tarefas dos últimos
 7 dias e vai baixando quando elas param. A música é eletrônica e instrumental (house, techno,

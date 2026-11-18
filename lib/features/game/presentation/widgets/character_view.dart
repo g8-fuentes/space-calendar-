@@ -98,7 +98,7 @@ class _CharacterPainter extends CustomPainter {
     final p = Paint()..color = matrixDark;
     canvas.drawRect(const Rect.fromLTWH(0, 0, w, h), p);
     paintRain(canvas, const Rect.fromLTWH(0, 0, w, h - 4), tick, density: .35, cell: 4, alpha: 110);
-    p.color = const Color(0xFF07140A);
+    p.color = const Color(0xFF1E2030);
     canvas.drawRect(const Rect.fromLTWH(0, h - 4, w, 4), p);
     p.color = matrixGreen.withAlpha(160);
     canvas.drawRect(const Rect.fromLTWH(0, h - 4, w, 1), p);

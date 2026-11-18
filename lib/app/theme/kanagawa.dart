@@ -1,62 +1,68 @@
 import 'package:flutter/material.dart';
 
+/// Paleta Tokyo Night Moon (tema escuro) e Tokyo Night Day (tema claro).
+///
+/// Os nomes dos campos vêm do tema antigo e viraram só "posições" de cor:
+/// `sumiInk*` são os fundos, `fujiWhite`/`oldWhite`/`fujiGray` os textos e
+/// `carpYellow` é a cor de destaque (o azul do Tokyo Night).
+
 /// Cores fixas dos desenhos em pixel art (personagem, cena, chama): não
-/// mudam com o tema.
+/// mudam com o tema. Sempre Tokyo Night Moon.
 abstract final class Px {
-  static const sumiInk0 = Color(0xFF16161D);
-  static const sumiInk3 = Color(0xFF1F1F28);
-  static const sumiInk4 = Color(0xFF2A2A37);
-  static const sumiInk5 = Color(0xFF363646);
-  static const sumiInk6 = Color(0xFF54546D);
-  static const fujiWhite = Color(0xFFDCD7BA);
-  static const oldWhite = Color(0xFFC8C093);
-  static const fujiGray = Color(0xFF727169);
-  static const springViolet1 = Color(0xFF938AA9);
-  static const oniViolet = Color(0xFF957FB8);
-  static const crystalBlue = Color(0xFF7E9CD8);
-  static const springBlue = Color(0xFF7FB4CA);
-  static const lightBlue = Color(0xFFA3D4D5);
-  static const waveBlue1 = Color(0xFF223249);
-  static const waveBlue2 = Color(0xFF2D4F67);
-  static const springGreen = Color(0xFF98BB6C);
-  static const autumnGreen = Color(0xFF76946A);
-  static const carpYellow = Color(0xFFE6C384);
-  static const boatYellow2 = Color(0xFFC0A36E);
-  static const surimiOrange = Color(0xFFFFA066);
-  static const autumnRed = Color(0xFFC34043);
-  static const waveRed = Color(0xFFE46876);
-  static const sakuraPink = Color(0xFFD27E99);
+  static const sumiInk0 = Color(0xFF1B1D2B); // black
+  static const sumiInk3 = Color(0xFF222436); // bg
+  static const sumiInk4 = Color(0xFF2F334D); // bg_highlight
+  static const sumiInk5 = Color(0xFF3B4261); // fg_gutter
+  static const sumiInk6 = Color(0xFF444A73); // terminal_black
+  static const fujiWhite = Color(0xFFC8D3F5); // fg
+  static const oldWhite = Color(0xFF828BB8); // fg_dark
+  static const fujiGray = Color(0xFF636DA6); // comment
+  static const springViolet1 = Color(0xFF737AA2); // dark5
+  static const oniViolet = Color(0xFFC099FF); // magenta
+  static const crystalBlue = Color(0xFF65BCFF); // blue1
+  static const springBlue = Color(0xFF86E1FC); // cyan
+  static const lightBlue = Color(0xFF89DDFF); // blue5
+  static const waveBlue1 = Color(0xFF2D3F76); // bg_visual
+  static const waveBlue2 = Color(0xFF394B70); // blue7
+  static const springGreen = Color(0xFFC3E88D); // green
+  static const autumnGreen = Color(0xFF4FD6BE); // teal
+  static const carpYellow = Color(0xFF82AAFF); // blue (destaque)
+  static const boatYellow2 = Color(0xFFFFC777); // yellow
+  static const surimiOrange = Color(0xFFFF966C); // orange
+  static const autumnRed = Color(0xFFC53B53); // red1
+  static const waveRed = Color(0xFFFF757F); // red
+  static const sakuraPink = Color(0xFFFCA7EA); // purple
 }
 
-/// Cores da interface. O tema escuro é um terminal verde, à la Matrix; o
-/// claro é papel com tinta verde. Mudam com [light].
+/// Cores da interface. O tema escuro é o Tokyo Night Moon; o claro é o
+/// Tokyo Night Day. Mudam com [light].
 abstract final class Kanagawa {
   /// Tema claro ligado (ver Ajustes).
   static bool light = false;
 
-  static Color get sumiInk0 => light ? const Color(0xFFE3EAE0) : const Color(0xFF070B08);
-  static Color get sumiInk3 => light ? const Color(0xFFF2F5EF) : const Color(0xFF0B110C);
-  static Color get sumiInk4 => light ? const Color(0xFFFFFFFF) : const Color(0xFF111A13);
-  static Color get sumiInk5 => light ? const Color(0xFFE8EEE5) : const Color(0xFF1A271C);
-  static Color get sumiInk6 => light ? const Color(0xFFB3C2AF) : const Color(0xFF2F4733);
-  static Color get fujiWhite => light ? const Color(0xFF17261A) : const Color(0xFFCDEFD0);
-  static Color get oldWhite => light ? const Color(0xFF34463A) : const Color(0xFFA6D8AA);
-  static Color get fujiGray => light ? const Color(0xFF6B7A6D) : const Color(0xFF5F7F63);
-  static Color get springViolet1 => light ? const Color(0xFF56685A) : const Color(0xFF80A886);
-  static Color get oniViolet => light ? const Color(0xFF6A4C93) : const Color(0xFF957FB8);
-  static Color get crystalBlue => light ? const Color(0xFF3B5BA0) : const Color(0xFF7E9CD8);
-  static Color get springBlue => light ? const Color(0xFF2F6F8F) : const Color(0xFF7FB4CA);
-  static Color get lightBlue => light ? const Color(0xFF2F7F86) : const Color(0xFFA3D4D5);
-  static Color get waveBlue1 => light ? const Color(0xFFD6EED9) : const Color(0xFF10301A);
-  static Color get waveBlue2 => light ? const Color(0xFFB5E0BF) : const Color(0xFF1E5A2E);
-  static Color get springGreen => light ? const Color(0xFF2F8F46) : const Color(0xFF98BB6C);
-  static Color get autumnGreen => light ? const Color(0xFF4D7A3A) : const Color(0xFF76946A);
-  static Color get carpYellow => light ? const Color(0xFF14833A) : const Color(0xFF3CFF6B);
-  static Color get boatYellow2 => light ? const Color(0xFF8A6D2F) : const Color(0xFFC0A36E);
-  static Color get surimiOrange => light ? const Color(0xFFC2621A) : const Color(0xFFFFA066);
-  static Color get autumnRed => light ? const Color(0xFFB3363A) : const Color(0xFFC34043);
-  static Color get waveRed => light ? const Color(0xFFC04A55) : const Color(0xFFE46876);
-  static Color get sakuraPink => light ? const Color(0xFFA8456C) : const Color(0xFFD27E99);
+  static Color get sumiInk0 => light ? const Color(0xFFD0D5E3) : Px.sumiInk0;
+  static Color get sumiInk3 => light ? const Color(0xFFE1E2E7) : Px.sumiInk3;
+  static Color get sumiInk4 => light ? const Color(0xFFE9E9EC) : Px.sumiInk4;
+  static Color get sumiInk5 => light ? const Color(0xFFC4C8DA) : Px.sumiInk5;
+  static Color get sumiInk6 => light ? const Color(0xFFA8AECB) : Px.sumiInk6;
+  static Color get fujiWhite => light ? const Color(0xFF3760BF) : Px.fujiWhite;
+  static Color get oldWhite => light ? const Color(0xFF6172B0) : Px.oldWhite;
+  static Color get fujiGray => light ? const Color(0xFF848CB5) : Px.fujiGray;
+  static Color get springViolet1 => light ? const Color(0xFF68709A) : Px.springViolet1;
+  static Color get oniViolet => light ? const Color(0xFF9854F1) : Px.oniViolet;
+  static Color get crystalBlue => light ? const Color(0xFF188092) : Px.crystalBlue;
+  static Color get springBlue => light ? const Color(0xFF007197) : Px.springBlue;
+  static Color get lightBlue => light ? const Color(0xFF006A83) : Px.lightBlue;
+  static Color get waveBlue1 => light ? const Color(0xFFD5D9EC) : Px.waveBlue1;
+  static Color get waveBlue2 => light ? const Color(0xFFB7C1E3) : Px.waveBlue2;
+  static Color get springGreen => light ? const Color(0xFF587539) : Px.springGreen;
+  static Color get autumnGreen => light ? const Color(0xFF118C74) : Px.autumnGreen;
+  static Color get carpYellow => light ? const Color(0xFF2E7DE9) : Px.carpYellow;
+  static Color get boatYellow2 => light ? const Color(0xFF8C6C3E) : Px.boatYellow2;
+  static Color get surimiOrange => light ? const Color(0xFFB15C00) : Px.surimiOrange;
+  static Color get autumnRed => light ? const Color(0xFFC64343) : Px.autumnRed;
+  static Color get waveRed => light ? const Color(0xFFF52A65) : Px.waveRed;
+  static Color get sakuraPink => light ? const Color(0xFF7847BD) : Px.sakuraPink;
 
   /// Cor de categoria (pastel) legível no tema atual.
   static Color ink(Color c) => light ? Color.lerp(c, const Color(0xFF000000), .35)! : c;

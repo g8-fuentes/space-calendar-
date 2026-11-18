@@ -253,8 +253,8 @@ class _ScenePainter extends CustomPainter {
   void _clock(Canvas canvas) {
     final time = '${two(now.hour)}:${two(now.minute)}';
     final colon = (tick ~/ 15).isEven;
-    const ink = Color(0xFFD8FFE0);
-    const shadow = Color(0xFF0E5A22);
+    const ink = Color(0xFFC8D3F5);
+    const shadow = Color(0xFF2D3F76);
     _label(canvas, colon ? time : time.replaceFirst(':', ' '), const Offset(151, 34), 20, shadow, center: true);
     _label(canvas, colon ? time : time.replaceFirst(':', ' '), const Offset(150, 33), 20, ink, center: true);
     final date = '${dayAbbr[now.weekday - 1]} ${two(now.day)}/${two(now.month)}';
@@ -270,10 +270,10 @@ class _ScenePainter extends CustomPainter {
     final name = place.name.toUpperCase();
     final region = place.region.toUpperCase();
     final tp = _painter(name, 6.5, matrixGreen);
-    final w = math.max(tp.width, _painter(region, 4.5, const Color(0xFF9FD8A6)).width) + 10;
+    final w = math.max(tp.width, _painter(region, 4.5, const Color(0xFF828BB8)).width) + 10;
     _rect(canvas, p, 3, 3, w + 2, 22, matrixGreen.withAlpha(170));
     _rect(canvas, p, 4, 4, w, 20, matrixDark.withAlpha(235));
-    _label(canvas, region, const Offset(9, 6), 4.5, const Color(0xFF9FD8A6));
+    _label(canvas, region, const Offset(9, 6), 4.5, const Color(0xFF828BB8));
     _label(canvas, name, const Offset(9, 13), 6.5, matrixGreen);
   }
 
