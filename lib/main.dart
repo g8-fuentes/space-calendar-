@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,9 +14,11 @@ import 'core/sound/sfx.dart';
 import 'core/time/clock.dart';
 import 'core/time/week_utils.dart';
 import 'features/game/data/datasources/game_local_datasource.dart';
+import 'features/game/data/datasources/sync_local_datasource.dart';
 import 'features/game/data/repositories/game_repository_impl.dart';
 import 'features/game/domain/entities/game_state.dart';
 import 'features/game/presentation/controllers/game_providers.dart';
+import 'features/game/presentation/controllers/sync_controller.dart';
 
 /// Composição da aplicação: cria as dependências concretas e injeta
 /// no Riverpod. Nenhuma tela conhece SharedPreferences.
@@ -31,7 +34,8 @@ Future<void> main() async {
 
     unawaited(SoundBoard.instance.init());
     unawaited(MusicBox.instance.init());
-    final alerts = LocalMissionAlerts();
+    // No navegador não há notificações agendadas: só no app Android.
+    final MissionAlerts alerts = kIsWeb ? const NoMissionAlerts() : LocalMissionAlerts();
     unawaited(alerts.init());
 
     const clock = SystemClock();
@@ -52,6 +56,8 @@ Future<void> main() async {
           gameRepositoryProvider.overrideWithValue(repository),
           initialGameStateProvider.overrideWithValue(initial),
           missionAlertsProvider.overrideWithValue(alerts),
+          syncStoreProvider.overrideWithValue(PrefsSyncStore(prefs)),
+          cloudClientProvider.overrideWithValue(cloudClientFromConfig()),
         ],
         child: const RotinaQuestApp(),
       ),

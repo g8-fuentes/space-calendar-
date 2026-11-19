@@ -36,7 +36,9 @@ jobs:
 
       - name: Gerar APK
         run: |
-          flutter build apk --release
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL="${{ vars.SUPABASE_URL }}" \
+            --dart-define=SUPABASE_KEY="${{ vars.SUPABASE_KEY }}"
           cp build/app/outputs/flutter-apk/app-release.apk build/dev-routine.apk
 
       - uses: actions/upload-artifact@v4

@@ -23,6 +23,28 @@ Cada tarefa do dia concluída dá pontos de Disciplina, e a chama cresce com as 
 7 dias e vai baixando quando elas param. A música é eletrônica e instrumental (house, techno,
 synthwave e breaks), gerada no próprio app.
 
+## Usar no navegador e no computador (PWA)
+
+O app também roda no navegador e pode ser instalado como app (PWA):
+
+- **Endereço**: https://g8-fuentes.github.io/space-calendar-/
+- **Celular (Chrome)**: abra o endereço, menu ⋮ > *Instalar app* (ou *Adicionar à tela inicial*).
+  No iPhone (Safari): Compartilhar > *Adicionar à Tela de Início*.
+- **Computador (Chrome/Edge)**: abra o endereço e clique no ícone de instalar na barra de endereço.
+
+Para ter o mesmo progresso em todos os aparelhos, entre com a sua conta em **Ajustes > Nuvem**
+(ou em *Já usa em outro aparelho?* na tela inicial). No primeiro login, o que já estava no
+aparelho sobe para a nuvem sem apagar nada. A configuração da nuvem (Supabase, grátis) está em
+[docs/sincronizacao.md](docs/sincronizacao.md).
+
+No navegador as notificações de início de missão não aparecem; elas continuam no app Android.
+
+O site é gerado pela ação **Web (PWA)** a cada envio para `main`. Para testar no computador:
+
+```bash
+flutter run -d chrome --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_KEY=...
+```
+
 ## Gerar o APK
 
 ### Opção 1: GitHub (sem instalar nada)
@@ -54,16 +76,19 @@ Clean Architecture por feature, com estado em Riverpod:
 lib/
   main.dart                     composição: cria dependências e injeta no Riverpod
   app/                          MaterialApp, abas e tema Kanagawa
-  core/                         relógio, tempo de Bauru, notificações, música e sons
+  core/                         relógio, tempo de Bauru, notificações, música, sons e o
+                                cliente da nuvem (Supabase, só HTTP)
   features/game/
     domain/                     regras puras, sem Flutter
       entities/                 Mission, GameState (serializável)
       catalog/                  categorias, destinos de cada semana, níveis e frases
-      services/                 importação .ics/.ical, regras e números derivados
+      services/                 importação .ics/.ical, regras, números derivados e a
+                                junção de dois saves (state_merge.dart)
       repositories/             contrato de persistência
     data/                       SharedPreferences + implementação do repositório
+                                (e o que o aparelho lembra da sincronização)
     presentation/
-      controllers/              GameController (Notifier) e providers
+      controllers/              GameController, SyncController (nuvem) e providers
       art/                      pixel art desenhada em código (CustomPainter)
       widgets/                  cena, personagem, componentes pixel
       screens/                  Explorar, Tarefas, Personagem, Mapa, Semana, Ajustes

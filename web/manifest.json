@@ -1,0 +1,20 @@
+{
+    "name": "Dev Routine",
+    "short_name": "Dev Routine",
+    "id": "./",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#1B1D2B",
+    "theme_color": "#222436",
+    "description": "A rotina semanal como a jornada de um dev em pixel art, subindo de nível dentro de um terminal na Matrix.",
+    "lang": "pt-BR",
+    "orientation": "any",
+    "prefer_related_applications": false,
+    "icons": [
+        {"src": "icons/Icon-192.png", "sizes": "192x192", "type": "image/png"},
+        {"src": "icons/Icon-512.png", "sizes": "512x512", "type": "image/png"},
+        {"src": "icons/Icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+        {"src": "icons/Icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+    ]
+}

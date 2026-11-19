@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:http/http.dart' as http;
 
 /// Tipo de tempo, para desenhar o céu.
 enum Sky { clear, partly, cloudy, fog, drizzle, rain, storm }
@@ -45,7 +45,6 @@ const bauruLat = -22.3147, bauruLon = -49.0606;
 
 /// Busca o tempo atual em Bauru. Devolve null sem internet.
 Future<WeatherNow?> fetchBauruWeather() async {
-  final client = HttpClient()..connectionTimeout = const Duration(seconds: 10);
   try {
     final uri = Uri.https('api.open-meteo.com', '/v1/forecast', {
       'latitude': '$bauruLat',
@@ -53,14 +52,11 @@ Future<WeatherNow?> fetchBauruWeather() async {
       'current': 'temperature_2m,weather_code',
       'timezone': 'America/Sao_Paulo',
     });
-    final res = await (await client.getUrl(uri)).close().timeout(const Duration(seconds: 15));
+    final res = await http.get(uri).timeout(const Duration(seconds: 15));
     if (res.statusCode != 200) return null;
-    final body = await res.transform(utf8.decoder).join();
-    final cur = (jsonDecode(body) as Map)['current'] as Map;
+    final cur = (jsonDecode(utf8.decode(res.bodyBytes)) as Map)['current'] as Map;
     return WeatherNow((cur['temperature_2m'] as num).toDouble(), (cur['weather_code'] as num).toInt());
   } catch (_) {
     return null;
-  } finally {
-    client.close(force: true);
   }
 }

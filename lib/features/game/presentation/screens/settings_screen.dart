@@ -6,6 +6,7 @@ import '../../../../core/sound/sfx.dart';
 import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
 import '../widgets/pixel_widgets.dart';
+import '../widgets/sync_panel.dart';
 import '../widgets/ui.dart';
 
 /// Passo a passo para tirar o arquivo .ics do Google Agenda.
@@ -35,6 +36,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final s = ref.watch(gameControllerProvider);
     final ctrl = ref.read(gameControllerProvider.notifier);
     return ListView(padding: const EdgeInsets.fromLTRB(12, 16, 12, 32), children: [
+      const SyncPanel(),
+      const SizedBox(height: 14),
       PixelPanel(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Text('AGENDA', style: PixelText.display(10)),

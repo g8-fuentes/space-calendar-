@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ import '../../domain/entities/game_state.dart';
 import '../../domain/repositories/game_repository.dart';
 import '../../domain/services/game_rules.dart';
 import '../../domain/services/game_stats.dart';
+import 'sync_controller.dart';
 
 /// Injetados em `main()` com `ProviderScope(overrides: ...)`.
 final clockProvider = Provider<Clock>((ref) => const SystemClock());
@@ -124,6 +126,7 @@ class GameController extends Notifier<GameState> {
 
   /// Aplica [change] numa cópia do estado.
   T apply<T>(T Function(GameState s) change) {
+    final before = jsonEncode(state.toJson());
     final next = state.copy();
     final result = change(next);
     final notices = GameRules.progressNotices(next, computeStats(next, now));
@@ -132,8 +135,25 @@ class GameController extends Notifier<GameState> {
     MusicBox.instance.enabled = next.music;
     _syncAlerts(next);
     unawaited(ref.read(gameRepositoryProvider).save(next));
+    // Só mudanças de verdade vão para a nuvem (abrir o app não conta).
+    if (jsonEncode(next.toJson()) != before) ref.read(syncProvider.notifier).localChanged();
     if (notices.isNotEmpty) notify(notices);
     return result;
+  }
+
+  /// Troca o estado pelo que veio da nuvem (outro aparelho mexeu).
+  /// Salva no aparelho sem marcar como mudança local.
+  void replaceFromCloud(GameState next) {
+    if (next.lastPlace < 0 || next.lastForm < 0) {
+      final t = computeStats(next, now);
+      if (next.lastPlace < 0) next.lastPlace = t.placeIndex;
+      if (next.lastForm < 0) next.lastForm = t.formIndex;
+    }
+    state = next;
+    SoundBoard.instance.enabled = next.sound;
+    MusicBox.instance.enabled = next.music;
+    _syncAlerts(next);
+    unawaited(ref.read(gameRepositoryProvider).save(next));
   }
 
   void notify(List<Notice> notices) {
@@ -154,6 +174,8 @@ class GameController extends Notifier<GameState> {
       ..lastForm = 0;
     state = fresh;
     _syncAlerts(fresh);
-    unawaited(ref.read(gameRepositoryProvider).save(fresh));
+    await ref.read(gameRepositoryProvider).save(fresh);
+    ref.read(syncProvider.notifier).localChanged();
+    await ref.read(syncProvider.notifier).replaceCloud();
   }
 }
