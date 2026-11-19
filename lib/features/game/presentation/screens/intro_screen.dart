@@ -8,6 +8,7 @@ import '../controllers/game_providers.dart';
 import '../controllers/import_flow.dart';
 import '../widgets/explore_scene.dart';
 import '../widgets/pixel_widgets.dart';
+import '../widgets/sync_panel.dart';
 import '../widgets/ui.dart';
 import 'settings_screen.dart' show exportHelp;
 
@@ -67,6 +68,8 @@ class _IntroScreenState extends ConsumerState<IntroScreen> {
                     textAlign: TextAlign.center, style: PixelText.body(16, color: Kanagawa.springViolet1)),
                 const SizedBox(height: 14),
                 PixelPanel(padding: EdgeInsets.zero, child: ExploreScene(placeOverride: placeAt(0))),
+                const SizedBox(height: 16),
+                const SyncPanel(intro: true),
                 const SizedBox(height: 16),
                 PixelPanel(
                   child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [

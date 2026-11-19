@@ -251,9 +251,10 @@ class MusicBox {
   static final instance = MusicBox._();
 
   final _paths = <String>[];
+  final _web = <Uint8List>[];
   AudioPlayer? _player;
   int _track = 0;
-  bool _enabled = true, _foreground = true, _playing = false, _started = false;
+  bool _enabled = true, _foreground = true, _playing = false, _started = false, _unlocked = false;
 
   bool get enabled => _enabled;
   set enabled(bool v) {
@@ -271,7 +272,6 @@ class MusicBox {
 
   Future<void> init() async {
     try {
-      final dir = await getTemporaryDirectory();
       final p = AudioPlayer();
       await p.setReleaseMode(ReleaseMode.release);
       await p.setVolume(.4);
@@ -284,6 +284,28 @@ class MusicBox {
       _player = p;
       _track = math.Random().nextInt(songs.length);
       final order = [for (var i = 0; i < songs.length; i++) (_track + i) % songs.length];
+      if (kIsWeb) {
+        // No navegador não há isolates nem arquivos: compõe na memória,
+        // uma música por vez, dando tempo para a tela respirar.
+        final ready = <int, Uint8List>{};
+        for (final i in order) {
+          await Future<void>.delayed(const Duration(milliseconds: 400));
+          ready[i] = wavFromSamples(renderSong(songs[i]), _rate);
+          if (i == _track) {
+            _web
+              ..clear()
+              ..addAll(List.filled(songs.length, ready[i]!));
+            _paths
+              ..clear()
+              ..addAll(List.filled(songs.length, ''));
+            unawaited(_apply());
+          } else {
+            _web[i] = ready[i]!;
+          }
+        }
+        return;
+      }
+      final dir = await getTemporaryDirectory();
       final ready = <int, String>{};
       for (final i in order) {
         ready[i] = await compute(renderSongToFile, (i, '${dir.path}/rq_music_$i.wav'));
@@ -313,14 +335,32 @@ class MusicBox {
           await p.resume();
         } else {
           _started = true;
-          await p.play(DeviceFileSource(_paths[_track]));
+          await p.play(kIsWeb ? BytesSource(_web[_track], mimeType: 'audio/wav') : DeviceFileSource(_paths[_track]));
         }
       } else if (_playing) {
         _playing = false;
         await p.pause();
       }
     } catch (e) {
+      // No navegador o som só pode começar depois de um toque na tela:
+      // deixa pronto para tentar de novo no próximo toque.
+      _playing = false;
+      _started = false;
       debugPrint('Música: $e');
     }
+  }
+
+  /// Chamado a cada toque no navegador: começa a música bloqueada pelo
+  /// navegador até a primeira interação.
+  void retryAfterGesture() {
+    final p = _player;
+    if (_unlocked || p == null || !_enabled || !_foreground || _paths.isEmpty) return;
+    if (p.state == PlayerState.playing) {
+      _unlocked = true;
+      return;
+    }
+    _playing = false;
+    _started = false;
+    unawaited(_apply());
   }
 }

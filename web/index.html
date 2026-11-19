@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- Trocado pelo --base-href do build (no GitHub Pages: /space-calendar-/). -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dev Routine: a rotina semanal como a jornada de um dev em pixel art.">
+  <meta name="theme-color" content="#222436">
+
+  <!-- iOS: abre como app pela tela inicial -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Dev Routine">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Dev Routine</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { margin: 0; height: 100%; background: #1B1D2B; }
+    #carregando {
+      position: fixed; inset: 0; display: flex; flex-direction: column; gap: 16px;
+      align-items: center; justify-content: center; color: #82AAFF;
+      font: 14px ui-monospace, Menlo, Consolas, monospace; letter-spacing: 1px;
+    }
+    #carregando img { width: 96px; height: 96px; image-rendering: pixelated; }
+  </style>
+</head>
+<body>
+  <div id="carregando"><img src="icons/Icon-192.png" alt=""><span>carregando dev routine...</span></div>
+  <script>
+    // Modo offline: guarda o app para abrir mesmo sem internet.
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      });
+    }
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('carregando');
+      if (el) el.remove();
+    });
+  </script>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

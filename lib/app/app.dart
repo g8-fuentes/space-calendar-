@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/sound/music.dart';
 import '../core/sound/sfx.dart';
 import '../features/game/presentation/controllers/game_providers.dart';
+import '../features/game/presentation/controllers/sync_controller.dart';
 import '../features/game/presentation/screens/character_screen.dart';
 import '../features/game/presentation/screens/explore_screen.dart';
 import '../features/game/presentation/screens/intro_screen.dart';
@@ -47,6 +49,7 @@ class _RotinaQuestAppState extends State<RotinaQuestApp> {
         debugShowCheckedModeBanner: false,
         theme: buildKanagawaTheme(),
         home: KeyedSubtree(key: ValueKey(light), child: const _Root()),
+        builder: (context, child) => _WideFrame(child: child!),
       );
     });
   }
@@ -94,7 +97,10 @@ class _GameShellState extends ConsumerState<GameShell> {
   }
 
   void _refresh() {
-    if (mounted) ref.read(gameControllerProvider.notifier).apply((_) {});
+    if (!mounted) return;
+    ref.read(gameControllerProvider.notifier).apply((_) {});
+    // Traz o que mudou nos outros aparelhos.
+    ref.read(syncProvider.notifier).syncNow();
   }
 
   @override
@@ -132,6 +138,35 @@ class _GameShellState extends ConsumerState<GameShell> {
               label: label,
             ),
         ],
+      ),
+    );
+  }
+}
+
+/// No computador o app fica numa coluna de celular no meio da tela. No
+/// navegador, o primeiro toque também libera a música.
+class _WideFrame extends StatelessWidget {
+  const _WideFrame({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget app = child;
+    if (kIsWeb) {
+      app = Listener(onPointerDown: (_) => MusicBox.instance.retryAfterGesture(), child: app);
+    }
+    final width = MediaQuery.sizeOf(context).width;
+    if (width <= 600) return app;
+    return ColoredBox(
+      color: Kanagawa.sumiInk0,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 520),
+          child: MediaQuery(
+            data: MediaQuery.of(context).copyWith(size: Size(520, MediaQuery.sizeOf(context).height)),
+            child: ClipRect(child: app),
+          ),
+        ),
       ),
     );
   }

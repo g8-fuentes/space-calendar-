@@ -41,6 +41,7 @@ class SoundBoard {
 
   bool enabled = true;
   final _paths = <Sfx, String>{};
+  final _bytes = <Sfx, Uint8List>{};
   final _players = <AudioPlayer>[];
   var _next = 0;
   bool _ready = false;
@@ -49,11 +50,18 @@ class SoundBoard {
   /// nunca travado.
   Future<void> init() async {
     try {
-      final dir = await getTemporaryDirectory();
-      for (final s in Sfx.values) {
-        final f = File('${dir.path}/rq_${s.name}.wav');
-        await f.writeAsBytes(synthesize(s.notes, s.wave), flush: true);
-        _paths[s] = f.path;
+      if (kIsWeb) {
+        // No navegador não há pasta temporária: o som fica na memória.
+        for (final s in Sfx.values) {
+          _bytes[s] = synthesize(s.notes, s.wave);
+        }
+      } else {
+        final dir = await getTemporaryDirectory();
+        for (final s in Sfx.values) {
+          final f = File('${dir.path}/rq_${s.name}.wav');
+          await f.writeAsBytes(synthesize(s.notes, s.wave), flush: true);
+          _paths[s] = f.path;
+        }
       }
       for (var i = 0; i < 4; i++) {
         final p = AudioPlayer();
@@ -77,10 +85,12 @@ class SoundBoard {
 
   void play(Sfx s) {
     if (!enabled || !_ready) return;
-    final path = _paths[s];
-    if (path == null) return;
+    final Source? source = kIsWeb
+        ? switch (_bytes[s]) { final b? => BytesSource(b, mimeType: 'audio/wav'), _ => null }
+        : switch (_paths[s]) { final path? => DeviceFileSource(path), _ => null };
+    if (source == null) return;
     final p = _players[_next++ % _players.length];
-    p.play(DeviceFileSource(path)).catchError((Object _) {});
+    p.play(source).catchError((Object _) {});
   }
 }
 
